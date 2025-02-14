@@ -179,7 +179,7 @@ const LaboratorySignUpForm = () => {
 
             <button
               type="submit"
-              className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition duration-200"
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition duration-200"
             >
               Create Account
             </button>
@@ -205,7 +205,7 @@ const LaboratorySignUpForm = () => {
 
             <p className="text-center text-sm text-gray-600">
               Already have an account?{' '}
-              <a href="#" className="text-purple-600 hover:underline">
+              <a href="#" className="text-blue-600 hover:underline">
                 Sign In
               </a>
             </p>
