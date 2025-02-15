@@ -1,8 +1,9 @@
-"use client"
+"use client";
 import React, { useState } from 'react';
 import { PlusIcon } from 'lucide-react';
 
-const DoctorSignUpForm = () => {
+
+const DoctorSignUpPage = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -10,17 +11,15 @@ const DoctorSignUpForm = () => {
     specialization: '',
     password: '',
     confirmPassword: '',
-    phone: '',
-    experience: '',
-    workAddress: '',
-    consultationFees: '',
-    availability: '',
-    agreeToTerms: false
   });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
+    console.log(formData);
   };
 
   return (
@@ -169,20 +168,6 @@ const DoctorSignUpForm = () => {
             <div className="text-center text-gray-500">or</div>
 
             <div className="space-y-3">
-              <button
-                type="button"
-                className="w-full flex items-center justify-center gap-2 border border-gray-300 py-2 px-4 rounded-md hover:bg-gray-50 transition duration-200"
-              >
-                <img src="/api/placeholder/20/20" alt="Google" className="w-5 h-5" />
-                Sign up with Google
-              </button>
-              <button
-                type="button"
-                className="w-full flex items-center justify-center gap-2 border border-gray-300 py-2 px-4 rounded-md hover:bg-gray-50 transition duration-200"
-              >
-                <img src="/api/placeholder/20/20" alt="Apple" className="w-5 h-5" />
-                Sign up with Apple
-              </button>
             </div>
 
             <p className="text-center text-sm text-gray-600">
@@ -198,4 +183,4 @@ const DoctorSignUpForm = () => {
   );
 };
 
-export default DoctorSignUpForm;
+export default DoctorSignUpPage;

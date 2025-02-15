@@ -11,7 +11,7 @@ import {
     NavigationMenu,
     NavigationMenuLink,
     NavigationMenuList,
-} from '../../app/layout/navigation-menu';
+} from './navigation-menu';
 
 const Navbar = () => {
   return (
