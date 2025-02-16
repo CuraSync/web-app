@@ -170,36 +170,12 @@ const PatientSignUpForm = () => {
 
             <button
               type="submit"
-              className="w-full bg-blue-600text-white py-2 px-4 rounded-md hover:bg-purple-700 transition duration-200"
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition duration-200"
             >
               Create Account
             </button>
 
-            <div className="text-center text-gray-500">or</div>
-
-            <div className="space-y-3">
-              <button
-                type="button"
-                className="w-full flex items-center justify-center gap-2 border border-gray-300 py-2 px-4 rounded-md hover:bg-gray-50 transition duration-200"
-              >
-                <img src="/api/placeholder/20/20" alt="Google" className="w-5 h-5" />
-                Sign up with Google
-              </button>
-              <button
-                type="button"
-                className="w-full flex items-center justify-center gap-2 border border-gray-300 py-2 px-4 rounded-md hover:bg-gray-50 transition duration-200"
-              >
-                <img src="/api/placeholder/20/20" alt="Apple" className="w-5 h-5" />
-                Sign up with Apple
-              </button>
-            </div>
-
-            <p className="text-center text-sm text-gray-600">
-              Already have an account?{' '}
-              <a href="#" className="text-blue-600 hover:underline">
-                Sign In
-              </a>
-            </p>
+            
           </form>
         </div>
       </div>

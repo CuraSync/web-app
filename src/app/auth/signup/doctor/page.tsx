@@ -165,17 +165,10 @@ const DoctorSignUpPage = () => {
               Create Account
             </button>
 
-            <div className="text-center text-gray-500">or</div>
 
             <div className="space-y-3">
             </div>
 
-            <p className="text-center text-sm text-gray-600">
-              Already have an account?{' '}
-              <a href="#" className="text-blue-600 hover:underline">
-                Sign In
-              </a>
-            </p>
           </form>
         </div>
       </div>

@@ -1,6 +1,43 @@
-import React from 'react';
+"use client";
+
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { toast } from 'sonner';
 
 const Login = () => {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    remember: false,
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { email, password } = formData;
+
+    // Validate email and password
+    if (!email || !password) {
+      toast.error("Please enter both email and password");
+      return;
+    }
+
+    // Add your login logic here
+    if (email === "lab@example.com" && password === "password123") {
+      toast.success("Login successful!");
+      // Add your redirect logic here
+    } else {
+      toast.error("Invalid credentials");
+    }
+  };
+
   return (
     <div className="flex h-screen">
       {/* Left Side */}
@@ -13,32 +50,48 @@ const Login = () => {
       {/* Right Side */}
       <div className="w-1/2 flex flex-col items-center justify-center p-10">
         <h1 className="text-3xl font-bold mb-4">Welcome back!</h1>
-        <p className="text-gray-600 mb-6">Doctor Login - Enter your credentials to access your account</p>
+        <p className="text-gray-600 mb-6">Lab Login - Enter your credentials to access your account</p>
 
-        <input
-          type="email"
-          placeholder="Email address"
-          className="border border-gray-300 rounded-md p-2 mb-4 w-full"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="border border-gray-300 rounded-md p-2 mb-4 w-full"
-        />
+        <form onSubmit={handleSubmit} className="w-full">
+          <input
+            type="email"
+            name="email"
+            placeholder="Email address"
+            className="border border-gray-300 rounded-md p-2 mb-4 w-full"
+            value={formData.email}
+            onChange={handleChange}
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            className="border border-gray-300 rounded-md p-2 mb-4 w-full"
+            value={formData.password}
+            onChange={handleChange}
+          />
 
-        <div className="flex items-center mb-4 w-full">
-          <input type="checkbox" className="mr-2" />
-          <label>Remember for 30 days</label>
-        </div>
+          <div className="flex items-center mb-4 w-full">
+            <input
+              type="checkbox"
+              name="remember"
+              className="mr-2"
+              checked={formData.remember}
+              onChange={handleChange}
+            />
+            <label>Remember for 30 days</label>
+          </div>
 
-        <button className="bg-purple-600 text-white py-2 px-4 rounded-md mb-4 w-full">Login</button>
+          <button type="submit" className="bg-purple-600 text-white py-2 px-4 rounded-md mb-4 w-full">
+            Login
+          </button>
+        </form>
 
         <div className="flex flex-col items-center w-full">
-          <button className="border border-gray-300 py-2 px-4 mb-2 w-full">Sign in with Google</button>
-          <button className="border border-gray-300 py-2 px-4 mb-4 w-full">Sign in with Apple</button>
           <p className="text-gray-600">
             Don't have an account?{' '}
-            <span className="text-purple-600 cursor-pointer">Sign Up</span>
+            <Link href="/auth/signup/lab">
+              <span className="text-purple-600 cursor-pointer">Sign Up</span>
+            </Link>
           </p>
         </div>
       </div>
