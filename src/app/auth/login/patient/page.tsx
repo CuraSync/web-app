@@ -81,9 +81,11 @@ const Login = () => {
             <label>Remember for 30 days</label>
           </div>
 
-          <button type="submit" className="bg-purple-600 text-white py-2 px-4 rounded-md mb-4 w-full">
+          <div className="flex flex-col items-center">
+          <button type="submit" className="bg-purple-600 text-white py-2 px-4 rounded-md mt-4 w-80">
             Login
           </button>
+        </div>
         </form>
 
         <div className="flex flex-col items-center w-full">
