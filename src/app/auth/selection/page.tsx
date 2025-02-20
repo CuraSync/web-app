@@ -1,9 +1,10 @@
 "use client";
-import React from 'react';
+import React from "react";
+import Link from "next/link";
+//import Navbar from "../../layout/navbar";
 import { FaUserMd, FaUser, FaFlask, FaPrescriptionBottleAlt } from "react-icons/fa";
-import Link from 'next/link';
 
-const HomePage = () => {
+const UserSelectionPage = () => {
   const accountTypes = [
     {
       href: "/auth/login/doctor",
@@ -33,6 +34,7 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+      
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-2">
           Welcome to CuraSync
@@ -58,4 +60,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default UserSelectionPage;
