@@ -3,18 +3,20 @@ import React, { useState } from 'react';
 import SignUpLayout from '@/components/auth/SignUpLayout';
 import { toast } from 'sonner';
 
-const PharmacySignUpPage = () => {
+const DoctorSignUpPage = () => {
   const [formData, setFormData] = useState({
-    pharmacyName: '',
+    firstName: '',
+    lastName: '',
+    fullName: '',
     email: '',
-    licenceNumber: '',
+    slmcNumber: '',
+    nic: '',
     password: '',
     confirmPassword: '',
     phone: '',
-    location: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -36,17 +38,41 @@ const PharmacySignUpPage = () => {
 
   return (
     <SignUpLayout
-      title="Pharmacy Portal"
-      description="Join our network of pharmacies and provide essential medication services."
+      title="Doctor Portal"
+      description="Join our network of healthcare professionals and provide quality care to patients."
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Pharmacy Name *</label>
+            <label className="block text-sm font-medium text-gray-700">First Name *</label>
             <input
               type="text"
-              name="pharmacyName"
-              value={formData.pharmacyName}
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Last Name *</label>
+            <input
+              type="text"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Full Name *</label>
+            <input
+              type="text"
+              name="fullName"
+              value={formData.fullName}
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
               required
@@ -66,11 +92,23 @@ const PharmacySignUpPage = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Licence Number *</label>
+            <label className="block text-sm font-medium text-gray-700">SLMC Registration Number *</label>
             <input
               type="text"
-              name="licenceNumber"
-              value={formData.licenceNumber}
+              name="slmcNumber"
+              value={formData.slmcNumber}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">NIC *</label>
+            <input
+              type="text"
+              name="nic"
+              value={formData.nic}
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
               required
@@ -115,18 +153,6 @@ const PharmacySignUpPage = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Location *</label>
-          <textarea
-            name="location"
-            value={formData.location}
-            onChange={handleChange}
-            rows={3}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-            required
-          />
-        </div>
-
-        <div>
           <button
             type="submit"
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
@@ -139,4 +165,4 @@ const PharmacySignUpPage = () => {
   );
 };
 
-export default PharmacySignUpPage;
+export default DoctorSignUpPage;
