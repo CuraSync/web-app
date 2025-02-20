@@ -80,22 +80,27 @@ const Footer = () => {
           
           <div>
             <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase">Connect</h3>
-            <div className="mt-4 flex space-x-6">
-              <a href="#" className="text-gray-600 hover:text-purple-600">
-                <div className="relative w-6 h-6">
-                  <Image src="/assets/icons/fb.svg" alt="Facebook" fill style={{ objectFit: 'contain' }} />
-                </div>
+            <div className="mt-4 space-y-2">
+              <a href="mailto:curasync.info@gmail.com" className="block text-gray-600 hover:text-purple-600">
+                curasync.info@gmail.com
               </a>
-              <a href="#" className="text-gray-600 hover:text-purple-600">
-                <div className="relative w-6 h-6">
-                  <Image src="/assets/icons/ig.svg" alt="Instagram" fill style={{ objectFit: 'contain' }} />
-                </div>
-              </a>
-              <a href="#" className="text-gray-600 hover:text-purple-600">
-                <div className="relative w-6 h-6">
-                  <Image src="/assets/icons/x.svg" alt="X (Twitter)" fill style={{ objectFit: 'contain' }} />
-                </div>
-              </a>
+              <div className="flex space-x-6 mt-4">
+                <a href="https://x.com/CuraSync_Health" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-purple-600">
+                  <div className="relative w-6 h-6">
+                    <Image src="/assets/icons/x.svg" alt="X (Twitter)" fill style={{ objectFit: 'contain' }} />
+                  </div>
+                </a>
+                <a href="https://www.instagram.com/curasync" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-purple-600">
+                  <div className="relative w-6 h-6">
+                    <Image src="/assets/icons/ig.svg" alt="Instagram" fill style={{ objectFit: 'contain' }} />
+                  </div>
+                </a>
+                <a href="https://www.facebook.com/curasync" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-purple-600">
+                  <div className="relative w-6 h-6">
+                    <Image src="/assets/icons/fb.svg" alt="Facebook" fill style={{ objectFit: 'contain' }} />
+                  </div>
+                </a>
+              </div>
             </div>
           </div>
         </div>
