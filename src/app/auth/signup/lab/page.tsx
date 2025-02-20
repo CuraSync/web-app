@@ -5,52 +5,21 @@ import { toast } from 'sonner';
 
 const LabSignUpPage = () => {
   const [formData, setFormData] = useState({
-    laboratoryName: '',
+    labName: '',
     email: '',
+    licenceNumber: '',
     password: '',
     confirmPassword: '',
-    labRegistration: '',
     phone: '',
-    address: '',
-    workingHours: '',
-    tests: {
-      bloodTests: false,
-      urineAnalysis: false,
-      xRay: false,
-      mri: false,
-      ctScan: false,
-      ultrasound: false,
-      ecg: false,
-      pathology: false,
-      microbiology: false,
-    },
-    agreeToTerms: false,
+    location: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    if (type === 'checkbox') {
-      if (name.startsWith('tests.')) {
-        const testName = name.split('.')[1];
-        setFormData({
-          ...formData,
-          tests: {
-            ...formData.tests,
-            [testName]: (e.target as HTMLInputElement).checked,
-          },
-        });
-      } else {
-        setFormData({
-          ...formData,
-          [name]: (e.target as HTMLInputElement).checked,
-        });
-      }
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-    }
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,8 +45,8 @@ const LabSignUpPage = () => {
             <label className="block text-sm font-medium text-gray-700">Laboratory Name *</label>
             <input
               type="text"
-              name="laboratoryName"
-              value={formData.laboratoryName}
+              name="labName"
+              value={formData.labName}
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
               required
@@ -90,6 +59,18 @@ const LabSignUpPage = () => {
               type="email"
               name="email"
               value={formData.email}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Licence Number *</label>
+            <input
+              type="text"
+              name="licenceNumber"
+              value={formData.licenceNumber}
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
               required
@@ -121,18 +102,6 @@ const LabSignUpPage = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Lab Registration Number *</label>
-            <input
-              type="text"
-              name="labRegistration"
-              value={formData.labRegistration}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              required
-            />
-          </div>
-
-          <div>
             <label className="block text-sm font-medium text-gray-700">Phone Number *</label>
             <input
               type="tel"
@@ -146,65 +115,15 @@ const LabSignUpPage = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Address *</label>
+          <label className="block text-sm font-medium text-gray-700">Location *</label>
           <textarea
-            name="address"
-            value={formData.address}
+            name="location"
+            value={formData.location}
             onChange={handleChange}
             rows={3}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
             required
           />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Working Hours *</label>
-          <input
-            type="text"
-            name="workingHours"
-            value={formData.workingHours}
-            onChange={handleChange}
-            placeholder="e.g., Mon-Fri 9AM-5PM"
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Tests Offered *</label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {Object.entries(formData.tests).map(([test, checked]) => (
-              <div key={test} className="flex items-center">
-                <input
-                  type="checkbox"
-                  name={`tests.${test}`}
-                  checked={checked}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-                />
-                <label className="ml-2 block text-sm text-gray-900">
-                  {test.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            name="agreeToTerms"
-            checked={formData.agreeToTerms}
-            onChange={handleChange}
-            className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-            required
-          />
-          <label className="ml-2 block text-sm text-gray-900">
-            I agree to the{' '}
-            <a href="#" className="text-purple-600 hover:text-purple-500">
-              Terms and Conditions
-            </a>
-          </label>
         </div>
 
         <div>

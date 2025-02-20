@@ -3,27 +3,22 @@ import React, { useState } from 'react';
 import SignUpLayout from '@/components/auth/SignUpLayout';
 import { toast } from 'sonner';
 
-const DoctorSignUpPage = () => {
+const PharmacySignUpPage = () => {
   const [formData, setFormData] = useState({
-    fullName: '',
+    pharmacyName: '',
     email: '',
-    medicalLicense: '',
-    specialization: '',
+    licenceNumber: '',
     password: '',
     confirmPassword: '',
     phone: '',
-    experience: '',
-    address: '',
-    consultationFees: '',
-    availability: '',
-    agreeToTerms: false,
+    location: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+      [name]: value,
     });
   };
 
@@ -41,17 +36,17 @@ const DoctorSignUpPage = () => {
 
   return (
     <SignUpLayout
-      title="Doctor Portal"
-      description="Join our network of healthcare professionals and provide quality care to patients."
+      title="Pharmacy Portal"
+      description="Join our network of pharmacies and provide essential medication services."
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Full Name *</label>
+            <label className="block text-sm font-medium text-gray-700">Pharmacy Name *</label>
             <input
               type="text"
-              name="fullName"
-              value={formData.fullName}
+              name="pharmacyName"
+              value={formData.pharmacyName}
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
               required
@@ -71,33 +66,15 @@ const DoctorSignUpPage = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Medical License *</label>
+            <label className="block text-sm font-medium text-gray-700">Licence Number *</label>
             <input
               type="text"
-              name="medicalLicense"
-              value={formData.medicalLicense}
+              name="licenceNumber"
+              value={formData.licenceNumber}
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
               required
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Specialization *</label>
-            <select
-              name="specialization"
-              value={formData.specialization}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              required
-            >
-              <option value="">Select Specialization</option>
-              <option value="cardiology">Cardiology</option>
-              <option value="dermatology">Dermatology</option>
-              <option value="neurology">Neurology</option>
-              <option value="pediatrics">Pediatrics</option>
-              <option value="orthopedics">Orthopedics</option>
-            </select>
           </div>
 
           <div>
@@ -135,75 +112,18 @@ const DoctorSignUpPage = () => {
               required
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Years of Experience *</label>
-            <input
-              type="number"
-              name="experience"
-              value={formData.experience}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              required
-            />
-          </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Work Address *</label>
+          <label className="block text-sm font-medium text-gray-700">Location *</label>
           <textarea
-            name="address"
-            value={formData.address}
+            name="location"
+            value={formData.location}
             onChange={handleChange}
             rows={3}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
             required
           />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Consultation Fees *</label>
-            <input
-              type="text"
-              name="consultationFees"
-              value={formData.consultationFees}
-              onChange={handleChange}
-              placeholder="e.g., $100"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Availability Hours *</label>
-            <input
-              type="text"
-              name="availability"
-              value={formData.availability}
-              onChange={handleChange}
-              placeholder="e.g., Mon-Fri 9AM-5PM"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              required
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            name="agreeToTerms"
-            checked={formData.agreeToTerms}
-            onChange={handleChange}
-            className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
-            required
-          />
-          <label className="ml-2 block text-sm text-gray-900">
-            I agree to the{' '}
-            <a href="#" className="text-purple-600 hover:text-purple-500">
-              Terms and Conditions
-            </a>
-          </label>
         </div>
 
         <div>
@@ -219,4 +139,4 @@ const DoctorSignUpPage = () => {
   );
 };
 
-export default DoctorSignUpPage;
+export default PharmacySignUpPage;
