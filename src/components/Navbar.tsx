@@ -10,13 +10,15 @@ const Navbar = () => {
           <div className="flex-shrink-0 flex items-center">
             <Link href="/">
               <div className="flex items-center">
-                <Image
-                  src="/assets/logo/logo.png"
-                  alt="CuraSync Logo"
-                  width={40}
-                  height={40}
-                  className="h-10 w-auto"
-                />
+                <div className="relative w-10 h-10">
+                  <Image
+                    src="/assets/logo/logo.png"
+                    alt="CuraSync Logo"
+                    fill
+                    style={{ objectFit: 'contain' }}
+                    priority
+                  />
+                </div>
                 <span className="ml-2 text-xl font-bold text-purple-600">CuraSync</span>
               </div>
             </Link>
