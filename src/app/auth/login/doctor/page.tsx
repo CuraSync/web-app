@@ -53,7 +53,7 @@ const DoctorLogin = () => {
             type="email"
             name="email"
             placeholder="Enter your email"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
             value={formData.email}
             onChange={handleChange}
           />
@@ -67,7 +67,7 @@ const DoctorLogin = () => {
             type="password"
             name="password"
             placeholder="Enter your password"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
             value={formData.password}
             onChange={handleChange}
           />
@@ -78,20 +78,20 @@ const DoctorLogin = () => {
             <input
               type="checkbox"
               name="remember"
-              className="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               checked={formData.remember}
               onChange={handleChange}
             />
             <label className="ml-2 text-sm text-gray-600">Remember me</label>
           </div>
-          <a href="#" className="text-sm text-purple-600 hover:text-purple-700">
+          <a href="#" className="text-sm text-blue-600 hover:text-blue-700">
             Forgot password?
           </a>
         </div>
 
         <button
           type="submit"
-          className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition duration-200"
+          className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
         >
           Sign in
         </button>

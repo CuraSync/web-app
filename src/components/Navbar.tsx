@@ -25,7 +25,7 @@ const Navbar = () => {
             </Link>
           </div>
           
-          {/* Navigation Links */}
+          {/* Navigation Links }
           <div className="hidden md:flex space-x-8">
             <Link href="/" className="text-gray-600 hover:text-purple-600 px-3 py-2 text-sm font-medium">
               Home
@@ -42,11 +42,7 @@ const Navbar = () => {
           </div>
           
           {/* Login Button */}
-          <div className="flex items-center space-x-4">
-            <Link href="/auth/selection" className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 text-sm font-medium transition-colors duration-200">
-              Login
-            </Link>
-          </div>
+          
         </div>
       </div>
     </nav>
