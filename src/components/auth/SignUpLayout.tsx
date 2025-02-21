@@ -11,10 +11,10 @@ interface SignUpLayoutProps {
 
 const SignUpLayout = ({ title, description, children }: SignUpLayoutProps) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
       <div className="max-w-4xl w-full bg-white rounded-2xl shadow-xl flex overflow-hidden">
         {/* Left Side - Decorative */}
-        <div className="hidden md:flex md:w-1/3 bg-purple-600 p-12 flex-col justify-between relative">
+        <div className="hidden md:flex md:w-1/3 bg-blue-900 p-12 flex-col justify-between relative">
           <div className="relative z-10">
             <Link href="/">
               <div className="flex items-center">
@@ -33,7 +33,7 @@ const SignUpLayout = ({ title, description, children }: SignUpLayoutProps) => {
             </Link>
             <div className="mt-16">
               <h2 className="text-3xl font-bold text-white mb-6">{title}</h2>
-              <p className="text-purple-200">
+              <p className="text-blue-200">
                 {description}
               </p>
             </div>
@@ -45,8 +45,8 @@ const SignUpLayout = ({ title, description, children }: SignUpLayoutProps) => {
           </div>
           {/* Decorative circles */}
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
-            <div className="absolute w-64 h-64 rounded-full bg-purple-500 opacity-20 -top-10 -left-10"></div>
-            <div className="absolute w-96 h-96 rounded-full bg-purple-500 opacity-20 -bottom-20 -right-20"></div>
+            <div className="absolute w-64 h-64 rounded-full bg-blue-500 opacity-20 -top-10 -left-10"></div>
+            <div className="absolute w-96 h-96 rounded-full bg-blue-500 opacity-20 -bottom-20 -right-20"></div>
           </div>
         </div>
 
@@ -64,7 +64,7 @@ const SignUpLayout = ({ title, description, children }: SignUpLayoutProps) => {
                     priority
                   />
                 </div>
-                <span className="ml-2 text-xl font-bold text-purple-600">CuraSync</span>
+                <span className="ml-2 text-xl font-bold text-blue-600">CuraSync</span>
               </div>
             </Link>
           </div>
@@ -80,7 +80,7 @@ const SignUpLayout = ({ title, description, children }: SignUpLayoutProps) => {
             <div className="text-center">
               <p className="text-sm text-gray-600">
                 Already have an account?{' '}
-                <Link href="/auth/selection" className="text-purple-600 hover:text-purple-700 font-semibold">
+                <Link href="/auth/selection" className="text-blue-600 hover:text-blue-700 font-semibold">
                   Sign in
                 </Link>
               </p>
