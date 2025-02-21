@@ -4,8 +4,11 @@ import React, { useState } from 'react';
 import { FaUserMd } from "react-icons/fa";
 import { toast } from 'sonner';
 import LoginLayout from '@/components/auth/LoginLayout';
+import { validateUser } from '@/utils/auth';
+import { useRouter } from 'next/navigation';
 
 const DoctorLogin = () => {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -29,10 +32,10 @@ const DoctorLogin = () => {
       return;
     }
 
-    // Add your login logic here
-    if (email === "doctor@example.com" && password === "password123") {
+    if (validateUser(email, password, 'doctor')) {
+      localStorage.setItem('userRole', 'doctor');
       toast.success("Login successful!");
-      // Add your redirect logic here
+      router.push('/dashboard/doctor');
     } else {
       toast.error("Invalid credentials");
     }

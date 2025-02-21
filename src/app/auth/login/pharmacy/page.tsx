@@ -4,8 +4,11 @@ import React, { useState } from 'react';
 import { FaPrescriptionBottleAlt } from "react-icons/fa";
 import { toast } from 'sonner';
 import LoginLayout from '@/components/auth/LoginLayout';
+import { validateUser } from '@/utils/auth';
+import { useRouter } from 'next/navigation';
 
 const PharmacyLogin = () => {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -29,10 +32,10 @@ const PharmacyLogin = () => {
       return;
     }
 
-    // Add your login logic here
-    if (email === "pharmacy@example.com" && password === "password123") {
+    if (validateUser(email, password, 'pharmacy')) {
+      localStorage.setItem('userRole', 'pharmacy');
       toast.success("Login successful!");
-      // Add your redirect logic here
+      router.push('/dashboard/pharmacy');
     } else {
       toast.error("Invalid credentials");
     }
