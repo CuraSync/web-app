@@ -62,6 +62,10 @@ const DoctorSearch = () => {
     }
   ];
 
+  const handleMessageClick = (doctorId: number) => {
+    console.log(`Message doctor with ID: ${doctorId}`);
+  };
+
   return (
     <div className="flex min-h-screen font-sans bg-white">
       {/* ========== LEFT SIDEBAR ========== */}
@@ -79,6 +83,7 @@ const DoctorSearch = () => {
           <SidebarItem icon={<FaEnvelope />} label="Messaging" />
           <SidebarItem icon={<FaBell />} label="Notification" />
           <SidebarItem icon={<FaCog />} label="Settings" />
+          <SidebarItem icon={<FaChartBar />} label="Laboratory" />
         </nav>
       </aside>
 
@@ -142,7 +147,6 @@ const DoctorSearch = () => {
               </div>
             </div>
           </div>
-
           {viewMode === 'cards' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {doctors.map(doctor => (
@@ -173,9 +177,18 @@ const DoctorSearch = () => {
                       <span className="ml-1">{doctor.rating}</span>
                     </div>
                     <div className="flex space-x-2">
-                      <Calendar className="w-5 h-5 text-blue-500" />
-                      <MessageCircle className="w-5 h-5 text-blue-500" />
-                      <User className="w-5 h-5 text-blue-500" />
+                      <button className="p-2 hover:bg-gray-100 rounded-full">
+                        <Calendar className="w-5 h-5 text-blue-500" />
+                      </button>
+                      <button 
+                        onClick={() => handleMessageClick(doctor.id)}
+                        className="p-2 hover:bg-gray-100 rounded-full flex items-center"
+                      >
+                        <MessageCircle className="w-5 h-5 text-blue-500" />
+                      </button>
+                      <button className="p-2 hover:bg-gray-100 rounded-full">
+                        <User className="w-5 h-5 text-blue-500" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -207,7 +220,12 @@ const DoctorSearch = () => {
                       <td className="px-6 py-4">{doctor.type}</td>
                       <td className="px-6 py-4">{doctor.lastVisit}</td>
                       <td className="px-6 py-4">
-                        <MessageCircle className="w-5 h-5 text-blue-500" />
+                        <button 
+                          onClick={() => handleMessageClick(doctor.id)}
+                          className="p-2 hover:bg-gray-100 rounded-full flex items-center"
+                        >
+                          <MessageCircle className="w-5 h-5 text-blue-500" />
+                        </button>
                       </td>
                       <td className="px-6 py-4">
                         <button className="px-3 py-1 bg-gray-800 text-white rounded">
@@ -225,6 +243,8 @@ const DoctorSearch = () => {
     </div>
   );
 };
+
+
 
 // ========== SIDEBAR ITEM COMPONENT ==========
 interface SidebarItemProps {
