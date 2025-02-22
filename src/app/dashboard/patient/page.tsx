@@ -2,8 +2,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BarChart3, Bell, Facebook, Instagram, Mail, PenSquare, Settings, Timer, Twitter, User } from 'lucide-react';
-
-
+import Link from 'next/link';
+import { FaChartBar, FaCog, FaEnvelope, FaFlask, FaUserMd } from 'react-icons/fa';
+import { FaBell } from 'react-icons/fa6';
 
 const PatientDashboard = () => {
   // State for Patient Info
@@ -71,6 +72,7 @@ const PatientDashboard = () => {
     updatedAllergies[index][name as keyof typeof updatedAllergies[number]] = value;
     setAllergies(updatedAllergies);
   };
+
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -104,26 +106,30 @@ const PatientDashboard = () => {
 
         {/* Navigation */}
         <nav className="mt-12 space-y-6">
-          <a href="#" className="flex items-center space-x-3 text-gray-600">
-            <Timer className="w-5 h-5" />
-            <span>TimeLine</span>
-          </a>
-          <a href="#" className="flex items-center space-x-3 text-gray-600">
-            <BarChart3 className="w-5 h-5" />
+        <Link href="/dashboard/patient/doctor" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
+            <FaUserMd className="w-5 h-5" />
+            <span>Doctor</span>
+          </Link>
+          <Link href="/dashboard/patient/timeline" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
+            <FaChartBar className="w-5 h-5" />
+            <span>Timeline</span>
+          </Link>
+          <Link href="/dashboard/patient/visualization" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
+            <FaFlask className="w-5 h-5" />
             <span>Visualization</span>
-          </a>
-          <a href="#" className="flex items-center space-x-3 text-gray-600">
-            <Mail className="w-5 h-5" />
+          </Link>
+          <Link href="/dashboard/patient/messaging" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
+            <FaEnvelope className="w-5 h-5" />
             <span>Messaging</span>
-          </a>
-          <a href="#" className="flex items-center space-x-3 text-gray-600">
-            <Bell className="w-5 h-5" />
+          </Link>
+          <Link href="/dashboard/patient/request" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
+            <FaBell className="w-5 h-5" />
             <span>Request</span>
-          </a>
-          <a href="#" className="flex items-center space-x-3 text-gray-600">
-            <Settings className="w-5 h-5" />
+          </Link>
+          <Link href="/dashboard/patient/settings" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
+            <FaCog className="w-5 h-5" />
             <span>Settings</span>
-          </a>
+          </Link>
         </nav>
 
         {/* User Profile */}
@@ -204,71 +210,71 @@ const PatientDashboard = () => {
           </div>
 
           <div className="mt-6 grid grid-cols-3 gap-6">
-  {/* Vital Statistics */}
-  <div className="col-span-2 bg-white rounded-lg shadow-sm border p-6">
-    <div className="flex justify-between items-start">
-      <h3 className="text-lg font-semibold mb-4">Vital Statistics</h3>
-      <button onClick={() => setIsEditingVitalStats(!isEditingVitalStats)}>
-        <PenSquare className="text-gray-400 w-5 h-5" />
-      </button>
-    </div>
-    {isEditingVitalStats ? (
-      <div className="space-y-2">
-        <input
-          type="text"
-          name="height"
-          value={vitalStats.height}
-          onChange={handleVitalStatsChange}
-          className="text-gray-600 border rounded p-1"
-        />
-        <input
-          type="text"
-          name="weight"
-          value={vitalStats.weight}
-          onChange={handleVitalStatsChange}
-          className="text-gray-600 border rounded p-1"
-        />
-        <input
-          type="text"
-          name="bmi"
-          value={vitalStats.bmi}
-          onChange={handleVitalStatsChange}
-          className="text-gray-600 border rounded p-1"
-        />
-        <input
-          type="text"
-          name="bloodPressure"
-          value={vitalStats.bloodPressure}
-          onChange={handleVitalStatsChange}
-          className="text-gray-600 border rounded p-1"
-        />
-        <input
-          type="text"
-          name="temperature"
-          value={vitalStats.temperature}
-          onChange={handleVitalStatsChange}
-          className="text-gray-600 border rounded p-1"
-        />
-        <input
-          type="text"
-          name="pulseRate"
-          value={vitalStats.pulseRate}
-          onChange={handleVitalStatsChange}
-          className="text-gray-600 border rounded p-1"
-        />
-      </div>
-    ) : (
-      <div className="space-y-2">
-        <p className="text-gray-600">Height: {vitalStats.height}</p>
-        <p className="text-gray-600">Weight: {vitalStats.weight}</p>
-        <p className="text-gray-600">BMI: {vitalStats.bmi}</p>
-        <p className="text-gray-600">Blood Pressure: {vitalStats.bloodPressure}</p>
-        <p className="text-gray-600">Temperature: {vitalStats.temperature}</p>
-        <p className="text-gray-600">Pulse Rate: {vitalStats.pulseRate}</p>
-        <p className="text-gray-400 text-sm mt-4">Last updated: 25 Jan 2025</p>
-      </div>
-    )}
-  </div>
+            {/* Vital Statistics */}
+            <div className="col-span-2 bg-white rounded-lg shadow-sm border p-6">
+              <div className="flex justify-between items-start">
+                <h3 className="text-lg font-semibold mb-4">Vital Statistics</h3>
+                <button onClick={() => setIsEditingVitalStats(!isEditingVitalStats)}>
+                  <PenSquare className="text-gray-400 w-5 h-5" />
+                </button>
+              </div>
+              {isEditingVitalStats ? (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    name="height"
+                    value={vitalStats.height}
+                    onChange={handleVitalStatsChange}
+                    className="text-gray-600 border rounded p-1"
+                  />
+                  <input
+                    type="text"
+                    name="weight"
+                    value={vitalStats.weight}
+                    onChange={handleVitalStatsChange}
+                    className="text-gray-600 border rounded p-1"
+                  />
+                  <input
+                    type="text"
+                    name="bmi"
+                    value={vitalStats.bmi}
+                    onChange={handleVitalStatsChange}
+                    className="text-gray-600 border rounded p-1"
+                  />
+                  <input
+                    type="text"
+                    name="bloodPressure"
+                    value={vitalStats.bloodPressure}
+                    onChange={handleVitalStatsChange}
+                    className="text-gray-600 border rounded p-1"
+                  />
+                  <input
+                    type="text"
+                    name="temperature"
+                    value={vitalStats.temperature}
+                    onChange={handleVitalStatsChange}
+                    className="text-gray-600 border rounded p-1"
+                  />
+                  <input
+                    type="text"
+                    name="pulseRate"
+                    value={vitalStats.pulseRate}
+                    onChange={handleVitalStatsChange}
+                    className="text-gray-600 border rounded p-1"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-gray-600">Height: {vitalStats.height}</p>
+                  <p className="text-gray-600">Weight: {vitalStats.weight}</p>
+                  <p className="text-gray-600">BMI: {vitalStats.bmi}</p>
+                  <p className="text-gray-600">Blood Pressure: {vitalStats.bloodPressure}</p>
+                  <p className="text-gray-600">Temperature: {vitalStats.temperature}</p>
+                  <p className="text-gray-600">Pulse Rate: {vitalStats.pulseRate}</p>
+                  <p className="text-gray-400 text-sm mt-4">Last updated: 25 Jan 2025</p>
+                </div>
+              )}
+            </div>
 
             {/* Emergency Contact */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
