@@ -6,6 +6,71 @@ import { BarChart3, Bell, Facebook, Instagram, Mail, PenSquare, Settings, Timer,
 
 
 const PatientDashboard = () => {
+  // State for Patient Info
+  const [isEditingPatientInfo, setIsEditingPatientInfo] = useState(false);
+  const [patientInfo, setPatientInfo] = useState({
+    name: "Sarah Johnson",
+    dob: "15 May 1985",
+    bloodType: "A+"
+  });
+
+  // State for Emergency Contact
+  const [isEditingEmergencyContact, setIsEditingEmergencyContact] = useState(false);
+  const [emergencyContact, setEmergencyContact] = useState({
+    name: "Michael Johnson",
+    relation: "Spouse",
+    phone: "+1 (555) 876-5432"
+  });
+
+  // State for Allergies
+  const [isEditingAllergies, setIsEditingAllergies] = useState(false);
+  const [allergies, setAllergies] = useState([
+    { severity: "Severe", type: "Drug", name: "Penicillin" },
+    { severity: "Moderate", type: "Food", name: "Peanuts" },
+    { severity: "Mild", type: "Environmental", name: "Pollen" }
+  ]);
+
+  // State for Vital Statistics
+  const [isEditingVitalStats, setIsEditingVitalStats] = useState(false);
+  const [vitalStats, setVitalStats] = useState({
+    height: "170 cm",
+    weight: "70 kg",
+    bmi: "24.2",
+    bloodPressure: "120/80 mmHg",
+    temperature: "98.6°F",
+    pulseRate: "72 bpm"
+  });
+
+  const handleVitalStatsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setVitalStats(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
+  const handlePatientInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPatientInfo(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
+  const handleEmergencyContactChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEmergencyContact(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
+  const handleAllergyChange = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    const updatedAllergies = [...allergies];
+    updatedAllergies[index][name as keyof typeof updatedAllergies[number]] = value;
+    setAllergies(updatedAllergies);
+  };
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -100,39 +165,151 @@ const PatientDashboard = () => {
                 <span className="text-blue-600 text-xl font-semibold">SJ</span>
               </div>
               <div>
-                <h2 className="text-xl font-bold">Sarah Johnson</h2>
-                <p className="text-gray-600">DOB: 15 May 1985</p>
-                <p className="text-gray-600">Blood Type: A+</p>
+                {isEditingPatientInfo ? (
+                  <>
+                    <input
+                      type="text"
+                      name="name"
+                      value={patientInfo.name}
+                      onChange={handlePatientInfoChange}
+                      className="text-xl font-bold border rounded p-1"
+                    />
+                    <input
+                      type="text"
+                      name="dob"
+                      value={patientInfo.dob}
+                      onChange={handlePatientInfoChange}
+                      className="text-gray-600 border rounded p-1 mt-1"
+                    />
+                    <input
+                      type="text"
+                      name="bloodType"
+                      value={patientInfo.bloodType}
+                      onChange={handlePatientInfoChange}
+                      className="text-gray-600 border rounded p-1 mt-1"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-xl font-bold">{patientInfo.name}</h2>
+                    <p className="text-gray-600">DOB: {patientInfo.dob}</p>
+                    <p className="text-gray-600">Blood Type: {patientInfo.bloodType}</p>
+                  </>
+                )}
               </div>
             </div>
-            <PenSquare className="text-gray-400 w-5 h-5" />
+            <button onClick={() => setIsEditingPatientInfo(!isEditingPatientInfo)}>
+              <PenSquare className="text-gray-400 w-5 h-5" />
+            </button>
           </div>
 
           <div className="mt-6 grid grid-cols-3 gap-6">
-            {/* Vital Statistics */}
-            <div className="col-span-2 bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold mb-4">Vital Statistics</h3>
-              <div className="space-y-2">
-                <p className="text-gray-600">Height: 5'7" (170 cm)</p>
-                <p className="text-gray-600">Weight: 145 lbs (65.8 kg)</p>
-                <p className="text-gray-600">BMI: 22.7</p>
-                <p className="text-gray-600">Blood Pressure: 120/80 mmHg</p>
-                <p className="text-gray-600">Temperature: 98.6°F (37°C)</p>
-                <p className="text-gray-600">Pulse Rate: 72 bpm</p>
-                <p className="text-gray-400 text-sm mt-4">Last updated: 25 Jan 2025</p>
-              </div>
-            </div>
+  {/* Vital Statistics */}
+  <div className="col-span-2 bg-white rounded-lg shadow-sm border p-6">
+    <div className="flex justify-between items-start">
+      <h3 className="text-lg font-semibold mb-4">Vital Statistics</h3>
+      <button onClick={() => setIsEditingVitalStats(!isEditingVitalStats)}>
+        <PenSquare className="text-gray-400 w-5 h-5" />
+      </button>
+    </div>
+    {isEditingVitalStats ? (
+      <div className="space-y-2">
+        <input
+          type="text"
+          name="height"
+          value={vitalStats.height}
+          onChange={handleVitalStatsChange}
+          className="text-gray-600 border rounded p-1"
+        />
+        <input
+          type="text"
+          name="weight"
+          value={vitalStats.weight}
+          onChange={handleVitalStatsChange}
+          className="text-gray-600 border rounded p-1"
+        />
+        <input
+          type="text"
+          name="bmi"
+          value={vitalStats.bmi}
+          onChange={handleVitalStatsChange}
+          className="text-gray-600 border rounded p-1"
+        />
+        <input
+          type="text"
+          name="bloodPressure"
+          value={vitalStats.bloodPressure}
+          onChange={handleVitalStatsChange}
+          className="text-gray-600 border rounded p-1"
+        />
+        <input
+          type="text"
+          name="temperature"
+          value={vitalStats.temperature}
+          onChange={handleVitalStatsChange}
+          className="text-gray-600 border rounded p-1"
+        />
+        <input
+          type="text"
+          name="pulseRate"
+          value={vitalStats.pulseRate}
+          onChange={handleVitalStatsChange}
+          className="text-gray-600 border rounded p-1"
+        />
+      </div>
+    ) : (
+      <div className="space-y-2">
+        <p className="text-gray-600">Height: {vitalStats.height}</p>
+        <p className="text-gray-600">Weight: {vitalStats.weight}</p>
+        <p className="text-gray-600">BMI: {vitalStats.bmi}</p>
+        <p className="text-gray-600">Blood Pressure: {vitalStats.bloodPressure}</p>
+        <p className="text-gray-600">Temperature: {vitalStats.temperature}</p>
+        <p className="text-gray-600">Pulse Rate: {vitalStats.pulseRate}</p>
+        <p className="text-gray-400 text-sm mt-4">Last updated: 25 Jan 2025</p>
+      </div>
+    )}
+  </div>
 
             {/* Emergency Contact */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="flex justify-between items-start">
                 <h3 className="text-lg font-semibold">Emergency Contact</h3>
-                <PenSquare className="text-gray-400 w-5 h-5" />
+                <button onClick={() => setIsEditingEmergencyContact(!isEditingEmergencyContact)}>
+                  <PenSquare className="text-gray-400 w-5 h-5" />
+                </button>
               </div>
               <div className="mt-4 space-y-2">
-                <p className="text-gray-600">Name: Michael Johnson</p>
-                <p className="text-gray-600">Relation: Spouse</p>
-                <p className="text-gray-600">Phone: +1 (555) 876-5432</p>
+                {isEditingEmergencyContact ? (
+                  <>
+                    <input
+                      type="text"
+                      name="name"
+                      value={emergencyContact.name}
+                      onChange={handleEmergencyContactChange}
+                      className="text-gray-600 border rounded p-1"
+                    />
+                    <input
+                      type="text"
+                      name="relation"
+                      value={emergencyContact.relation}
+                      onChange={handleEmergencyContactChange}
+                      className="text-gray-600 border rounded p-1"
+                    />
+                    <input
+                      type="text"
+                      name="phone"
+                      value={emergencyContact.phone}
+                      onChange={handleEmergencyContactChange}
+                      className="text-gray-600 border rounded p-1"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <p className="text-gray-600">Name: {emergencyContact.name}</p>
+                    <p className="text-gray-600">Relation: {emergencyContact.relation}</p>
+                    <p className="text-gray-600">Phone: {emergencyContact.phone}</p>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -141,21 +318,50 @@ const PatientDashboard = () => {
           <div className="mt-6 bg-white rounded-lg shadow-sm border p-6">
             <div className="flex justify-between items-start">
               <h3 className="text-lg font-semibold">Allergies</h3>
-              <PenSquare className="text-gray-400 w-5 h-5" />
+              <button onClick={() => setIsEditingAllergies(!isEditingAllergies)}>
+                <PenSquare className="text-gray-400 w-5 h-5" />
+              </button>
             </div>
             <div className="mt-4 space-y-3">
-              <div className="flex items-center space-x-2">
-                <span className="px-2 py-1 bg-red-500 text-white text-sm rounded">Severe</span>
-                <span className="text-gray-600">Drug: Penicillin</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="px-2 py-1 bg-yellow-500 text-black text-sm rounded">Moderate</span>
-                <span className="text-gray-600">Food: Peanuts</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="px-2 py-1 bg-gray-800 text-white text-sm rounded">Mild</span>
-                <span className="text-gray-600">Environmental: Pollen</span>
-              </div>
+              {allergies.map((allergy, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  {isEditingAllergies ? (
+                    <>
+                      <select
+                        name="severity"
+                        value={allergy.severity}
+                        onChange={(e) => handleAllergyChange(index, e)}
+                        className="px-2 py-1 bg-gray-200 text-sm rounded"
+                      >
+                        <option value="Severe">Severe</option>
+                        <option value="Moderate">Moderate</option>
+                        <option value="Mild">Mild</option>
+                      </select>
+                      <input
+                        type="text"
+                        name="type"
+                        value={allergy.type}
+                        onChange={(e) => handleAllergyChange(index, e)}
+                        className="text-gray-600 border rounded p-1"
+                      />
+                      <input
+                        type="text"
+                        name="name"
+                        value={allergy.name}
+                        onChange={(e) => handleAllergyChange(index, e)}
+                        className="text-gray-600 border rounded p-1"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <span className={`px-2 py-1 bg-${allergy.severity === 'Severe' ? 'red' : allergy.severity === 'Moderate' ? 'yellow' : 'gray'}-500 text-white text-sm rounded`}>
+                        {allergy.severity}
+                      </span>
+                      <span className="text-gray-600">{allergy.type}: {allergy.name}</span>
+                    </>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
@@ -172,6 +378,5 @@ const PatientDashboard = () => {
     </div>
   );
 };
-
 
 export default PatientDashboard;
