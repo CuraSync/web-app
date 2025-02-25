@@ -1,21 +1,22 @@
 "use client";
 import React, { useState } from 'react';
-import { Moon, Users, HelpCircle, LogOut, Settings as SettingsIcon } from 'lucide-react';
+import { Users, HelpCircle, LogOut, Settings as SettingsIcon, Moon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '../sidebar/sidebar'; // Ensure the import path is correct
 
 const SettingsPage = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const router = useRouter();
   const [email, setEmail] = useState('');
-  
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
-  
+
   const handleLogout = () => {
-    // Handle logout logic here
-    console.log('Logging out...');
+    // Clear user data from local storage
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('authToken'); // Assuming you have an auth token
+
+    // Redirect to login page
+    router.push('/auth/login/patient');
   };
-  
+
   const handleInviteSend = () => {
     if (email) {
       console.log(`Sending invite to: ${email}`);
@@ -23,12 +24,17 @@ const SettingsPage = () => {
       setEmail(''); // Clear the input after sending
     }
   };
-  
+
+  const toggleDarkMode = () => {
+    // Placeholder function for dark mode toggle
+    console.log('Dark mode toggle clicked');
+  };
+
   return (
-    <div className="bg-white min-h-screen flex font-sans">
+    <div className="min-h-screen flex font-sans bg-white text-gray-900">
       <Sidebar /> {/* Use the Sidebar component here */}
       <div className="p-8 flex-1 flex justify-center items-center">
-        <div className="w-full max-w-4xl bg-white border border-gray-200 rounded-lg shadow-md">
+        <div className="w-full max-w-4xl border rounded-lg shadow-md bg-white border-gray-200">
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-xl font-medium flex items-center">
               <SettingsIcon className="w-6 h-6 mr-2" />
@@ -44,7 +50,7 @@ const SettingsPage = () => {
                 </svg>
               </div>
               <div className="ml-6">
-                <p className="text-xl font-medium text-gray-900">John Anderson</p>
+                <p className="text-xl font-medium">John Anderson</p>
                 <p className="text-base text-blue-500">john.anderson@example.com</p>
               </div>
             </div>
@@ -53,14 +59,14 @@ const SettingsPage = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <Moon className="w-8 h-8 text-gray-500" />
-                  <span className="ml-4 text-base text-gray-700">Dark Mode</span>
+                  <span className="ml-4 text-base">Dark Mode</span>
                 </div>
                 <button 
                   onClick={toggleDarkMode}
-                  className={`w-16 h-8 rounded-full relative transition-colors duration-200 ease-in-out ${darkMode ? "bg-blue-500" : "bg-gray-200"}`}
+                  className="w-16 h-8 rounded-full relative transition-colors duration-200 ease-in-out bg-gray-200"
                 >
                   <span 
-                    className={`absolute top-1 left-1 bg-white w-6 h-6 rounded-full shadow transform transition-transform duration-200 ease-in-out ${darkMode ? "translate-x-8" : ""}`}
+                    className="absolute top-1 left-1 bg-white w-6 h-6 rounded-full shadow transform transition-transform duration-200 ease-in-out"
                   />
                 </button>
               </div>
@@ -69,13 +75,13 @@ const SettingsPage = () => {
             <div className="py-8 border-b border-gray-200">
               <div className="mb-4 flex items-center">
                 <Users className="w-8 h-8 text-gray-500" />
-                <span className="ml-4 text-base text-gray-700">Invite Friends</span>
+                <span className="ml-4 text-base">Invite Friends</span>
               </div>
               <div className="flex mt-4">
                 <input 
                   type="email" 
                   placeholder="Enter email address" 
-                  className="flex-1 px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-4 py-3 text-base border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white border-gray-300 text-gray-900"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -92,7 +98,7 @@ const SettingsPage = () => {
               <button className="flex items-center justify-between w-full text-left">
                 <div className="flex items-center">
                   <HelpCircle className="w-8 h-8 text-gray-500" />
-                  <span className="ml-4 text-base text-gray-700">Help & Support</span>
+                  <span className="ml-4 text-base">Help & Support</span>
                 </div>
                 <svg className="w-8 h-8 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
