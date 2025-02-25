@@ -1,13 +1,14 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BarChart3, Bell, Facebook, Instagram, Mail, PenSquare, Settings, Timer, Twitter, User } from 'lucide-react';
+import { Bell, Facebook, Instagram, Mail, PenSquare, Settings, Timer, Twitter, User } from 'lucide-react';
 import Link from 'next/link';
-import { FaChartBar, FaCog, FaEnvelope, FaFlask, FaUserMd } from 'react-icons/fa';
+import { FaChartBar, FaCog, FaEnvelope, FaFlask, FaUserMd, FaPrescriptionBottleAlt } from 'react-icons/fa';
 import { FaBell } from 'react-icons/fa6';
 
 const PatientDashboard = () => {
-  // State for Patient Info
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
   const [isEditingPatientInfo, setIsEditingPatientInfo] = useState(false);
   const [patientInfo, setPatientInfo] = useState({
     name: "Sarah Johnson",
@@ -15,7 +16,6 @@ const PatientDashboard = () => {
     bloodType: "A+"
   });
 
-  // State for Emergency Contact
   const [isEditingEmergencyContact, setIsEditingEmergencyContact] = useState(false);
   const [emergencyContact, setEmergencyContact] = useState({
     name: "Michael Johnson",
@@ -23,7 +23,6 @@ const PatientDashboard = () => {
     phone: "+1 (555) 876-5432"
   });
 
-  // State for Allergies
   const [isEditingAllergies, setIsEditingAllergies] = useState(false);
   const [allergies, setAllergies] = useState([
     { severity: "Severe", type: "Drug", name: "Penicillin" },
@@ -31,7 +30,6 @@ const PatientDashboard = () => {
     { severity: "Mild", type: "Environmental", name: "Pollen" }
   ]);
 
-  // State for Vital Statistics
   const [isEditingVitalStats, setIsEditingVitalStats] = useState(false);
   const [vitalStats, setVitalStats] = useState({
     height: "170 cm",
@@ -41,40 +39,6 @@ const PatientDashboard = () => {
     temperature: "98.6°F",
     pulseRate: "72 bpm"
   });
-
-  const handleVitalStatsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setVitalStats(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
-  };
-
-  const handlePatientInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setPatientInfo(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
-  };
-
-  const handleEmergencyContactChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEmergencyContact(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
-  };
-
-  const handleAllergyChange = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    const updatedAllergies = [...allergies];
-    updatedAllergies[index][name as keyof typeof updatedAllergies[number]] = value;
-    setAllergies(updatedAllergies);
-  };
-
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const userRole = localStorage.getItem('userRole');
@@ -106,7 +70,7 @@ const PatientDashboard = () => {
 
         {/* Navigation */}
         <nav className="mt-12 space-y-6">
-        <Link href="/dashboard/patient/doctor" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
+          <Link href="/dashboard/patient/doctor" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
             <FaUserMd className="w-5 h-5" />
             <span>Doctor</span>
           </Link>
@@ -114,17 +78,25 @@ const PatientDashboard = () => {
             <FaChartBar className="w-5 h-5" />
             <span>Timeline</span>
           </Link>
+          <Link href="/dashboard/patient/laboratory" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
+            <FaFlask className="w-5 h-5" />
+            <span>Laboratory</span>
+          </Link>
           <Link href="/dashboard/patient/visualization" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
             <FaFlask className="w-5 h-5" />
             <span>Visualization</span>
           </Link>
-          <Link href="/dashboard/patient/messaging" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
+          <Link href="/dashboard/patient/pharmacy" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
+            <FaPrescriptionBottleAlt className="w-5 h-5" />
+            <span>Pharmacy</span>
+          </Link>
+          <Link href="/dashboard/patient/message" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
             <FaEnvelope className="w-5 h-5" />
             <span>Messaging</span>
           </Link>
-          <Link href="/dashboard/patient/request" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
+          <Link href="/dashboard/patient/notification" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
             <FaBell className="w-5 h-5" />
-            <span>Request</span>
+            <span>Notification</span>
           </Link>
           <Link href="/dashboard/patient/settings" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
             <FaCog className="w-5 h-5" />
@@ -135,7 +107,7 @@ const PatientDashboard = () => {
         {/* User Profile */}
         <div className="mt-auto flex items-center space-x-3">
           <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-          <span className="text-gray-700">Nithya Kumar</span>
+          <span className="text-gray-700">Sarah Johnson</span>
         </div>
       </aside>
 
@@ -177,21 +149,21 @@ const PatientDashboard = () => {
                       type="text"
                       name="name"
                       value={patientInfo.name}
-                      onChange={handlePatientInfoChange}
+                      onChange={(e) => setPatientInfo({ ...patientInfo, name: e.target.value })}
                       className="text-xl font-bold border rounded p-1"
                     />
                     <input
                       type="text"
                       name="dob"
                       value={patientInfo.dob}
-                      onChange={handlePatientInfoChange}
+                      onChange={(e) => setPatientInfo({ ...patientInfo, dob: e.target.value })}
                       className="text-gray-600 border rounded p-1 mt-1"
                     />
                     <input
                       type="text"
                       name="bloodType"
                       value={patientInfo.bloodType}
-                      onChange={handlePatientInfoChange}
+                      onChange={(e) => setPatientInfo({ ...patientInfo, bloodType: e.target.value })}
                       className="text-gray-600 border rounded p-1 mt-1"
                     />
                   </>
@@ -224,42 +196,42 @@ const PatientDashboard = () => {
                     type="text"
                     name="height"
                     value={vitalStats.height}
-                    onChange={handleVitalStatsChange}
+                    onChange={(e) => setVitalStats({ ...vitalStats, height: e.target.value })}
                     className="text-gray-600 border rounded p-1"
                   />
                   <input
                     type="text"
                     name="weight"
                     value={vitalStats.weight}
-                    onChange={handleVitalStatsChange}
+                    onChange={(e) => setVitalStats({ ...vitalStats, weight: e.target.value })}
                     className="text-gray-600 border rounded p-1"
                   />
                   <input
                     type="text"
                     name="bmi"
                     value={vitalStats.bmi}
-                    onChange={handleVitalStatsChange}
+                    onChange={(e) => setVitalStats({ ...vitalStats, bmi: e.target.value })}
                     className="text-gray-600 border rounded p-1"
                   />
                   <input
                     type="text"
                     name="bloodPressure"
                     value={vitalStats.bloodPressure}
-                    onChange={handleVitalStatsChange}
+                    onChange={(e) => setVitalStats({ ...vitalStats, bloodPressure: e.target.value })}
                     className="text-gray-600 border rounded p-1"
                   />
                   <input
                     type="text"
                     name="temperature"
                     value={vitalStats.temperature}
-                    onChange={handleVitalStatsChange}
+                    onChange={(e) => setVitalStats({ ...vitalStats, temperature: e.target.value })}
                     className="text-gray-600 border rounded p-1"
                   />
                   <input
                     type="text"
                     name="pulseRate"
                     value={vitalStats.pulseRate}
-                    onChange={handleVitalStatsChange}
+                    onChange={(e) => setVitalStats({ ...vitalStats, pulseRate: e.target.value })}
                     className="text-gray-600 border rounded p-1"
                   />
                 </div>
@@ -291,21 +263,21 @@ const PatientDashboard = () => {
                       type="text"
                       name="name"
                       value={emergencyContact.name}
-                      onChange={handleEmergencyContactChange}
+                      onChange={(e) => setEmergencyContact({ ...emergencyContact, name: e.target.value })}
                       className="text-gray-600 border rounded p-1"
                     />
                     <input
                       type="text"
                       name="relation"
                       value={emergencyContact.relation}
-                      onChange={handleEmergencyContactChange}
+                      onChange={(e) => setEmergencyContact({ ...emergencyContact, relation: e.target.value })}
                       className="text-gray-600 border rounded p-1"
                     />
                     <input
                       type="text"
                       name="phone"
                       value={emergencyContact.phone}
-                      onChange={handleEmergencyContactChange}
+                      onChange={(e) => setEmergencyContact({ ...emergencyContact, phone: e.target.value })}
                       className="text-gray-600 border rounded p-1"
                     />
                   </>
@@ -336,7 +308,11 @@ const PatientDashboard = () => {
                       <select
                         name="severity"
                         value={allergy.severity}
-                        onChange={(e) => handleAllergyChange(index, e)}
+                        onChange={(e) => {
+                          const newAllergies = [...allergies];
+                          newAllergies[index] = { ...allergy, severity: e.target.value };
+                          setAllergies(newAllergies);
+                        }}
                         className="px-2 py-1 bg-gray-200 text-sm rounded"
                       >
                         <option value="Severe">Severe</option>
@@ -347,14 +323,22 @@ const PatientDashboard = () => {
                         type="text"
                         name="type"
                         value={allergy.type}
-                        onChange={(e) => handleAllergyChange(index, e)}
+                        onChange={(e) => {
+                          const newAllergies = [...allergies];
+                          newAllergies[index] = { ...allergy, type: e.target.value };
+                          setAllergies(newAllergies);
+                        }}
                         className="text-gray-600 border rounded p-1"
                       />
                       <input
                         type="text"
                         name="name"
                         value={allergy.name}
-                        onChange={(e) => handleAllergyChange(index, e)}
+                        onChange={(e) => {
+                          const newAllergies = [...allergies];
+                          newAllergies[index] = { ...allergy, name: e.target.value };
+                          setAllergies(newAllergies);
+                        }}
                         className="text-gray-600 border rounded p-1"
                       />
                     </>
