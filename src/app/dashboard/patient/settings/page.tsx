@@ -1,190 +1,121 @@
 "use client";
 import React, { useState } from 'react';
-import { MessageCircle, Calendar, User, Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Moon, Users, HelpCircle, LogOut, Mail, BarChart2, User, ShoppingBag, Bell, Settings as SettingsIcon } from 'lucide-react';
+import Link from 'next/link';
+import { Beaker } from 'lucide-react';
 
-const DoctorSearch = () => {
-  const router = useRouter();
-  const [viewMode, setViewMode] = useState('cards');
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const doctors = [
-    {
-      id: 1,
-      name: "Dr. James Bond",
-      type: "Neurologist",
-      experience: "15 years experience",
-      rating: 4.8,
-      availability: ["Mon", "Wed", "Fri"],
-      lastVisit: "04/10/2023"
-    },
-    {
-      id: 2,
-      name: "Dr. Sarah Jhons",
-      type: "Surgeon",
-      experience: "12 years experience",
-      rating: 4.9,
-      availability: ["Tue", "Thu", "Sat"],
-      lastVisit: "04/10/2023"
-    },
-    {
-      id: 3,
-      name: "Dr. Aseem Naizer",
-      type: "Oncologist",
-      experience: "10 years experience",
-      rating: 4.7,
-      availability: ["Mon", "Thu", "Fri"],
-      lastVisit: "04/10/2023"
-    },
-    {
-      id: 4,
-      name: "Dr. Travis Oman",
-      type: "Dentist",
-      experience: "8 years experience",
-      rating: 4.6,
-      availability: ["Wed", "Thu", "Sat"],
-      lastVisit: "04/10/2023"
-    },
-    {
-      id: 5,
-      name: "Dr. Vivian Moner",
-      type: "Ophthalmologist",
-      experience: "14 years experience",
-      rating: 4.8,
-      availability: ["Mon", "Tue", "Fri"],
-      lastVisit: "04/10/2023"
-    }
-  ];
-
-  const handleMessageClick = () => {
-    router.push('/dashboard/patient/message');
+const SettingsPage = () => {
+  const [darkMode, setDarkMode] = useState(false);
+  const [email, setEmail] = useState('');
+  
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
   };
-
+  
+  const handleLogout = () => {
+    // Handle logout logic here
+    console.log('Logging out...');
+  };
+  
+  const handleInviteSend = () => {
+    if (email) {
+      console.log(`Sending invite to: ${email}`);
+      // Add your invite logic here
+      setEmail(''); // Clear the input after sending
+    }
+  };
+  
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Find a Doctor</h1>
-        <div className="flex items-center">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search doctors..."
-              className="w-64 pl-10 pr-4 py-2 border rounded-lg"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+    <div className="min-h-screen bg-gray-50 p-8 flex justify-center items-center">
+      <div className="w-full max-w-4xl bg-white border border-gray-200 rounded-lg shadow-md">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <h2 className="text-2xl font-medium flex items-center">
+            <SettingsIcon className="w-6 h-6 mr-2" />
+            Settings
+          </h2>
+        </div>
+        
+        <div className="p-8">
+          <div className="flex items-center pb-8 border-b border-gray-200">
+            <div className="relative w-20 h-20 overflow-hidden rounded-full bg-gray-100">
+              <svg className="absolute w-24 h-24 text-gray-400 -left-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-6">
+              <p className="text-2xl font-medium text-gray-900">John Anderson</p>
+              <p className="text-lg text-blue-500">john.anderson@example.com</p>
+            </div>
           </div>
-          <div className="ml-4 space-x-2">
-            <button
-              onClick={() => setViewMode('cards')}
-              className={`px-4 py-2 rounded ${viewMode === 'cards' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            >
-              Cards
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`px-4 py-2 rounded ${viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-            >
-              List
+          
+          <div className="py-8 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Moon className="w-8 h-8 text-gray-500" />
+                <span className="ml-4 text-lg text-gray-700">Dark Mode</span>
+              </div>
+              <button 
+                onClick={toggleDarkMode}
+                className={`w-16 h-8 rounded-full relative transition-colors duration-200 ease-in-out ${darkMode ? "bg-blue-500" : "bg-gray-200"}`}
+              >
+                <span 
+                  className={`absolute top-1 left-1 bg-white w-6 h-6 rounded-full shadow transform transition-transform duration-200 ease-in-out ${darkMode ? "translate-x-8" : ""}`}
+                />
+              </button>
+            </div>
+          </div>
+          
+          <div className="py-8 border-b border-gray-200">
+            <div className="mb-4 flex items-center">
+              <Users className="w-8 h-8 text-gray-500" />
+              <span className="ml-4 text-lg text-gray-700">Invite Friends</span>
+            </div>
+            <div className="flex mt-4">
+              <input 
+                type="email" 
+                placeholder="Enter email address" 
+                className="flex-1 px-4 py-3 text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <button 
+                onClick={handleInviteSend}
+                className="ml-4 px-8 py-3 bg-gray-800 text-white text-lg font-medium rounded-md hover:bg-gray-700 transition-colors"
+              >
+                Send Invite
+              </button>
+            </div>
+          </div>
+          
+          <div className="py-8 border-b border-gray-200">
+            <button className="flex items-center justify-between w-full text-left">
+              <div className="flex items-center">
+                <HelpCircle className="w-8 h-8 text-gray-500" />
+                <span className="ml-4 text-lg text-gray-700">Help & Support</span>
+              </div>
+              <svg className="w-8 h-8 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
             </button>
           </div>
+          
+          <div className="py-8">
+            <button 
+              onClick={handleLogout}
+              className="flex items-center text-lg text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              <LogOut className="w-8 h-8 text-gray-500" />
+              <span className="ml-4">Logout</span>
+            </button>
+          </div>
+        </div>
+        
+        <div className="p-6 text-center text-sm text-gray-500 border-t border-gray-200">
+          © 2025 CuraSync. All rights reserved.
         </div>
       </div>
-
-      {viewMode === 'cards' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {doctors.map(doctor => (
-            <div key={doctor.id} className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-start">
-                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-600">
-                  {doctor.name.split(' ')[1][0]}
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-lg font-semibold">{doctor.name}</h3>
-                  <p className="text-gray-600">{doctor.type}</p>
-                  <p className="text-gray-500 text-sm">{doctor.experience}</p>
-                </div>
-              </div>
-              <div className="mt-4">
-                <p className="text-gray-600">Available:</p>
-                <div className="flex space-x-2 mt-1">
-                  {doctor.availability.map(day => (
-                    <span key={day} className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-sm">
-                      {day}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="mt-4 flex items-center justify-between">
-                <div className="flex items-center">
-                  <span className="text-yellow-400">★</span>
-                  <span className="ml-1">{doctor.rating}</span>
-                </div>
-                <div className="flex space-x-2">
-                  <button className="p-2 hover:bg-gray-100 rounded-full">
-                    <Calendar className="w-5 h-5 text-blue-500" />
-                  </button>
-                  <button 
-                    onClick={handleMessageClick}
-                    className="p-2 hover:bg-gray-100 rounded-full flex items-center"
-                  >
-                    <MessageCircle className="w-5 h-5 text-blue-500" />
-                  </button>
-                  <button className="p-2 hover:bg-gray-100 rounded-full">
-                    <User className="w-5 h-5 text-blue-500" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg shadow">
-          <table className="min-w-full">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="px-6 py-3 text-left text-gray-600">Doctor's Name</th>
-                <th className="px-6 py-3 text-left text-gray-600">Doctor's Type</th>
-                <th className="px-6 py-3 text-left text-gray-600">Last Visit</th>
-                <th className="px-6 py-3 text-left text-gray-600">Messaging</th>
-                <th className="px-6 py-3 text-left text-gray-600">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {doctors.map(doctor => (
-                <tr key={doctor.id} className="border-t">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-3">
-                        {doctor.name.split(' ')[1][0]}
-                      </div>
-                      {doctor.name}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">{doctor.type}</td>
-                  <td className="px-6 py-4">{doctor.lastVisit}</td>
-                  <td className="px-6 py-4">
-                    <button 
-                      onClick={handleMessageClick}
-                      className="p-2 hover:bg-gray-100 rounded-full flex items-center"
-                    >
-                      <MessageCircle className="w-5 h-5 text-blue-500" />
-                    </button>
-                  </td>
-                  <td className="px-6 py-4">
-                    <button className="px-3 py-1 bg-gray-800 text-white rounded">
-                      Add
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
     </div>
   );
 };
 
-export default DoctorSearch;
+export default SettingsPage;
