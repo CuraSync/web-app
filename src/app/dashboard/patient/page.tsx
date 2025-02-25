@@ -50,6 +50,29 @@ const PatientDashboard = () => {
     }
   }, [router]);
 
+  const handleSavePatientInfo = () => {
+    // Save patient info logic here
+    setIsEditingPatientInfo(false);
+    console.log('Patient info saved:', patientInfo);
+  };
+
+  const handleSaveEmergencyContact = () => {
+    // Save emergency contact logic here
+    setIsEditingEmergencyContact(false);
+    console.log('Emergency contact saved:', emergencyContact);
+  };
+
+  const handleSaveAllergies = () => {
+    // Save allergies logic here
+    setIsEditingAllergies(false);
+    console.log('Allergies saved:', allergies);
+  };
+
+  const handleSaveVitalStats = () => {
+    // Save vital stats logic here
+    setIsEditingVitalStats(false);
+    console.log('Vital stats saved:', vitalStats);
+  };
 
   if (isLoading) {
     return <div className="min-h-screen bg-gray-50 p-8">Loading...</div>;
@@ -57,8 +80,8 @@ const PatientDashboard = () => {
 
   return (
     <div className="bg-white min-h-screen flex font-sans">
-      {/*Sidebar */}
-        <Sidebar/>
+      {/* Sidebar */}
+      <Sidebar />
     
       {/* Main Content */}
       <main className="flex-1">    
@@ -94,6 +117,7 @@ const PatientDashboard = () => {
                       onChange={(e) => setPatientInfo({ ...patientInfo, bloodType: e.target.value })}
                       className="text-gray-600 border rounded p-1 mt-1"
                     />
+                    <button onClick={handleSavePatientInfo} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md">Save</button>
                   </>
                 ) : (
                   <>
@@ -162,6 +186,9 @@ const PatientDashboard = () => {
                     onChange={(e) => setVitalStats({ ...vitalStats, pulseRate: e.target.value })}
                     className="text-gray-600 border rounded p-1"
                   />
+                  <div className="flex justify-end">
+                    <button onClick={handleSaveVitalStats} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md">Save</button>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -208,6 +235,9 @@ const PatientDashboard = () => {
                       onChange={(e) => setEmergencyContact({ ...emergencyContact, phone: e.target.value })}
                       className="text-gray-600 border rounded p-1"
                     />
+                    <div className="flex justify-end">
+                      <button onClick={handleSaveEmergencyContact} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md">Save</button>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -272,7 +302,7 @@ const PatientDashboard = () => {
                     </>
                   ) : (
                     <>
-                      <span className={`px-2 py-1 bg-${allergy.severity === 'Severe' ? 'red' : allergy.severity === 'Moderate' ? 'yellow' : 'gray'}-500 text-white text-sm rounded`}>
+                      <span className={`px-2 py-1 ${allergy.severity === 'Severe' ? 'bg-red-500' : allergy.severity === 'Moderate' ? 'bg-yellow-500' : 'bg-gray-500'} text-white text-sm rounded`}>
                         {allergy.severity}
                       </span>
                       <span className="text-gray-600">{allergy.type}: {allergy.name}</span>
@@ -280,6 +310,11 @@ const PatientDashboard = () => {
                   )}
                 </div>
               ))}
+              {isEditingAllergies && (
+                <div className="flex justify-end">
+                  <button onClick={handleSaveAllergies} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md">Save</button>
+                </div>
+              )}
             </div>
           </div>
 
