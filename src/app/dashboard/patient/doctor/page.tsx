@@ -1,8 +1,10 @@
 "use client";
 import React, { useState } from 'react';
 import { MessageCircle, Calendar, User, Search } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const DoctorSearch = () => {
+  const router = useRouter();
   const [viewMode, setViewMode] = useState('cards');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -54,8 +56,8 @@ const DoctorSearch = () => {
     }
   ];
 
-  const handleMessageClick = (doctorId: number) => {
-    console.log(`Message doctor with ID: ${doctorId}`);
+  const handleMessageClick = () => {
+    router.push('/dashboard/patient/message');
   };
 
   return (
@@ -124,7 +126,7 @@ const DoctorSearch = () => {
                     <Calendar className="w-5 h-5 text-blue-500" />
                   </button>
                   <button 
-                    onClick={() => handleMessageClick(doctor.id)}
+                    onClick={handleMessageClick}
                     className="p-2 hover:bg-gray-100 rounded-full flex items-center"
                   >
                     <MessageCircle className="w-5 h-5 text-blue-500" />
@@ -164,7 +166,7 @@ const DoctorSearch = () => {
                   <td className="px-6 py-4">{doctor.lastVisit}</td>
                   <td className="px-6 py-4">
                     <button 
-                      onClick={() => handleMessageClick(doctor.id)}
+                      onClick={handleMessageClick}
                       className="p-2 hover:bg-gray-100 rounded-full flex items-center"
                     >
                       <MessageCircle className="w-5 h-5 text-blue-500" />
