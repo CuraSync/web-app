@@ -5,6 +5,7 @@ import { Bell, Facebook, Instagram, Mail, PenSquare, Settings, Timer, Twitter, U
 import Link from 'next/link';
 import { FaChartBar, FaCog, FaEnvelope, FaFlask, FaUserMd, FaPrescriptionBottleAlt } from 'react-icons/fa';
 import { FaBell } from 'react-icons/fa6';
+import Sidebar from './sidebar/sidebar';
 
 const PatientDashboard = () => {
   const router = useRouter();
@@ -49,91 +50,18 @@ const PatientDashboard = () => {
     }
   }, [router]);
 
+
   if (isLoading) {
     return <div className="min-h-screen bg-gray-50 p-8">Loading...</div>;
   }
 
   return (
     <div className="bg-white min-h-screen flex font-sans">
-      {/* Left Sidebar */}
-      <aside className="w-64 border-r p-6 flex flex-col">
-        {/* Logo */}
-        <div className="flex items-center space-x-2">
-          <div className="w-10 h-10">
-            <svg viewBox="0 0 40 40" className="text-blue-600 w-full h-full">
-              <path d="M20 5C11.716 5 5 11.716 5 20c0 8.284 6.716 15 15 15 8.284 0 15-6.716 15-15 0-8.284-6.716-15-15-15z" fill="currentColor" opacity="0.2"/>
-              <path d="M20 10c-5.523 0-10 4.477-10 10s4.477 10 10 10 10-4.477 10-10-4.477-10-10-10z" fill="currentColor"/>
-            </svg>
-          </div>
-          <h1 className="text-xl font-bold text-blue-600">CuraSync</h1>
-        </div>
-
-        {/* Navigation */}
-        <nav className="mt-12 space-y-6">
-          <Link href="/dashboard/patient/doctor" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
-            <FaUserMd className="w-5 h-5" />
-            <span>Doctor</span>
-          </Link>
-          <Link href="/dashboard/patient/timeline" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
-            <FaChartBar className="w-5 h-5" />
-            <span>Timeline</span>
-          </Link>
-          <Link href="/dashboard/patient/laboratory" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
-            <FaFlask className="w-5 h-5" />
-            <span>Laboratory</span>
-          </Link>
-          <Link href="/dashboard/patient/visualization" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
-            <FaFlask className="w-5 h-5" />
-            <span>Visualization</span>
-          </Link>
-          <Link href="/dashboard/patient/pharmacy" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
-            <FaPrescriptionBottleAlt className="w-5 h-5" />
-            <span>Pharmacy</span>
-          </Link>
-          <Link href="/dashboard/patient/message" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
-            <FaEnvelope className="w-5 h-5" />
-            <span>Messaging</span>
-          </Link>
-          <Link href="/dashboard/patient/notification" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
-            <FaBell className="w-5 h-5" />
-            <span>Notification</span>
-          </Link>
-          <Link href="/dashboard/patient/settings" className="flex items-center space-x-3 text-gray-600 hover:text-blue-600">
-            <FaCog className="w-5 h-5" />
-            <span>Settings</span>
-          </Link>
-        </nav>
-
-        {/* User Profile */}
-        <div className="mt-auto flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-          <span className="text-gray-700">Sarah Johnson</span>
-        </div>
-      </aside>
-
+      {/*Sidebar */}
+        <Sidebar/>
+    
       {/* Main Content */}
-      <main className="flex-1">
-        {/* Header */}
-        <header className="border-b p-4 flex items-center justify-between">
-          <nav className="flex space-x-8">
-            <a href="#" className="text-gray-600 hover:text-gray-900">Home</a>
-            <a href="#" className="text-gray-600 hover:text-gray-900">About Us</a>
-            <a href="#" className="text-gray-600 hover:text-gray-900">Our Services</a>
-            <a href="#" className="text-gray-600 hover:text-gray-900">Contact</a>
-          </nav>
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-4">
-              <Twitter className="w-5 h-5 text-blue-400" />
-              <Facebook className="w-5 h-5 text-blue-600" />
-              <Instagram className="w-5 h-5 text-pink-600" />
-              <User className="w-5 h-5 text-gray-600" />
-            </div>
-            <button className="px-4 py-1 border border-purple-600 text-purple-600 rounded-md">
-              Patient
-            </button>
-          </div>
-        </header>
-
+      <main className="flex-1">    
         {/* Content */}
         <div className="p-6">
           {/* Patient Info Card */}
