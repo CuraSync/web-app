@@ -11,35 +11,57 @@ const PatientDashboard = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isEditingPatientInfo, setIsEditingPatientInfo] = useState(false);
-  const [patientInfo, setPatientInfo] = useState({
-    name: "Sarah Johnson",
-    dob: "15 May 1985",
-    bloodType: "A+"
-  });
-
   const [isEditingEmergencyContact, setIsEditingEmergencyContact] = useState(false);
-  const [emergencyContact, setEmergencyContact] = useState({
-    name: "Michael Johnson",
-    relation: "Spouse",
-    phone: "+1 (555) 876-5432"
-  });
-
   const [isEditingAllergies, setIsEditingAllergies] = useState(false);
-  const [allergies, setAllergies] = useState([
-    { severity: "Severe", type: "Drug", name: "Penicillin" },
-    { severity: "Moderate", type: "Food", name: "Peanuts" },
-    { severity: "Mild", type: "Environmental", name: "Pollen" }
-  ]);
-
   const [isEditingVitalStats, setIsEditingVitalStats] = useState(false);
-  const [vitalStats, setVitalStats] = useState({
-    height: "170 cm",
-    weight: "70 kg",
-    bmi: "24.2",
-    bloodPressure: "120/80 mmHg",
-    temperature: "98.6°F",
-    pulseRate: "72 bpm"
+
+     // Initialize state with data from localStorage
+  const [patientInfo, setPatientInfo] = useState(() => {
+    const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+    return {
+      name: savedData.fullName || "Sarah Johnson",
+      dob: savedData.dateOfBirth || "15 May 1985",
+      bloodType: savedData.bloodType || "A+",
+    };
   });
+
+  const [emergencyContact, setEmergencyContact] = useState(() => {
+    const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+    return {
+      name: savedData.emergencyContactName || "Michael Johnson",
+      relation: savedData.emergencyContactRelation || "Spouse",
+      phone: savedData.emergencyContactPhone || "+1 (555) 876-5432",
+    };
+  });
+
+  const [allergies, setAllergies] = useState(() => {
+    const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+    const allergyText = savedData.allergies || "Penicillin, Peanuts, Pollen";
+    // Parse allergies string into an array of objects if it exists
+    return allergyText
+      ? allergyText.split(',').map((item: string, index: number) => ({
+          severity: index === 0 ? "Severe" : index === 1 ? "Moderate" : "Mild", // Default severity logic
+          type: item.trim().toLowerCase().includes("penicillin") ? "Drug" : item.trim().toLowerCase().includes("peanuts") ? "Food" : "Environmental",
+          name: item.trim(),
+        }))
+      : [
+          { severity: "Severe", type: "Drug", name: "Penicillin" },
+          { severity: "Moderate", type: "Food", name: "Peanuts" },
+          { severity: "Mild", type: "Environmental", name: "Pollen" },
+        ];
+  });
+
+  const [vitalStats, setVitalStats] = useState(() => {
+    const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+    return {
+      height: savedData.height ? `${savedData.height} cm` : "170 cm",
+      weight: savedData.weight ? `${savedData.weight} kg` : "70 kg",
+      bmi: savedData.bmi || "24.2",
+      bloodPressure: savedData.bloodPressure || "120/80 mmHg",
+      pulseRate: savedData.pulseRate ? `${savedData.pulseRate} bpm` : "72 bpm",
+    };
+  });
+
 
   useEffect(() => {
     const userRole = localStorage.getItem('userRole');
@@ -50,28 +72,50 @@ const PatientDashboard = () => {
     }
   }, [router]);
 
-  const handleSavePatientInfo = () => {
-    // Save patient info logic here
+  // Save changes to localStorage when editing is complete
+  const savePatientInfo = () => {
+    const updatedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+    localStorage.setItem('patientData', JSON.stringify({
+      ...updatedData,
+      fullName: patientInfo.name,
+      dateOfBirth: patientInfo.dob,
+      bloodType: patientInfo.bloodType,
+    }));
     setIsEditingPatientInfo(false);
-    console.log('Patient info saved:', patientInfo);
   };
 
-  const handleSaveEmergencyContact = () => {
-    // Save emergency contact logic here
-    setIsEditingEmergencyContact(false);
-    console.log('Emergency contact saved:', emergencyContact);
-  };
-
-  const handleSaveAllergies = () => {
-    // Save allergies logic here
-    setIsEditingAllergies(false);
-    console.log('Allergies saved:', allergies);
-  };
-
-  const handleSaveVitalStats = () => {
-    // Save vital stats logic here
+  const saveVitalStats = () => {
+    const updatedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+    localStorage.setItem('patientData', JSON.stringify({
+      ...updatedData,
+      height: vitalStats.height.replace(" cm", ""),
+      weight: vitalStats.weight.replace(" kg", ""),
+      bmi: vitalStats.bmi,
+      bloodPressure: vitalStats.bloodPressure,
+      pulseRate: vitalStats.pulseRate.replace(" bpm", ""),
+    }));
     setIsEditingVitalStats(false);
-    console.log('Vital stats saved:', vitalStats);
+  };
+
+  const saveEmergencyContact = () => {
+    const updatedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+    localStorage.setItem('patientData', JSON.stringify({
+      ...updatedData,
+      emergencyContactName: emergencyContact.name,
+      emergencyContactRelation: emergencyContact.relation,
+      emergencyContactPhone: emergencyContact.phone,
+    }));
+    setIsEditingEmergencyContact(false);
+  };
+
+  const saveAllergies = () => {
+    const updatedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+    const allergyText = allergies.map((a: { name: string }) => a.name).join(', ');
+    localStorage.setItem('patientData', JSON.stringify({
+      ...updatedData,
+      allergies: allergyText,
+    }));
+    setIsEditingAllergies(false);
   };
 
   if (isLoading) {
@@ -80,18 +124,29 @@ const PatientDashboard = () => {
 
   return (
     <div className="bg-white min-h-screen flex font-sans">
-      {/* Sidebar */}
-      <Sidebar />
-    
+      {/* Left Sidebar */}
+      
+
       {/* Main Content */}
-      <main className="flex-1">    
-        {/* Content */}
+      <main className="flex-1">
+        <header className="border-b p-4 flex items-center justify-between">
+          
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-4">
+              
+            </div>
+            <button className="px-4 py-1 border border-purple-600 text-purple-600 rounded-md">
+              Patient
+            </button>
+          </div>
+        </header>
+
         <div className="p-6">
           {/* Patient Info Card */}
           <div className="bg-white rounded-lg shadow-sm border p-6 flex justify-between items-start">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600 text-xl font-semibold">SJ</span>
+                <span className="text-blue-600 text-xl font-semibold">{patientInfo.name.split(' ').map((n: string) => n[0]).join('')}</span>
               </div>
               <div>
                 {isEditingPatientInfo ? (
@@ -117,7 +172,7 @@ const PatientDashboard = () => {
                       onChange={(e) => setPatientInfo({ ...patientInfo, bloodType: e.target.value })}
                       className="text-gray-600 border rounded p-1 mt-1"
                     />
-                    <button onClick={handleSavePatientInfo} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md">Save</button>
+                    <button onClick={savePatientInfo} className="mt-2 px-4 py-1 bg-blue-500 text-white rounded">Save</button>
                   </>
                 ) : (
                   <>
@@ -174,21 +229,12 @@ const PatientDashboard = () => {
                   />
                   <input
                     type="text"
-                    name="temperature"
-                    value={vitalStats.temperature}
-                    onChange={(e) => setVitalStats({ ...vitalStats, temperature: e.target.value })}
-                    className="text-gray-600 border rounded p-1"
-                  />
-                  <input
-                    type="text"
                     name="pulseRate"
                     value={vitalStats.pulseRate}
                     onChange={(e) => setVitalStats({ ...vitalStats, pulseRate: e.target.value })}
                     className="text-gray-600 border rounded p-1"
                   />
-                  <div className="flex justify-end">
-                    <button onClick={handleSaveVitalStats} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md">Save</button>
-                  </div>
+                  <button onClick={saveVitalStats} className="mt-2 px-4 py-1 bg-blue-500 text-white rounded">Save</button>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -196,7 +242,6 @@ const PatientDashboard = () => {
                   <p className="text-gray-600">Weight: {vitalStats.weight}</p>
                   <p className="text-gray-600">BMI: {vitalStats.bmi}</p>
                   <p className="text-gray-600">Blood Pressure: {vitalStats.bloodPressure}</p>
-                  <p className="text-gray-600">Temperature: {vitalStats.temperature}</p>
                   <p className="text-gray-600">Pulse Rate: {vitalStats.pulseRate}</p>
                   <p className="text-gray-400 text-sm mt-4">Last updated: 25 Jan 2025</p>
                 </div>
@@ -235,9 +280,7 @@ const PatientDashboard = () => {
                       onChange={(e) => setEmergencyContact({ ...emergencyContact, phone: e.target.value })}
                       className="text-gray-600 border rounded p-1"
                     />
-                    <div className="flex justify-end">
-                      <button onClick={handleSaveEmergencyContact} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md">Save</button>
-                    </div>
+                    <button onClick={saveEmergencyContact} className="mt-2 px-4 py-1 bg-blue-500 text-white rounded">Save</button>
                   </>
                 ) : (
                   <>
@@ -259,7 +302,7 @@ const PatientDashboard = () => {
               </button>
             </div>
             <div className="mt-4 space-y-3">
-              {allergies.map((allergy, index) => (
+              {allergies.map((allergy: { severity: string; type: string; name: string }, index: number) => (
                 <div key={index} className="flex items-center space-x-2">
                   {isEditingAllergies ? (
                     <>
@@ -302,7 +345,7 @@ const PatientDashboard = () => {
                     </>
                   ) : (
                     <>
-                      <span className={`px-2 py-1 ${allergy.severity === 'Severe' ? 'bg-red-500' : allergy.severity === 'Moderate' ? 'bg-yellow-500' : 'bg-gray-500'} text-white text-sm rounded`}>
+                      <span className={`px-2 py-1 bg-${allergy.severity === 'Severe' ? 'red' : allergy.severity === 'Moderate' ? 'yellow' : 'gray'}-500 text-white text-sm rounded`}>
                         {allergy.severity}
                       </span>
                       <span className="text-gray-600">{allergy.type}: {allergy.name}</span>
@@ -311,9 +354,7 @@ const PatientDashboard = () => {
                 </div>
               ))}
               {isEditingAllergies && (
-                <div className="flex justify-end">
-                  <button onClick={handleSaveAllergies} className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md">Save</button>
-                </div>
+                <button onClick={saveAllergies} className="mt-2 px-4 py-1 bg-blue-500 text-white rounded">Save</button>
               )}
             </div>
           </div>
