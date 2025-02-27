@@ -57,6 +57,13 @@ const DoctorSearch = () => {
     }
   ];
 
+  // Filter doctors based on search query
+  const filteredDoctors = doctors.filter(doctor => 
+    doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    doctor.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    doctor.experience.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const handleMessageClick = () => {
     router.push('/dashboard/patient/message');
   };
@@ -74,8 +81,8 @@ const DoctorSearch = () => {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search doctors..."
-                className="w-64 pl-10 pr-4 py-2 border rounded-lg"
+                placeholder="Search doctors by name, specialty..."
+                className="w-64 pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -98,9 +105,13 @@ const DoctorSearch = () => {
           </div>
         </div>
 
-        {viewMode === 'cards' ? (
+        {filteredDoctors.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <p className="text-gray-500">No doctors found matching your search.</p>
+          </div>
+        ) : viewMode === 'cards' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {doctors.map(doctor => (
+            {filteredDoctors.map(doctor => (
               <div key={doctor.id} className="bg-white rounded-lg shadow-md p-6">
                 <div className="flex items-start">
                   <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-600">
@@ -157,7 +168,7 @@ const DoctorSearch = () => {
                 </tr>
               </thead>
               <tbody>
-                {doctors.map(doctor => (
+                {filteredDoctors.map(doctor => (
                   <tr key={doctor.id} className="border-t">
                     <td className="px-6 py-4">
                       <div className="flex items-center">
