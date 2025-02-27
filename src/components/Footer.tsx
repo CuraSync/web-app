@@ -18,7 +18,7 @@ const Footer = () => {
                     style={{ objectFit: 'contain' }}
                   />
                 </div>
-                <span className="ml-2 text-xl font-bold text-purple-600">CuraSync</span>
+                <span className="ml-2 text-xl font-bold text-blue-600">CuraSync</span>
               </div>
             </Link>
             <p className="mt-4 text-gray-600">
@@ -30,22 +30,22 @@ const Footer = () => {
             <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase">Services</h3>
             <ul className="mt-4 space-y-2">
               <li>
-                <Link href="/services/doctors" className="text-gray-600 hover:text-purple-600">
+                <Link href="/services/doctors" className="text-gray-600 hover:text-blue-600">
                   For Doctors
                 </Link>
               </li>
               <li>
-                <Link href="/services/patients" className="text-gray-600 hover:text-purple-600">
+                <Link href="/services/patients" className="text-gray-600 hover:text-blue-600">
                   For Patients
                 </Link>
               </li>
               <li>
-                <Link href="/services/labs" className="text-gray-600 hover:text-purple-600">
+                <Link href="/services/labs" className="text-gray-600 hover:text-blue-600">
                   For Labs
                 </Link>
               </li>
               <li>
-                <Link href="/services/pharmacies" className="text-gray-600 hover:text-purple-600">
+                <Link href="/services/pharmacies" className="text-gray-600 hover:text-blue-600">
                   For Pharmacies
                 </Link>
               </li>

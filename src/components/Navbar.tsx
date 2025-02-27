@@ -20,7 +20,7 @@ const Navbar = () => {
                     priority
                   />
                 </div>
-                <span className="ml-2 text-xl font-bold text-purple-600">CuraSync</span>
+                <span className="ml-2 text-xl font-bold text-blue-600">CuraSync</span>
               </div>
             </Link>
           </div>
