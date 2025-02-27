@@ -7,25 +7,25 @@ const HomePage = () => {
   const accountTypes = [
     {
       href: "/auth/login/doctor",
-      icon: <FaUserMd className="text-5xl text-purple-600" />,
+      icon: <FaUserMd className="text-5xl text-blue-600" />,
       title: "Doctor",
       description: "Medical professional account",
     },
     {
       href: "/auth/login/patient",
-      icon: <FaUser className="text-5xl text-purple-600" />,
+      icon: <FaUser className="text-5xl text-blue-600" />,
       title: "Patient",
       description: "Patient account for appointments",
     },
     {
       href: "/auth/login/lab",
-      icon: <FaFlask className="text-5xl text-purple-600" />,
+      icon: <FaFlask className="text-5xl text-blue-600" />,
       title: "Laboratory",
       description: "Lab testing facility account",
     },
     {
       href: "/auth/login/pharmacy",
-      icon: <FaPrescriptionBottleAlt className="text-5xl text-purple-600" />,
+      icon: <FaPrescriptionBottleAlt className="text-5xl text-blue-600" />,
       title: "Pharmacy",
       description: "Pharmacy store account",
     },
