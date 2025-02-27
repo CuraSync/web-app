@@ -15,7 +15,7 @@ const PatientDashboard = () => {
   const [isEditingAllergies, setIsEditingAllergies] = useState(false);
   const [isEditingVitalStats, setIsEditingVitalStats] = useState(false);
 
-     // Initialize state with data from localStorage
+  // Initialize state with data from localStorage
   const [patientInfo, setPatientInfo] = useState(() => {
     const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
     return {
@@ -62,6 +62,10 @@ const PatientDashboard = () => {
     };
   });
 
+  const [lastUpdated, setLastUpdated] = useState(() => {
+    const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+    return savedData.lastUpdated || "25 Jan 2025";
+  });
 
   useEffect(() => {
     const userRole = localStorage.getItem('userRole');
@@ -86,6 +90,7 @@ const PatientDashboard = () => {
 
   const saveVitalStats = () => {
     const updatedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+    const currentDate = new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
     localStorage.setItem('patientData', JSON.stringify({
       ...updatedData,
       height: vitalStats.height.replace(" cm", ""),
@@ -93,7 +98,9 @@ const PatientDashboard = () => {
       bmi: vitalStats.bmi,
       bloodPressure: vitalStats.bloodPressure,
       pulseRate: vitalStats.pulseRate.replace(" bpm", ""),
+      lastUpdated: currentDate,
     }));
+    setLastUpdated(currentDate);
     setIsEditingVitalStats(false);
   };
 
@@ -125,7 +132,7 @@ const PatientDashboard = () => {
   return (
     <div className="bg-white min-h-screen flex font-sans">
       {/* Left Sidebar */}
-      
+      <Sidebar />
 
       {/* Main Content */}
       <main className="flex-1">
@@ -243,7 +250,7 @@ const PatientDashboard = () => {
                   <p className="text-gray-600">BMI: {vitalStats.bmi}</p>
                   <p className="text-gray-600">Blood Pressure: {vitalStats.bloodPressure}</p>
                   <p className="text-gray-600">Pulse Rate: {vitalStats.pulseRate}</p>
-                  <p className="text-gray-400 text-sm mt-4">Last updated: 25 Jan 2025</p>
+                  <p className="text-gray-400 text-sm mt-4">Last updated: {lastUpdated}</p>
                 </div>
               )}
             </div>
@@ -345,7 +352,7 @@ const PatientDashboard = () => {
                     </>
                   ) : (
                     <>
-                      <span className={`px-2 py-1 bg-${allergy.severity === 'Severe' ? 'red' : allergy.severity === 'Moderate' ? 'yellow' : 'gray'}-500 text-white text-sm rounded`}>
+                      <span className={`px-2 py-1 ${allergy.severity === 'Severe' ? 'bg-red-500' : allergy.severity === 'Moderate' ? 'bg-yellow-500' : 'bg-gray-500'} text-white text-sm rounded`}>
                         {allergy.severity}
                       </span>
                       <span className="text-gray-600">{allergy.type}: {allergy.name}</span>

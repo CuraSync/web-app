@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from 'react';
-import { MessageCircle, Calendar, User, Search } from 'lucide-react';
+import { MessageCircle, Calendar, User, Search, List, Grid } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../sidebar/sidebar'; // Import the Sidebar component
 
@@ -63,14 +63,14 @@ const DoctorSearch = () => {
 
   return (
     <div className="bg-white min-h-screen flex font-sans">
-        {/* Sidebar */}
-        <Sidebar /> 
+      {/* Sidebar */}
+      <Sidebar /> 
 
       {/* Main Content */}
       <main className="flex-1 p-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold">Find a Doctor</h1>
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
             <div className="relative">
               <input
                 type="text"
@@ -81,18 +81,18 @@ const DoctorSearch = () => {
               />
               <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
             </div>
-            <div className="ml-4 space-x-2">
+            <div className="flex space-x-2">
               <button
                 onClick={() => setViewMode('cards')}
-                className={`px-4 py-2 rounded ${viewMode === 'cards' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                className={`px-4 py-2 rounded flex items-center ${viewMode === 'cards' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
               >
-                Cards
+                <Grid className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`px-4 py-2 rounded ${viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+                className={`px-4 py-2 rounded flex items-center ${viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
               >
-                List
+                <List className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -154,7 +154,6 @@ const DoctorSearch = () => {
                   <th className="px-6 py-3 text-left text-gray-600">Doctor's Type</th>
                   <th className="px-6 py-3 text-left text-gray-600">Last Visit</th>
                   <th className="px-6 py-3 text-left text-gray-600">Messaging</th>
-                  <th className="px-6 py-3 text-left text-gray-600">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -176,11 +175,6 @@ const DoctorSearch = () => {
                         className="p-2 hover:bg-gray-100 rounded-full flex items-center"
                       >
                         <MessageCircle className="w-5 h-5 text-blue-500" />
-                      </button>
-                    </td>
-                    <td className="px-6 py-4">
-                      <button className="px-3 py-1 bg-gray-800 text-white rounded">
-                        Add
                       </button>
                     </td>
                   </tr>

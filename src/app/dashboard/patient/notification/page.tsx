@@ -1,10 +1,10 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import { Bell, Calendar, FlaskRound as Flask, Presentation as PrescriptionBottle } from 'lucide-react';
 import Sidebar from '../sidebar/sidebar'; // Ensure the import path is correct
 
 const NotificationPage = () => {
-  const notifications = [
+  const [notifications, setNotifications] = useState([
     {
       id: 1,
       title: "New Lab Results Available",
@@ -45,7 +45,7 @@ const NotificationPage = () => {
       type: "appointment",
       isRead: true
     }
-  ];
+  ]);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -73,6 +73,18 @@ const NotificationPage = () => {
     }
   };
 
+  const markAllAsRead = () => {
+    const updatedNotifications = notifications.map(notification => ({
+      ...notification,
+      isRead: true
+    }));
+    setNotifications(updatedNotifications);
+  };
+
+  const clearAll = () => {
+    setNotifications([]);
+  };
+
   return (
     <div className="bg-white min-h-screen flex font-sans">
       <Sidebar /> {/* Use the Sidebar component here */}
@@ -81,76 +93,91 @@ const NotificationPage = () => {
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
             <div className="flex items-center space-x-4">
-              <button className="text-sm text-blue-600 hover:text-blue-800">
+              <button 
+                onClick={markAllAsRead}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
                 Mark all as read
               </button>
-              <button className="text-sm text-gray-600 hover:text-gray-800">
+              <button 
+                onClick={clearAll}
+                className="text-sm text-gray-600 hover:text-gray-800"
+              >
                 Clear all
               </button>
             </div>
           </div>
 
-          <div className="space-y-4">
-            {/* Today's Notifications */}
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-700 mb-4">Today</h2>
-              {notifications
-                .filter(notification => 
-                  notification.time.includes('now') || 
-                  notification.time.includes('minutes') || 
-                  notification.time.includes('hours')
-                )
-                .map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`mb-4 p-4 rounded-lg border-l-4 ${getNotificationColor(notification.type)} ${
-                      !notification.isRead ? 'shadow-sm' : ''
-                    }`}
-                  >
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0">
-                        {getNotificationIcon(notification.type)}
-                      </div>
-                      <div className="ml-4 flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-gray-900">{notification.title}</p>
-                          <span className="text-xs text-gray-500">{notification.time}</span>
+          {notifications.length === 0 ? (
+            <div className="text-center text-gray-500">
+              <p className="text-lg">You don't have any notifications.</p>
+              <p className="text-sm">Enjoy your day!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Today's Notifications */}
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-700 mb-4">Today</h2>
+                {notifications
+                  .filter(notification => 
+                    notification.time.includes('now') || 
+                    notification.time.includes('minutes') || 
+                    notification.time.includes('hours')
+                  )
+                  .map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`mb-4 p-4 rounded-lg border-l-4 ${getNotificationColor(notification.type)} ${
+                        !notification.isRead ? 'bg-yellow-50' : ''
+                      }`}
+                    >
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          {getNotificationIcon(notification.type)}
                         </div>
-                        <p className="mt-1 text-sm text-gray-600">{notification.message}</p>
+                        <div className="ml-4 flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-gray-900">{notification.title}</p>
+                            <span className="text-xs text-gray-500">{notification.time}</span>
+                          </div>
+                          <p className="mt-1 text-sm text-gray-600">{notification.message}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-            </div>
+                  ))}
+              </div>
 
-            {/* Earlier Notifications */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-700 mb-4">Earlier</h2>
-              {notifications
-                .filter(notification => 
-                  notification.time.includes('day')
-                )
-                .map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`mb-4 p-4 rounded-lg border-l-4 ${getNotificationColor(notification.type)} opacity-75`}
-                  >
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0">
-                        {getNotificationIcon(notification.type)}
-                      </div>
-                      <div className="ml-4 flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-gray-900">{notification.title}</p>
-                          <span className="text-xs text-gray-500">{notification.time}</span>
+              {/* Earlier Notifications */}
+              <div>
+                <h2 className="text-lg font-semibold text-gray-700 mb-4">Earlier</h2>
+                {notifications
+                  .filter(notification => 
+                    notification.time.includes('day')
+                  )
+                  .map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`mb-4 p-4 rounded-lg border-l-4 ${getNotificationColor(notification.type)} opacity-75 ${
+                        !notification.isRead ? 'bg-yellow-50' : ''
+                      }`}
+                    >
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          {getNotificationIcon(notification.type)}
                         </div>
-                        <p className="mt-1 text-sm text-gray-600">{notification.message}</p>
+                        <div className="ml-4 flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-gray-900">{notification.title}</p>
+                            <span className="text-xs text-gray-500">{notification.time}</span>
+                          </div>
+                          <p className="mt-1 text-sm text-gray-600">{notification.message}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

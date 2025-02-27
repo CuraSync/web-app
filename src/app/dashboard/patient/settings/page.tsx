@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from 'react';
-import { Users, HelpCircle, LogOut, Settings as SettingsIcon, Moon } from 'lucide-react';
+import { Users, HelpCircle, LogOut, Settings as SettingsIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../sidebar/sidebar'; // Ensure the import path is correct
 
@@ -25,11 +25,6 @@ const SettingsPage = () => {
     }
   };
 
-  const toggleDarkMode = () => {
-    // Placeholder function for dark mode toggle
-    console.log('Dark mode toggle clicked');
-  };
-
   return (
     <div className="min-h-screen flex font-sans bg-white text-gray-900">
       <Sidebar /> {/* Use the Sidebar component here */}
@@ -52,23 +47,6 @@ const SettingsPage = () => {
               <div className="ml-6">
                 <p className="text-xl font-medium">John Anderson</p>
                 <p className="text-base text-blue-500">john.anderson@example.com</p>
-              </div>
-            </div>
-            
-            <div className="py-8 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Moon className="w-8 h-8 text-gray-500" />
-                  <span className="ml-4 text-base">Dark Mode</span>
-                </div>
-                <button 
-                  onClick={toggleDarkMode}
-                  className="w-16 h-8 rounded-full relative transition-colors duration-200 ease-in-out bg-gray-200"
-                >
-                  <span 
-                    className="absolute top-1 left-1 bg-white w-6 h-6 rounded-full shadow transform transition-transform duration-200 ease-in-out"
-                  />
-                </button>
               </div>
             </div>
             
