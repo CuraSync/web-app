@@ -142,7 +142,7 @@ const PatientDashboard = () => {
             <div className="flex items-center space-x-4">
               
             </div>
-            <button className="px-4 py-1 border border-purple-600 text-purple-600 rounded-md">
+            <button className="px-4 py-1 border border-blue-600 text-blue-600 rounded-md">
               Patient
             </button>
           </div>
