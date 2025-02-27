@@ -139,18 +139,13 @@ const DoctorSearch = () => {
                     <span className="ml-1">{doctor.rating}</span>
                   </div>
                   <div className="flex space-x-2">
-                    <button className="p-2 hover:bg-gray-100 rounded-full">
-                      <Calendar className="w-5 h-5 text-blue-500" />
-                    </button>
                     <button 
                       onClick={handleMessageClick}
                       className="p-2 hover:bg-gray-100 rounded-full flex items-center"
                     >
                       <MessageCircle className="w-5 h-5 text-blue-500" />
                     </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-full">
-                      <User className="w-5 h-5 text-blue-500" />
-                    </button>
+                    
                   </div>
                 </div>
               </div>
