@@ -111,7 +111,7 @@ const LaboratoryPage = () => {
               <div>Laboratory Name</div>
               <div>Name & Specialty</div>
               <div>Available Time</div>
-              <div className="text-center">Messaging</div>
+              
               <div className="text-center">Actions</div>
             </div>
 
@@ -139,16 +139,7 @@ const LaboratoryPage = () => {
                       <Clock className="w-4 h-4 text-gray-400" />
                       <span className="text-gray-600">{laboratory.availableTime}</span>
                     </div>
-                    <div className="flex justify-center">
-                      <button 
-                        onClick={handleMessageClick}
-                        className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
-                      >
-                        <MessageSquare className={`w-5 h-5 ${
-                          laboratory.hasMessage ? 'text-blue-500' : 'text-gray-400'
-                        } group-hover:text-blue-600`} />
-                      </button>
-                    </div>
+                    
                     <div className="flex justify-center">
                       <button 
                         onClick={() => handleAddLaboratory(laboratory)}
