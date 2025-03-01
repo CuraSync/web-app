@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MessageSquare, Clock, ArrowRightLeft, X, Search, UserPlus } from 'lucide-react';
 import DoctorSidebar from '@/components/doctor/Sidebar';
@@ -30,6 +30,33 @@ interface SentRequest {
   timestamp: string;
 }
 
+interface Doctor {
+  id: number;
+  name: string;
+  specialty: string;
+  hospital: string;
+  experience: string;
+  availability: string[];
+  rating: number;
+  image: string;
+}
+
+interface TransferRequest {
+  id: number;
+  patientId: number;
+  patientName: string;
+  doctorId: number;
+  doctorName: string;
+  reason: string;
+  details?: string;
+  priority: string;
+  status: string;
+  timestamp: string;
+  fromDoctor?: string;
+  fromSpecialty?: string;
+  hospital?: string;
+}
+
 const PatientsPage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
@@ -41,8 +68,18 @@ const PatientsPage = () => {
   const [patientSearchQuery, setPatientSearchQuery] = useState('');
   const [patientNumber, setPatientNumber] = useState('');
   
+  // Transfer patient modal state
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<string>('');
+  const [transferReason, setTransferReason] = useState('');
+  const [transferDetails, setTransferDetails] = useState('');
+  const [transferPriority, setTransferPriority] = useState('Medium');
+  const [doctorSearchQuery, setDoctorSearchQuery] = useState('');
+  
   // Track sent requests
   const [sentRequests, setSentRequests] = useState<SentRequest[]>([]);
+  const [sentTransferRequests, setSentTransferRequests] = useState<TransferRequest[]>([]);
 
   // Default patients
   const defaultPatients: Patient[] = [
@@ -69,6 +106,50 @@ const PatientsPage = () => {
       timeOfVisit: '01:00 pm',
       reason: 'Consultation',
       chatStatus: false
+    }
+  ];
+
+  // Sample doctors data
+  const doctors: Doctor[] = [
+    {
+      id: 1,
+      name: "Dr. Sarah Williams",
+      specialty: "Cardiologist",
+      hospital: "Central Hospital",
+      experience: "12 years",
+      availability: ["Mon", "Wed", "Fri"],
+      rating: 4.8,
+      image: "SW"
+    },
+    {
+      id: 2,
+      name: "Dr. Michael Chen",
+      specialty: "Neurologist",
+      hospital: "City Medical Center",
+      experience: "15 years",
+      availability: ["Tue", "Thu", "Sat"],
+      rating: 4.9,
+      image: "MC"
+    },
+    {
+      id: 3,
+      name: "Dr. Emily Rodriguez",
+      specialty: "Pediatrician",
+      hospital: "Children's Hospital",
+      experience: "8 years",
+      availability: ["Mon", "Tue", "Thu"],
+      rating: 4.7,
+      image: "ER"
+    },
+    {
+      id: 4,
+      name: "Dr. James Wilson",
+      specialty: "Orthopedic Surgeon",
+      hospital: "Orthopedic Institute",
+      experience: "20 years",
+      availability: ["Wed", "Fri", "Sat"],
+      rating: 4.9,
+      image: "JW"
     }
   ];
 
@@ -186,6 +267,15 @@ const PatientsPage = () => {
       .filter(patient => !patients.some(p => p.id === patient.id)) // Exclude existing patients
     : [];
 
+  // Filter doctors based on search query
+  const filteredDoctors = doctorSearchQuery
+    ? doctors.filter(doctor => 
+        doctor.name.toLowerCase().includes(doctorSearchQuery.toLowerCase()) ||
+        doctor.specialty.toLowerCase().includes(doctorSearchQuery.toLowerCase()) ||
+        doctor.hospital.toLowerCase().includes(doctorSearchQuery.toLowerCase())
+      )
+    : doctors;
+
   const handleSendInvitation = (patient: Patient) => {
     // Check if request already sent
     if (sentRequests.some(req => req.patientId === patient.id)) {
@@ -223,8 +313,58 @@ const PatientsPage = () => {
   };
 
   const handleTransferClick = (patient: Patient) => {
-    // In a real app, this would open a transfer request modal
-    toast.info(`Preparing transfer request for ${patient.name}`);
+    // Open the transfer modal and set the selected patient
+    setSelectedPatient(patient);
+    setShowTransferModal(true);
+    // Set default priority based on patient's current priority
+    setTransferPriority(patient.priority);
+  };
+
+  const handleSendTransferRequest = () => {
+    if (!selectedPatient) return;
+    if (!selectedDoctor) {
+      toast.error("Please select a doctor to transfer to");
+      return;
+    }
+    if (!transferReason.trim()) {
+      toast.error("Please provide a reason for the transfer");
+      return;
+    }
+
+    // Find the selected doctor
+    const doctor = doctors.find(d => d.name === selectedDoctor);
+    if (!doctor) return;
+
+    // Create a new transfer request
+    const newTransferRequest: TransferRequest = {
+      id: Date.now(),
+      patientId: selectedPatient.id,
+      patientName: selectedPatient.name,
+      doctorId: doctor.id,
+      doctorName: doctor.name,
+      reason: transferReason,
+      details: transferDetails,
+      priority: transferPriority,
+      status: 'pending',
+      timestamp: new Date().toLocaleString(),
+      fromDoctor: "Dr. James Martin",
+      fromSpecialty: "General Practitioner",
+      hospital: "City Hospital"
+    };
+
+    // Add to sent transfer requests
+    setSentTransferRequests([...sentTransferRequests, newTransferRequest]);
+
+    // Show success message
+    toast.success(`Transfer request for ${selectedPatient.name} sent to ${doctor.name}`);
+
+    // Close the modal and reset fields
+    setShowTransferModal(false);
+    setSelectedPatient(null);
+    setSelectedDoctor('');
+    setTransferReason('');
+    setTransferDetails('');
+    setDoctorSearchQuery('');
   };
 
   // Toggle chat status for a patient
@@ -474,6 +614,52 @@ const PatientsPage = () => {
               </div>
             </div>
           )}
+
+          {/* Sent Transfer Requests Section */}
+          {sentTransferRequests.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-lg font-semibold mb-4">Sent Transfer Requests</h2>
+              <div className="bg-white rounded-lg shadow-sm border">
+                <div className="divide-y">
+                  {sentTransferRequests.map((request) => (
+                    <div key={request.id} className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <div className="flex items-center">
+                            <h3 className="font-semibold text-lg">{request.patientName}</h3>
+                            <span className={`ml-3 px-2 py-1 text-xs rounded-full ${
+                              request.priority === 'High' 
+                                ? 'bg-red-100 text-red-800' 
+                                : request.priority === 'Medium'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-green-100 text-green-800'
+                            }`}>
+                              {request.priority} Priority
+                            </span>
+                          </div>
+                          <p className="text-gray-600">From: {request.fromDoctor} ({request.fromSpecialty})</p>
+                          <p className="text-gray-600">To: {request.doctorName}</p>
+                          <p className="text-gray-600">Hospital: {request.hospital}</p>
+                          <p className="text-gray-600">Reason: {request.reason}</p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
+                            Pending
+                          </span>
+                        </div>
+                      </div>
+                      {request.details && (
+                        <div className="bg-gray-50 p-3 rounded-md text-gray-700 mt-2">
+                          {request.details}
+                        </div>
+                      )}
+                      <p className="text-gray-500 text-sm mt-2">Requested on: {request.timestamp}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* Add Patient Modal */}
           {showAddPatientModal && (
@@ -561,6 +747,157 @@ const PatientsPage = () => {
                     className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                   >
                     Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Transfer Patient Modal */}
+          {showTransferModal && selectedPatient && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Transfer Patient</h2>
+                  <button 
+                    onClick={() => {
+                      setShowTransferModal(false);
+                      setSelectedPatient(null);
+                      setSelectedDoctor('');
+                      setTransferReason('');
+                      setTransferDetails('');
+                      setDoctorSearchQuery('');
+                    }}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <div className="mb-6">
+                  <p className="text-gray-700 font-medium">
+                    Transferring patient: <span className="text-blue-600">{selectedPatient.name}</span>
+                  </p>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Doctor
+                  </label>
+                  
+                  {/* Doctor Search */}
+                  <div className="relative mb-2">
+                    <input
+                      type="text"
+                      placeholder="Search doctors..."
+                      className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={doctorSearchQuery}
+                      onChange={(e) => setDoctorSearchQuery(e.target.value)}
+                    />
+                    <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+                  </div>
+
+                  {/* Doctor Selection Dropdown */}
+                  <select
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={selectedDoctor}
+                    onChange={(e) => setSelectedDoctor(e.target.value)}
+                  >
+                    <option value="">Select a doctor</option>
+                    {filteredDoctors.map((doctor) => (
+                      <option key={doctor.id} value={doctor.name}>
+                        {doctor.name} - {doctor.specialty}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Doctor Details (if selected) */}
+                {selectedDoctor && (
+                  <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                    {(() => {
+                      const doctor = doctors.find(d => d.name === selectedDoctor);
+                      if (!doctor) return null;
+                      
+                      return (
+                        <div className="flex items-start">
+                          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
+                            {doctor.image}
+                          </div>
+                          <div className="ml-4">
+                            <h3 className="font-semibold">{doctor.name}</h3>
+                            <p className="text-gray-600">{doctor.specialty}</p>
+                            <p className="text-gray-600">{doctor.hospital}</p>
+                            <p className="text-gray-500 text-sm">{doctor.experience}</p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {/* Priority Selection */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Priority
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={transferPriority}
+                    onChange={(e) => setTransferPriority(e.target.value)}
+                  >
+                    <option value="High">High Priority</option>
+                    <option value="Medium">Medium Priority</option>
+                    <option value="Low">Low Priority</option>
+                  </select>
+                </div>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Reason for Transfer
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Requires specialized cardiac care"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value={transferReason}
+                    onChange={(e) => setTransferReason(e.target.value)}
+                  />
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Additional Details
+                  </label>
+                  <textarea
+                    placeholder="Please provide additional details about the transfer"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={4}
+                    value={transferDetails}
+                    onChange={(e) => setTransferDetails(e.target.value)}
+                  />
+                </div>
+                
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => {
+                      setShowTransferModal(false);
+                      setSelectedPatient(null);
+                      setSelectedDoctor('');
+                      setTransferReason('');
+                      setTransferDetails('');
+                      setDoctorSearchQuery('');
+                    }}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSendTransferRequest}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    disabled={!selectedDoctor || !transferReason.trim()}
+                  >
+                    Send Transfer Request
                   </button>
                 </div>
               </div>

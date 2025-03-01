@@ -12,6 +12,7 @@ interface DoctorRequest {
   hospital: string;
   timestamp: string;
   initials: string;
+  status?: string;
 }
 
 interface TransferRequest {
