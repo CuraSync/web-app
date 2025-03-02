@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Toaster } from 'sonner';
 
 interface LoginLayoutProps {
   title: string;
@@ -20,6 +21,7 @@ const LoginLayout = ({ title, icon, children, userType }: LoginLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
+      <Toaster richColors position="top-center" />
       <div className="max-w-4xl w-full bg-white rounded-2xl shadow-xl flex overflow-hidden">
         {/* Left Side - Decorative */}
         <div className="hidden md:flex md:w-1/2 bg-blue-900 p-12 flex-col justify-between relative">
