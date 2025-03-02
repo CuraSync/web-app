@@ -43,7 +43,7 @@ const Sidebar = () => {
         <div className="mt-auto flex items-center space-x-3">
           <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
           <Link href="/dashboard/patient" className="text-gray-700 hover:text-blue-600">
-            Sarah Johnson
+          <span>Profile</span>
           </Link>
         </div>
       </aside>
