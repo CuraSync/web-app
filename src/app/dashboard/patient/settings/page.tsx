@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from 'react';
-import { Users, HelpCircle, LogOut, Settings as SettingsIcon } from 'lucide-react';
+import { Users, HelpCircle, LogOut, Settings as SettingsIcon, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import Sidebar from '../sidebar/sidebar'; // Ensure the import path is correct
+import Sidebar from '../sidebar/sidebar';
 
 const SettingsPage = () => {
   const router = useRouter();
@@ -25,9 +25,13 @@ const SettingsPage = () => {
     }
   };
 
+  const navigateToHelpSupport = () => {
+    router.push('/dashboard/patient/help');
+  };
+
   return (
     <div className="min-h-screen flex font-sans bg-white text-gray-900">
-      <Sidebar /> {/* Use the Sidebar component here */}
+      <Sidebar />
       <div className="p-8 flex-1 flex justify-center items-center">
         <div className="w-full max-w-4xl border rounded-lg shadow-md bg-white border-gray-200">
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -45,8 +49,8 @@ const SettingsPage = () => {
                 </svg>
               </div>
               <div className="ml-6">
-                <p className="text-xl font-medium">John Anderson</p>
-                <p className="text-base text-blue-500">john.anderson@example.com</p>
+                <p className="text-xl font-medium">Sarah Johnson</p>
+                <p className="text-base text-blue-500">sarah.johnson@example.com</p>
               </div>
             </div>
             
@@ -73,14 +77,15 @@ const SettingsPage = () => {
             </div>
             
             <div className="py-8 border-b border-gray-200">
-              <button className="flex items-center justify-between w-full text-left">
+              <button 
+                onClick={navigateToHelpSupport}
+                className="flex items-center justify-between w-full text-left"
+              >
                 <div className="flex items-center">
                   <HelpCircle className="w-8 h-8 text-gray-500" />
                   <span className="ml-4 text-base">Help & Support</span>
                 </div>
-                <svg className="w-8 h-8 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                </svg>
+                <ChevronRight className="w-6 h-6 text-gray-400" />
               </button>
             </div>
             
