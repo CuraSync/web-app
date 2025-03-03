@@ -1,7 +1,7 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Send, Paperclip, MoreVertical, Phone, Video, Info, Search, ArrowLeft } from 'lucide-react';
+import { Send, Paperclip, Search, ArrowLeft, Trash, Edit, Forward, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import PharmacySidebar from '../../pharmacy/sidebar/sidebar';
 import { toast } from 'sonner';
 
@@ -11,91 +11,104 @@ const MessagesPage = () => {
   const [activeChat, setActiveChat] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editMessage, setEditMessage] = useState('');
+  const [resizePosition, setResizePosition] = useState(320); // Default width of conversation list
+  const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Sample conversations data
   const [conversations, setConversations] = useState([
     {
       id: '1',
-      name: 'Dr. James Martin',
-      initials: 'JM',
-      lastMessage: 'The prescription for patient Sarah Johnson is ready for pickup.',
+      name: 'Sarah Johnson',
+      initials: 'SJ',
+      lastMessage: 'Is my prescription ready for pickup?',
       time: '12:15 AM',
       unread: 2,
       online: true,
+      type: 'patient',
       messages: [
         {
           id: 'm1',
-          sender: 'doctor',
-          text: 'Hello, I need to confirm if the prescription for patient Sarah Johnson is ready for pickup.',
-          time: '12:10 AM'
+          sender: 'patient',
+          text: 'Hello, I wanted to check if my prescription is ready for pickup?',
+          time: '12:10 AM',
+          edited: false
         },
         {
           id: 'm2',
           sender: 'pharmacy',
-          text: 'Yes, the prescription for patient Sarah Johnson is ready for pickup.',
-          time: '12:15 AM'
+          text: 'Yes, your prescription is ready for pickup. You can come anytime during our working hours.',
+          time: '12:15 AM',
+          edited: false
+          
         }
       ]
     },
     {
       id: '2',
-      name: 'Sarah Johnson',
-      initials: 'SJ',
-      lastMessage: 'Is my prescription ready for pickup?',
+      name: 'Michael Brown',
+      initials: 'MB',
+      lastMessage: 'Do you have any over-the-counter allergy medication?',
       time: '1h ago',
       unread: 1,
       online: true,
+      type: 'patient',
       messages: [
         {
           id: 'm1',
           sender: 'patient',
-          text: 'Is my prescription ready for pickup?',
+          text: 'Do you have any over-the-counter allergy medication?',
           time: '1h ago'
         }
       ]
     },
     {
       id: '3',
-      name: 'Dr. Emily Parker',
-      initials: 'EP',
-      lastMessage: 'Please prepare the medication for John Doe.',
+      name: 'Emily Davis',
+      initials: 'ED',
+      lastMessage: 'I need to refill my monthly prescription.',
       time: '2h ago',
       unread: 0,
       online: false,
+      type: 'patient',
       messages: [
         {
           id: 'm1',
-          sender: 'doctor',
-          text: 'Please prepare the medication for John Doe. He will be coming to pick it up tomorrow.',
+          sender: 'patient',
+          text: 'I need to refill my monthly prescription. Can I do that through the app?',
           time: '2:30 PM'
         },
         {
           id: 'm2',
           sender: 'pharmacy',
-          text: 'We will have it ready by tomorrow morning.',
+          text: 'Yes, you can request a refill through the app. Please provide your prescription number.',
           time: '2:45 PM'
         }
       ]
     },
     {
       id: '4',
-      name: 'Michael Brown',
-      initials: 'MB',
-      lastMessage: 'Do you have any over-the-counter allergy medication?',
+      name: 'Robert Wilson',
+      initials: 'RW',
+      lastMessage: 'What are your opening hours this weekend?',
       time: 'Yesterday',
       unread: 0,
       online: false,
+      type: 'patient',
       messages: [
         {
           id: 'm1',
           sender: 'patient',
-          text: 'Do you have any over-the-counter allergy medication?',
+          text: 'What are your opening hours this weekend?',
           time: '10:00 AM'
         },
         {
           id: 'm2',
           sender: 'pharmacy',
-          text: 'Yes, we have several options. Would you like me to recommend one based on your symptoms?',
+          text: 'We are open from 9 AM to 6 PM on Saturday and 10 AM to 4 PM on Sunday.',
           time: '10:15 AM'
         }
       ]
@@ -110,6 +123,37 @@ const MessagesPage = () => {
       setIsLoading(false);
     }
   }, [router]);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging && containerRef.current) {
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const newPosition = e.clientX - containerRect.left;
+        
+        // Set min and max constraints
+        const minWidth = 250;
+        const maxWidth = Math.min(500, containerRect.width - 400);
+        
+        if (newPosition >= minWidth && newPosition <= maxWidth) {
+          setResizePosition(newPosition);
+        }
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
 
   // Filter conversations based on search query
   const filteredConversations = conversations.filter(conversation =>
@@ -150,8 +194,97 @@ const MessagesPage = () => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      if (isEditing) {
+        handleUpdateMessage();
+      } else {
+        handleSendMessage();
+      }
     }
+  };
+
+  const handleMessageClick = (messageId: string, text: string) => {
+    if (selectedMessage === messageId) {
+      setSelectedMessage(null);
+    } else {
+      setSelectedMessage(messageId);
+      setEditMessage(text);
+    }
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    if (!activeChat) return;
+
+    setConversations(conversations.map(conversation => {
+      if (conversation.id === activeChat) {
+        const updatedMessages = conversation.messages.filter(msg => msg.id !== messageId);
+        const lastMsg = updatedMessages.length > 0 ? updatedMessages[updatedMessages.length - 1] : null;
+        
+        return {
+          ...conversation,
+          messages: updatedMessages,
+          lastMessage: lastMsg ? lastMsg.text : 'No messages',
+          time: lastMsg ? lastMsg.time : conversation.time
+        };
+      }
+      return conversation;
+    }));
+
+    setSelectedMessage(null);
+    toast.success('Message deleted');
+  };
+
+  const handleEditMessage = (messageId: string) => {
+    setIsEditing(true);
+    setSelectedMessage(null);
+  };
+
+  const handleUpdateMessage = () => {
+    if (!editMessage.trim() || !activeChat || !selectedMessage) return;
+
+    setConversations(conversations.map(conversation => {
+      if (conversation.id === activeChat) {
+        const updatedMessages = conversation.messages.map(msg => {
+          if (msg.id === selectedMessage) {
+            return {
+              ...msg,
+              text: editMessage,
+              edited: true
+            };
+          }
+          return msg;
+        });
+        
+        return {
+          ...conversation,
+          messages: updatedMessages,
+          lastMessage: updatedMessages[updatedMessages.length - 1].text
+        };
+      }
+      return conversation;
+    }));
+
+    setIsEditing(false);
+    setSelectedMessage(null);
+    setEditMessage('');
+    toast.success('Message updated');
+  };
+
+  const handleForwardMessage = (messageId: string) => {
+    const message = activeChat ? 
+      conversations.find(c => c.id === activeChat)?.messages.find(m => m.id === messageId) : null;
+    
+    if (message) {
+      toast.success('Message ready to forward. Select a conversation.');
+      // In a real app, you would implement a forwarding flow here
+    }
+    
+    setSelectedMessage(null);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setSelectedMessage(null);
+    setEditMessage('');
   };
 
   if (isLoading) {
@@ -166,9 +299,9 @@ const MessagesPage = () => {
       <PharmacySidebar />
       
       {/* Main Content */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex" ref={containerRef}>
         {/* Conversations List */}
-        <div className="w-80 border-r flex flex-col">
+        <div className="border-r flex flex-col" style={{ width: `${resizePosition}px` }}>
           <div className="p-4 border-b">
             <div className="relative">
               <input
@@ -235,6 +368,17 @@ const MessagesPage = () => {
           </div>
         </div>
         
+        {/* Resize handle */}
+        <div 
+          className="w-1 bg-gray-200 hover:bg-green-400 cursor-col-resize flex items-center justify-center"
+          onMouseDown={() => setIsDragging(true)}
+        >
+          <div className="h-8 flex flex-col items-center justify-center">
+            <ChevronLeft className="w-3 h-3 text-gray-400" />
+            <ChevronRight className="w-3 h-3 text-gray-400" />
+          </div>
+        </div>
+        
         {/* Chat Area */}
         <div className="flex-1 flex flex-col">
           {activeChat ? (
@@ -259,23 +403,9 @@ const MessagesPage = () => {
                   <div className="ml-3">
                     <h3 className="font-medium text-gray-900">{activeConversation?.name}</h3>
                     <p className="text-xs text-gray-500">
-                      {activeConversation?.online ? 'Online' : 'Offline'}
+                      {activeConversation?.online ? 'Online' : 'Offline'} • {activeConversation?.type}
                     </p>
                   </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <button className="p-2 rounded-full hover:bg-gray-100">
-                    <Phone className="w-5 h-5 text-gray-500" />
-                  </button>
-                  <button className="p-2 rounded-full hover:bg-gray-100">
-                    <Video className="w-5 h-5 text-gray-500" />
-                  </button>
-                  <button className="p-2 rounded-full hover:bg-gray-100">
-                    <Info className="w-5 h-5 text-gray-500" />
-                  </button>
-                  <button className="p-2 rounded-full hover:bg-gray-100">
-                    <MoreVertical className="w-5 h-5 text-gray-500" />
-                  </button>
                 </div>
               </div>
               
@@ -297,18 +427,46 @@ const MessagesPage = () => {
                         className={`flex ${msg.sender === 'pharmacy' ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl rounded-lg p-3 ${
+                          className={`relative max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl rounded-lg p-3 ${
                             msg.sender === 'pharmacy'
                               ? 'bg-green-500 text-white rounded-br-none'
                               : 'bg-white text-gray-800 rounded-bl-none'
-                          }`}
+                          } ${selectedMessage === msg.id ? 'ring-2 ring-blue-400' : ''}`}
+                          onClick={() => msg.sender === 'pharmacy' && handleMessageClick(msg.id, msg.text)}
                         >
                           <p>{msg.text}</p>
                           <p className={`text-xs mt-1 text-right ${
                             msg.sender === 'pharmacy' ? 'text-green-100' : 'text-gray-500'
                           }`}>
-                            {msg.time}
+                            {msg.time} {'edited' in msg && msg.edited && '(edited)'}
                           </p>
+                          
+                          {/* Message actions popup */}
+                          {selectedMessage === msg.id && msg.sender === 'pharmacy' && (
+                            <div className="absolute top-0 right-0 transform -translate-y-full bg-white shadow-lg rounded-lg p-2 flex space-x-2">
+                              <button 
+                                className="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
+                                onClick={() => handleEditMessage(msg.id)}
+                                title="Edit message"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button 
+                                className="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
+                                onClick={() => handleDeleteMessage(msg.id)}
+                                title="Delete message"
+                              >
+                                <Trash className="w-4 h-4" />
+                              </button>
+                              <button 
+                                className="p-2 text-gray-600 hover:bg-gray-100 rounded-full"
+                                onClick={() => handleForwardMessage(msg.id)}
+                                title="Forward message"
+                              >
+                                <Forward className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -318,28 +476,61 @@ const MessagesPage = () => {
               
               {/* Message Input */}
               <div className="p-4 border-t">
-                <div className="flex items-end">
-                  <button className="p-2 rounded-full hover:bg-gray-100 mr-2">
-                    <Paperclip className="w-5 h-5 text-gray-500" />
-                  </button>
-                  <div className="flex-1 relative">
-                    <textarea
-                      placeholder="Type a message..."
-                      className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                      rows={1}
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                    />
+                {isEditing ? (
+                  <div className="flex flex-col">
+                    <div className="bg-yellow-50 p-2 mb-2 rounded-lg flex justify-between items-center">
+                      <span className="text-sm text-yellow-700">Editing message</span>
+                      <button 
+                        className="text-gray-500 hover:text-gray-700"
+                        onClick={handleCancelEdit}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex items-end">
+                      <div className="flex-1 relative">
+                        <textarea
+                          placeholder="Edit your message..."
+                          className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                          rows={2}
+                          value={editMessage}
+                          onChange={(e) => setEditMessage(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                        />
+                      </div>
+                      <button
+                        className="p-2 bg-blue-500 text-white rounded-full ml-2 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={handleUpdateMessage}
+                        disabled={!editMessage.trim()}
+                      >
+                        <Edit className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    className="p-2 bg-green-500 text-white rounded-full ml-2 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={handleSendMessage}
-                    disabled={!message.trim()}
-                  >
-                    <Send className="w-5 h-5" />
-                  </button>
-                </div>
+                ) : (
+                  <div className="flex items-end">
+                    <button className="p-2 rounded-full hover:bg-gray-100 mr-2">
+                      <Paperclip className="w-5 h-5 text-gray-500" />
+                    </button>
+                    <div className="flex-1 relative">
+                      <textarea
+                        placeholder="Type a message..."
+                        className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                        rows={1}
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                      />
+                    </div>
+                    <button
+                      className="p-2 bg-green-500 text-white rounded-full ml-2 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={handleSendMessage}
+                      disabled={!message.trim()}
+                    >
+                      <Send className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           ) : (
