@@ -19,9 +19,6 @@ const PatientSignUpPage = () => {
     height: '', // in cm
     weight: '', // in kg
     bmi: '', // calculated field
-    bloodPressure: '',
-    temperature: '', // in Celsius
-    pulseRate: '',
     emergencyContactName: '',
     emergencyContactRelation: '',
     emergencyContactPhone: '',
@@ -77,9 +74,6 @@ const PatientSignUpPage = () => {
       height: formData.height,
       weight: formData.weight,
       bmi: formData.bmi,
-      bloodPressure: formData.bloodPressure,
-      temperature: formData.temperature,
-      pulseRate: formData.pulseRate,
       emergencyContactName: formData.emergencyContactName,
       emergencyContactRelation: formData.emergencyContactRelation,
       emergencyContactPhone: formData.emergencyContactPhone,
@@ -251,38 +245,6 @@ const PatientSignUpPage = () => {
               value={formData.bmi}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100"
               readOnly
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Blood Pressure (mmHg)</label>
-            <input
-              type="text"
-              name="bloodPressure"
-              value={formData.bloodPressure}
-              onChange={handleChange}
-              placeholder="e.g., 120/80"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Temperature (°C)</label>
-            <input
-              type="number"
-              name="temperature"
-              value={formData.temperature}
-              onChange={handleChange}
-              step="0.1"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Pulse Rate (bpm)</label>
-            <input
-              type="number"
-              name="pulseRate"
-              value={formData.pulseRate}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
             />
           </div>
           <div>

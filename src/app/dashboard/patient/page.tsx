@@ -57,8 +57,6 @@ const PatientDashboard = () => {
       height: savedData.height ? `${savedData.height} cm` : "170 cm",
       weight: savedData.weight ? `${savedData.weight} kg` : "70 kg",
       bmi: savedData.bmi || "24.2",
-      bloodPressure: savedData.bloodPressure || "120/80 mmHg",
-      pulseRate: savedData.pulseRate ? `${savedData.pulseRate} bpm` : "72 bpm",
     };
   });
 
@@ -96,8 +94,6 @@ const PatientDashboard = () => {
       height: vitalStats.height.replace(" cm", ""),
       weight: vitalStats.weight.replace(" kg", ""),
       bmi: vitalStats.bmi,
-      bloodPressure: vitalStats.bloodPressure,
-      pulseRate: vitalStats.pulseRate.replace(" bpm", ""),
       lastUpdated: currentDate,
     }));
     setLastUpdated(currentDate);
@@ -227,20 +223,6 @@ const PatientDashboard = () => {
                     onChange={(e) => setVitalStats({ ...vitalStats, bmi: e.target.value })}
                     className="text-gray-600 border rounded p-1"
                   />
-                  <input
-                    type="text"
-                    name="bloodPressure"
-                    value={vitalStats.bloodPressure}
-                    onChange={(e) => setVitalStats({ ...vitalStats, bloodPressure: e.target.value })}
-                    className="text-gray-600 border rounded p-1"
-                  />
-                  <input
-                    type="text"
-                    name="pulseRate"
-                    value={vitalStats.pulseRate}
-                    onChange={(e) => setVitalStats({ ...vitalStats, pulseRate: e.target.value })}
-                    className="text-gray-600 border rounded p-1"
-                  />
                   <button onClick={saveVitalStats} className="mt-2 px-4 py-1 bg-blue-500 text-white rounded">Save</button>
                 </div>
               ) : (
@@ -248,8 +230,6 @@ const PatientDashboard = () => {
                   <p className="text-gray-600">Height: {vitalStats.height}</p>
                   <p className="text-gray-600">Weight: {vitalStats.weight}</p>
                   <p className="text-gray-600">BMI: {vitalStats.bmi}</p>
-                  <p className="text-gray-600">Blood Pressure: {vitalStats.bloodPressure}</p>
-                  <p className="text-gray-600">Pulse Rate: {vitalStats.pulseRate}</p>
                   <p className="text-gray-400 text-sm mt-4">Last updated: {lastUpdated}</p>
                 </div>
               )}
