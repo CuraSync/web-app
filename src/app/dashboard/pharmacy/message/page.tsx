@@ -12,11 +12,12 @@ const MessagesPage = () => {
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState('all');
   const [isEditing, setIsEditing] = useState(false);
   const [editMessage, setEditMessage] = useState('');
-  const [resizePosition, setResizePosition] = useState(320); // Default width of conversation list
-  const [isDragging, setIsDragging] = useState(false);
+  const [resizePosition, setResizePosition] = useState(320); 
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Sample conversations data
   const [conversations, setConversations] = useState([
@@ -155,10 +156,12 @@ const MessagesPage = () => {
     };
   }, [isDragging]);
 
-  // Filter conversations based on search query
-  const filteredConversations = conversations.filter(conversation =>
-    conversation.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter conversations based on search query and filter type
+  const filteredConversations = conversations.filter(conversation => {
+    const matchesSearchQuery = conversation.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilterType = filterType === 'all' || conversation.unread > 0;
+    return matchesSearchQuery && matchesFilterType;
+  });
 
   const handleSendMessage = () => {
     if (!message.trim() || !activeChat) return;
@@ -275,7 +278,6 @@ const MessagesPage = () => {
     
     if (message) {
       toast.success('Message ready to forward. Select a conversation.');
-      // In a real app, you would implement a forwarding flow here
     }
     
     setSelectedMessage(null);
@@ -285,6 +287,24 @@ const MessagesPage = () => {
     setIsEditing(false);
     setSelectedMessage(null);
     setEditMessage('');
+  };
+
+  const handleConversationClick = (conversationId: string) => {
+    setActiveChat(conversationId);
+    setConversations(conversations.map(conversation => {
+      if (conversation.id === conversationId) {
+        const updatedMessages = conversation.messages.map(msg => ({
+          ...msg,
+          isRead: true
+        }));
+        return {
+          ...conversation,
+          messages: updatedMessages,
+          unread: 0
+        };
+      }
+      return conversation;
+    }));
   };
 
   if (isLoading) {
