@@ -1,16 +1,13 @@
 "use client";
 import React, { useState } from 'react';
-import { Users, HelpCircle, Settings as SettingsIcon, Bell, Shield, Key } from 'lucide-react';
+import { Users, HelpCircle, LogOut, Settings as SettingsIcon, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../sidebar/sidebar';
 import { toast } from 'sonner';
 
 const SettingsPage = () => {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('profile');
-  const [isEditing, setIsEditing] = useState(false);
-
-  // Profile settings
+  const [email, setEmail] = useState('');
   const [profileData, setProfileData] = useState(() => {
     const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
     return {
@@ -20,7 +17,7 @@ const SettingsPage = () => {
       fullName: savedData.fullName || 'Sarah Johnson',
       email: savedData.email || 'sarah.johnson@example.com',
       nic: '982760149V', // Static NIC
-      password: '********', // Placeholder for password
+      password: '****', // Placeholder for password
       phone: savedData.phone || '+1 (555) 123-4567',
       address: savedData.address || '123 Main St, City, Country',
       dateOfBirth: savedData.dateOfBirth || '1990-05-15',
@@ -32,6 +29,7 @@ const SettingsPage = () => {
       guardianName: savedData.guardianName || '',
       guardianContact: savedData.guardianContact || '',
       guardianEmail: savedData.guardianEmail || '',
+      profilePic: savedData.profilePic || '',
     };
   });
 
@@ -62,12 +60,30 @@ const SettingsPage = () => {
     });
   };
 
+  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setProfileData({
+          ...profileData,
+          profilePic: reader.result as string,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSaveProfile = () => {
     localStorage.setItem('patientData', JSON.stringify(profileData));
-    setIsEditing(false);
     toast.success("Profile updated successfully");
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('userRole');
+    router.push('/auth/login/patient');
+    toast.success("Logged out successfully");
+  };
 
   return (
     <div className="min-h-screen flex bg-white">
@@ -76,26 +92,47 @@ const SettingsPage = () => {
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Settings</h1>
-            {isEditing ? (
-              <button
-                onClick={handleSaveProfile}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Save Changes
-              </button>
-            ) : (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Edit Profile
-              </button>
-            )}
+            <button
+              onClick={handleSaveProfile}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Save Changes
+            </button>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold mb-6">Personal Information</h2>
+            {/* Profile Picture */}
+            <div className="flex items-center pb-8 border-b border-gray-200">
+              <div className="relative w-20 h-20 overflow-hidden rounded-full bg-blue-100 flex items-center justify-center">
+                {profileData.profilePic ? (
+                  <img
+                    src={profileData.profilePic}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-blue-600 text-2xl font-semibold">
+                    {profileData.firstName[0]}{profileData.lastName[0]}
+                  </span>
+                )}
+                <label htmlFor="profile-pic" className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer">
+                  <Upload className="w-4 h-4" />
+                  <input
+                    type="file"
+                    id="profile-pic"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleProfilePicChange}
+                  />
+                </label>
+              </div>
+              <div className="ml-6">
+                <p className="text-xl font-medium">{profileData.fullName}</p>
+                <p className="text-base text-blue-500">{profileData.email}</p>
+              </div>
+            </div>
 
+            <h2 className="text-lg font-semibold mt-6 mb-4">Personal Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Patient ID - Read Only */}
               <div>
@@ -128,7 +165,6 @@ const SettingsPage = () => {
                   value={profileData.firstName}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  disabled={!isEditing}
                 />
               </div>
 
@@ -141,7 +177,6 @@ const SettingsPage = () => {
                   value={profileData.lastName}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  disabled={!isEditing}
                 />
               </div>
 
@@ -154,7 +189,6 @@ const SettingsPage = () => {
                   value={profileData.fullName}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  disabled={!isEditing}
                 />
               </div>
 
@@ -167,7 +201,6 @@ const SettingsPage = () => {
                   value={profileData.email}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  disabled={!isEditing}
                 />
               </div>
 
@@ -180,7 +213,6 @@ const SettingsPage = () => {
                   value={profileData.phone}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  disabled={!isEditing}
                 />
               </div>
 
@@ -193,7 +225,6 @@ const SettingsPage = () => {
                   value={profileData.dateOfBirth}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  disabled={!isEditing}
                 />
               </div>
 
@@ -206,7 +237,6 @@ const SettingsPage = () => {
                   value={profileData.address}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  disabled={!isEditing}
                 />
               </div>
 
@@ -219,7 +249,6 @@ const SettingsPage = () => {
                   value={profileData.height}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  disabled={!isEditing}
                 />
               </div>
 
@@ -232,7 +261,6 @@ const SettingsPage = () => {
                   value={profileData.weight}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  disabled={!isEditing}
                 />
               </div>
 
@@ -256,7 +284,6 @@ const SettingsPage = () => {
                   value={profileData.bloodType}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  disabled={!isEditing}
                 />
               </div>
 
@@ -269,7 +296,6 @@ const SettingsPage = () => {
                   value={profileData.medicationAllergies}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  disabled={!isEditing}
                   placeholder="List any medication allergies, separated by commas"
                 />
               </div>
@@ -283,7 +309,6 @@ const SettingsPage = () => {
                   value={profileData.guardianName}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  disabled={!isEditing}
                 />
               </div>
 
@@ -295,7 +320,6 @@ const SettingsPage = () => {
                   value={profileData.guardianContact}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  disabled={!isEditing}
                 />
               </div>
 
@@ -307,7 +331,6 @@ const SettingsPage = () => {
                   value={profileData.guardianEmail}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  disabled={!isEditing}
                 />
               </div>
             </div>
