@@ -1,23 +1,26 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, HelpCircle, LogOut, Settings as SettingsIcon, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import PharmacySidebar from '../sidebar/sidebar';
 import { toast } from 'sonner';
 
+// Define the base URL for your API
+const API_BASE_URL = 'https://your-backend-api.com';
+
 const SettingsPage = () => {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [profileData, setProfileData] = useState({
-    pharmacyId: 'PH12345', // Example ID
-    pharmacyName: 'MedPlus Pharmacy',
-    location: '123 Main St, City, Country',
-    email: 'info@medpluspharmacy.com',
+    pharmacyId: '',
+    pharmacyName: '',
+    location: '',
+    email: '',
     password: '********', // Placeholder for password
-    contactNo: '+1 (555) 123-4567',
-    GovRegId: 'REG-987654',
-    description: 'Your trusted local pharmacy providing quality care and medications.',
-    profilePic: '', // URL or base64 string for profile picture
+    contactNo: '',
+    GovRegId: '',
+    description: '',
+    profilePic: '',
     socialMediaLinks: {
       facebook: '',
       twitter: '',
@@ -25,17 +28,56 @@ const SettingsPage = () => {
     },
   });
 
+  // Fetch pharmacy profile data on component mount
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/pharmacy/profile`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`, // Include auth token
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch profile data');
+        }
+        const data = await response.json();
+        setProfileData(data);
+      } catch (error) {
+        toast.error('Failed to load profile data');
+        console.error(error);
+      }
+    };
+
+    fetchProfileData();
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('userRole');
-    localStorage.removeItem('authToken'); // Assuming you have an auth token
+    localStorage.removeItem('authToken');
     toast.success("Logged out successfully");
     router.push('/auth/login/pharmacy');
   };
 
-  const handleInviteSend = () => {
+  const handleInviteSend = async () => {
     if (email) {
-      toast.success(`Invitation sent to ${email}`);
-      setEmail(''); // Clear the input after sending
+      try {
+        const response = await fetch(`${API_BASE_URL}/pharmacy/invite`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+          body: JSON.stringify({ email }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to send invitation');
+        }
+        toast.success(`Invitation sent to ${email}`);
+        setEmail('');
+      } catch (error) {
+        toast.error('Failed to send invitation');
+        console.error(error);
+      }
     } else {
       toast.error("Please enter an email address");
     }
@@ -60,23 +102,54 @@ const SettingsPage = () => {
     });
   };
 
-  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePicChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
+      const formData = new FormData();
+      formData.append('profilePic', file);
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/pharmacy/upload-profile-pic`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+          body: formData,
+        });
+        if (!response.ok) {
+          throw new Error('Failed to upload profile picture');
+        }
+        const data = await response.json();
         setProfileData({
           ...profileData,
-          profilePic: reader.result as string,
+          profilePic: data.profilePicUrl, // Assuming the backend returns the URL
         });
-      };
-      reader.readAsDataURL(file);
+        toast.success('Profile picture updated successfully');
+      } catch (error) {
+        toast.error('Failed to upload profile picture');
+        console.error(error);
+      }
     }
   };
 
-  const handleSaveProfile = () => {
-    // Here you would typically send the updated data to your backend
-    toast.success('Profile updated successfully');
+  const handleSaveProfile = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/pharmacy/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify(profileData),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+      toast.success('Profile updated successfully');
+    } catch (error) {
+      toast.error('Failed to update profile');
+      console.error(error);
+    }
   };
 
   return (
