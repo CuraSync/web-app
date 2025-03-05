@@ -1,14 +1,35 @@
 "use client";
 import React, { useState } from 'react';
-import { Users, HelpCircle, LogOut, Settings as SettingsIcon, ChevronRight, Bell, Shield, Key } from 'lucide-react';
+import { Users, HelpCircle, LogOut, Settings as SettingsIcon, Bell, Shield, Key } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../sidebar/sidebar';
 import { toast } from 'sonner';
 
 const SettingsPage = () => {
   const router = useRouter();
-  const [email, setEmail] = useState('');
   const [activeTab, setActiveTab] = useState('profile');
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Profile settings
+  const [profileData, setProfileData] = useState(() => {
+    const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+    return {
+      firstName: savedData.firstName || 'Sarah',
+      lastName: savedData.lastName || 'Johnson',
+      fullName: savedData.fullName || 'Sarah Johnson',
+      email: savedData.email || 'sarah.johnson@example.com',
+      phone: savedData.phone || '+1 (555) 123-4567',
+      dateOfBirth: savedData.dateOfBirth || '1990-05-15',
+      bloodType: savedData.bloodType || 'A+',
+      height: savedData.height || '170',
+      weight: savedData.weight || '65',
+      emergencyContact: {
+        name: savedData.emergencyContactName || 'Michael Johnson',
+        relation: savedData.emergencyContactRelation || 'Spouse',
+        phone: savedData.emergencyContactPhone || '+1 (555) 987-6543'
+      }
+    };
+  });
   
   // Notification settings
   const [notificationSettings, setNotificationSettings] = useState({
@@ -31,48 +52,21 @@ const SettingsPage = () => {
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
   const handleLogout = () => {
-    // Clear user data from local storage
     localStorage.removeItem('userRole');
-    localStorage.removeItem('authToken'); // Assuming you have an auth token
-
-    // Redirect to login page
     router.push('/auth/login/patient');
     toast.success("Logged out successfully");
   };
 
-  const handleInviteSend = () => {
-    if (email) {
-      toast.success(`Invitation sent to ${email}`);
-      setEmail(''); // Clear the input after sending
-    } else {
-      toast.error("Please enter an email address");
-    }
+  const handleSaveProfile = () => {
+    localStorage.setItem('patientData', JSON.stringify(profileData));
+    setIsEditing(false);
+    toast.success("Profile updated successfully");
   };
 
-  const navigateToHelpSupport = () => {
-    router.push('/dashboard/patient/help');
-  };
-  
-  const handleNotificationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setNotificationSettings({
-      ...notificationSettings,
-      [name]: checked
-    });
-  };
-  
-  const handleSecurityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setSecurityData({
-      ...securityData,
-      [name]: value
-    });
-  };
-  
   const handleSaveNotifications = () => {
     toast.success('Notification preferences updated');
   };
-  
+
   const handleChangePassword = () => {
     if (securityData.newPassword !== securityData.confirmPassword) {
       toast.error('New passwords do not match');
@@ -84,7 +78,6 @@ const SettingsPage = () => {
       return;
     }
     
-    // Here you would typically send the data to your backend
     toast.success('Password changed successfully');
     setSecurityData({
       currentPassword: '',
@@ -92,16 +85,16 @@ const SettingsPage = () => {
       confirmPassword: ''
     });
   };
-  
+
   const handleToggleTwoFactor = () => {
     setTwoFactorEnabled(!twoFactorEnabled);
     toast.success(`Two-factor authentication ${!twoFactorEnabled ? 'enabled' : 'disabled'}`);
   };
 
   return (
-    <div className="min-h-screen flex font-sans bg-white text-gray-900">
+    <div className="min-h-screen flex bg-white">
       <Sidebar />
-      <div className="p-8 flex-1">
+      <div className="flex-1 p-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Settings</h1>
         
         {/* Settings Tabs */}
@@ -148,71 +141,169 @@ const SettingsPage = () => {
             </div>
           </button>
         </div>
-        
+
         {/* Profile Settings */}
         {activeTab === 'profile' && (
-          <div className="bg-white rounded-lg shadow-md border p-6">
-            <div className="flex items-center pb-8 border-b border-gray-200">
-              <div className="relative w-20 h-20 overflow-hidden rounded-full bg-gray-100">
-                <svg className="absolute w-24 h-24 text-gray-400 -left-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-6">
-                <p className="text-xl font-medium">Sarah Johnson</p>
-                <p className="text-base text-blue-500">sarah.johnson@example.com</p>
-              </div>
-            </div>
-            
-            <div className="py-8 border-b border-gray-200">
-              <div className="mb-4 flex items-center">
-                <Users className="w-8 h-8 text-gray-500" />
-                <span className="ml-4 text-base">Invite Friends</span>
-              </div>
-              <div className="flex mt-4">
-                <input 
-                  type="email" 
-                  placeholder="Enter email address" 
-                  className="flex-1 px-4 py-3 text-base border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white border-gray-300 text-gray-900"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                <button 
-                  onClick={handleInviteSend}
-                  className="ml-4 px-8 py-3 bg-blue-600 text-white text-base font-medium rounded-md hover:bg-blue-700 transition-colors"
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-semibold">Personal Information</h2>
+              {isEditing ? (
+                <button
+                  onClick={handleSaveProfile}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 >
-                  Send Invite
+                  Save Changes
                 </button>
+              ) : (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  <SettingsIcon className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">First Name</label>
+                <input
+                  type="text"
+                  value={profileData.firstName}
+                  onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
+                  className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                <input
+                  type="text"
+                  value={profileData.lastName}
+                  onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
+                  className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <input
+                  type="email"
+                  value={profileData.email}
+                  onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                  className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                <input
+                  type="tel"
+                  value={profileData.phone}
+                  onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                  className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                <input
+                  type="date"
+                  value={profileData.dateOfBirth}
+                  onChange={(e) => setProfileData({...profileData, dateOfBirth: e.target.value})}
+                  className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Blood Type</label>
+                <input
+                  type="text"
+                  value={profileData.bloodType}
+                  onChange={(e) => setProfileData({...profileData, bloodType: e.target.value})}
+                  className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Height (cm)</label>
+                <input
+                  type="number"
+                  value={profileData.height}
+                  onChange={(e) => setProfileData({...profileData, height: e.target.value})}
+                  className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Weight (kg)</label>
+                <input
+                  type="number"
+                  value={profileData.weight}
+                  onChange={(e) => setProfileData({...profileData, weight: e.target.value})}
+                  className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditing}
+                />
               </div>
             </div>
-            
-            <div className="py-8 border-b border-gray-200">
-              <button 
-                onClick={navigateToHelpSupport}
-                className="flex items-center justify-between w-full text-left"
-              >
-                <div className="flex items-center">
-                  <HelpCircle className="w-8 h-8 text-gray-500" />
-                  <span className="ml-4 text-base">Help & Support</span>
-                </div>
-                <ChevronRight className="w-6 h-6 text-gray-400" />
-              </button>
-            </div>
-            <div className="py-8">
-              <button 
-                onClick={handleLogout}
-                className="flex items-center text-base text-gray-700 hover:text-gray-900 transition-colors"
-              >
-                <LogOut className="w-8 h-8 text-gray-500" />
-                <span className="ml-4">Logout</span>
-              </button>
+
+            <h3 className="text-lg font-semibold mt-8 mb-4">Emergency Contact</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <input
+                  type="text"
+                  value={profileData.emergencyContact.name}
+                  onChange={(e) => setProfileData({
+                    ...profileData,
+                    emergencyContact: {...profileData.emergencyContact, name: e.target.value}
+                  })}
+                  className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Relationship</label>
+                <input
+                  type="text"
+                  value={profileData.emergencyContact.relation}
+                  onChange={(e) => setProfileData({
+                    ...profileData,
+                    emergencyContact: {...profileData.emergencyContact, relation: e.target.value}
+                  })}
+                  className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditing}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                <input
+                  type="tel"
+                  value={profileData.emergencyContact.phone}
+                  onChange={(e) => setProfileData({
+                    ...profileData,
+                    emergencyContact: {...profileData.emergencyContact, phone: e.target.value}
+                  })}
+                  className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  disabled={!isEditing}
+                />
+              </div>
             </div>
           </div>
         )}
         
         {/* Notification Settings */}
         {activeTab === 'notifications' && (
-          <div className="bg-white rounded-lg shadow-md border p-6">
+          <div className="bg-white rounded-lg shadow-sm border p-6">
             <h2 className="text-lg font-semibold mb-4">Notification Preferences</h2>
             
             <div className="space-y-4 mb-6">
@@ -226,7 +317,10 @@ const SettingsPage = () => {
                     type="checkbox"
                     name="emailNotifications"
                     checked={notificationSettings.emailNotifications}
-                    onChange={handleNotificationChange}
+                    onChange={(e) => setNotificationSettings({
+                      ...notificationSettings,
+                      emailNotifications: e.target.checked
+                    })}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -243,7 +337,10 @@ const SettingsPage = () => {
                     type="checkbox"
                     name="smsNotifications"
                     checked={notificationSettings.smsNotifications}
-                    onChange={handleNotificationChange}
+                    onChange={(e) => setNotificationSettings({
+                      ...notificationSettings,
+                      smsNotifications: e.target.checked
+                    })}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -264,7 +361,10 @@ const SettingsPage = () => {
                     type="checkbox"
                     name="appointmentReminders"
                     checked={notificationSettings.appointmentReminders}
-                    onChange={handleNotificationChange}
+                    onChange={(e) => setNotificationSettings({
+                      ...notificationSettings,
+                      appointmentReminders: e.target.checked
+                    })}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -281,7 +381,10 @@ const SettingsPage = () => {
                     type="checkbox"
                     name="doctorMessages"
                     checked={notificationSettings.doctorMessages}
-                    onChange={handleNotificationChange}
+                    onChange={(e) => setNotificationSettings({
+                      ...notificationSettings,
+                      doctorMessages: e.target.checked
+                    })}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -298,7 +401,10 @@ const SettingsPage = () => {
                     type="checkbox"
                     name="systemUpdates"
                     checked={notificationSettings.systemUpdates}
-                    onChange={handleNotificationChange}
+                    onChange={(e) => setNotificationSettings({
+                      ...notificationSettings,
+                      systemUpdates: e.target.checked
+                    })}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -315,7 +421,10 @@ const SettingsPage = () => {
                     type="checkbox"
                     name="marketingEmails"
                     checked={notificationSettings.marketingEmails}
-                    onChange={handleNotificationChange}
+                    onChange={(e) => setNotificationSettings({
+                      ...notificationSettings,
+                      marketingEmails: e.target.checked
+                    })}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -336,7 +445,7 @@ const SettingsPage = () => {
         
         {/* Security Settings */}
         {activeTab === 'security' && (
-          <div className="bg-white rounded-lg shadow-md border p-6">
+          <div className="bg-white rounded-lg shadow-sm border p-6">
             <h2 className="text-lg font-semibold mb-4">Change Password</h2>
             
             <div className="space-y-4 mb-6">
@@ -348,7 +457,7 @@ const SettingsPage = () => {
                   type="password"
                   name="currentPassword"
                   value={securityData.currentPassword}
-                  onChange={handleSecurityChange}
+                  onChange={(e) => setSecurityData({...securityData, currentPassword: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -361,7 +470,7 @@ const SettingsPage = () => {
                   type="password"
                   name="newPassword"
                   value={securityData.newPassword}
-                  onChange={handleSecurityChange}
+                  onChange={(e) => setSecurityData({...securityData, newPassword: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -374,7 +483,7 @@ const SettingsPage = () => {
                   type="password"
                   name="confirmPassword"
                   value={securityData.confirmPassword}
-                  onChange={handleSecurityChange}
+                  onChange={(e) => setSecurityData({...securityData, confirmPassword: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -404,12 +513,21 @@ const SettingsPage = () => {
                   onChange={handleToggleTwoFactor}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after :after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
             </div>
+            
+            <h2 className="text-lg font-semibold mb-4">Account Actions</h2>
+            
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </button>
           </div>
         )}
-        
       </div>
     </div>
   );
