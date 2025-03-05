@@ -11,13 +11,13 @@ const SettingsPage = () => {
   const [profileData, setProfileData] = useState(() => {
     const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
     return {
-      patientId: 'PAT12345', // Example static ID
+      patientId: 'PAT12345',
       firstName: savedData.firstName || 'Sarah',
       lastName: savedData.lastName || 'Johnson',
       fullName: savedData.fullName || 'Sarah Johnson',
       email: savedData.email || 'sarah.johnson@example.com',
-      nic: '982760149V', // Static NIC
-      password: '****', // Placeholder for password
+      nic: '982760149V',
+      password: '****',
       phone: savedData.phone || '+1 (555) 123-4567',
       address: savedData.address || '123 Main St, City, Country',
       dateOfBirth: savedData.dateOfBirth || '1990-05-15',
@@ -33,7 +33,6 @@ const SettingsPage = () => {
     };
   });
 
-  // Calculate BMI whenever height or weight changes
   const calculateBMI = (height: string, weight: string) => {
     if (height && weight) {
       const heightInMeters = parseFloat(height) / 100;
@@ -46,13 +45,19 @@ const SettingsPage = () => {
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfileData(prev => {
-      const newData = { ...prev, [name]: value };
+      // For height and weight, ensure value is not negative
+      let newValue = value;
+      if ((name === 'height' || name === 'weight') && value !== '') {
+        newValue = Math.max(0, parseFloat(value)).toString();
+      }
+
+      const newData = { ...prev, [name]: newValue };
       
       // Recalculate BMI if height or weight changes
       if (name === 'height' || name === 'weight') {
         newData.bmi = calculateBMI(
-          name === 'height' ? value : prev.height,
-          name === 'weight' ? value : prev.weight
+          name === 'height' ? newValue : prev.height,
+          name === 'weight' ? newValue : prev.weight
         );
       }
       
@@ -68,7 +73,7 @@ const SettingsPage = () => {
         setProfileData({
           ...profileData,
           profilePic: reader.result as string,
-        });
+        }); 
       };
       reader.readAsDataURL(file);
     }
