@@ -16,7 +16,7 @@ export default function LabDashboard() {
       <div className="flex-1 flex flex-col">
         {/* Navigation */}
         <div className="border-b p-4">
-          <div className="inline-block px-4 py-1 bg-purple-100 text-purple-800 rounded-md text-sm font-medium">Lab</div>
+          <div className="inline-block px-4 py-1 bg-purple-100 text-purple-800 rounded-md text-sm font-medium">Laboratory</div>
         </div>
 
         {/* Content */}
