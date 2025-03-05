@@ -44,12 +44,12 @@ const SettingsPage = () => {
           
           <div className="p-8">
             <div className="flex items-center pb-8 border-b border-gray-200">
-              <div className="relative w-20 h-20 overflow-hidden rounded-full bg-green-100 flex items-center justify-center">
-                <span className="text-green-600 text-2xl font-semibold">MC</span>
+              <div className="relative w-20 h-20 overflow-hidden rounded-full  bg-purple-100 flex items-center justify-center">
+                <span className="text-purple-800  text-2xl font-semibold">CL</span>
               </div>
               <div className="ml-6">
-                <p className="text-xl font-medium">MedCare Laboratory</p>
-                <p className="text-base text-blue-500">info@medcarelab.com</p>
+                <p className="text-xl font-medium">City Lab</p>
+                <p className="text-base text-blue-500">info@citylab.com</p>
               </div>
             </div>
             
