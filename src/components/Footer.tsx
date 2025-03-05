@@ -25,60 +25,7 @@ const Footer = () => {
               Connecting healthcare professionals with patients for better care.
             </p>
           </div>
-          
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase">Services</h3>
-            <ul className="mt-4 space-y-2">
-              <li>
-                <Link href="/services/doctors" className="text-gray-600 hover:text-blue-600">
-                  For Doctors
-                </Link>
-              </li>
-              <li>
-                <Link href="/services/patients" className="text-gray-600 hover:text-blue-600">
-                  For Patients
-                </Link>
-              </li>
-              <li>
-                <Link href="/services/labs" className="text-gray-600 hover:text-blue-600">
-                  For Labs
-                </Link>
-              </li>
-              <li>
-                <Link href="/services/pharmacies" className="text-gray-600 hover:text-blue-600">
-                  For Pharmacies
-                </Link>
-              </li>
-            </ul>
-          </div>
-          
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase">Company</h3>
-            <ul className="mt-4 space-y-2">
-              <li>
-                <Link href="/about" className="text-gray-600 hover:text-purple-600">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-gray-600 hover:text-purple-600">
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="text-gray-600 hover:text-purple-600">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms" className="text-gray-600 hover:text-purple-600">
-                  Terms of Service
-                </Link>
-              </li>
-            </ul>
-          </div>
-          
-          <div>
+          <div className="md:col-span-1 md:col-start-4">
             <h3 className="text-sm font-semibold text-gray-900 tracking-wider uppercase">Connect</h3>
             <div className="mt-4 space-y-2">
               <a href="mailto:curasync.info@gmail.com" className="block text-gray-600 hover:text-purple-600">
