@@ -3,17 +3,19 @@ import { FaChartBar, FaCog, FaEnvelope, FaFlask, FaUserMd, FaPrescriptionBottleA
 import { useRouter } from 'next/navigation'; 
 import { toast } from 'sonner';
 import { useCallback } from 'react';
+import { LogOut } from 'lucide-react';
 
 const Sidebar = () => {
   const router = useRouter();
   
   const handleLogout = useCallback(() => {
     localStorage.removeItem('userRole');
-    router.push('/auth/login/patient');
+    router.push('/auth/login/lab');
     setTimeout(() => {
       toast.success("Logged out successfully");
     }, 0);
   }, [router]);
+  
   
   return (
     <div>
@@ -42,7 +44,7 @@ const Sidebar = () => {
         <button 
           className="mt-4 w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
           onClick={handleLogout}>
-          <FaSignOutAlt className="w-4 h-4" />
+          <LogOut className="w-4 h-4" />
           <span>Sign Out</span>
         </button>
       </aside>
