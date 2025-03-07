@@ -38,6 +38,7 @@ const LabSignUpPage = () => {
     <SignUpLayout
       title="Laboratory Portal"
       description="Join our network of diagnostic centers and provide quality testing services."
+      userType="lab"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
