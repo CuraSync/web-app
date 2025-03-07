@@ -16,6 +16,18 @@ const LabSignUpPage = () => {
     confirmPassword: '',
     phone: '',
     location: '',
+    description: '',
+    operatingHours: {
+      weekdays: '8:00 AM - 9:00 PM',
+      saturday: '9:00 AM - 7:00 PM',
+      sunday: '10:00 AM - 5:00 PM',
+      holidays: '10:00 AM - 3:00 PM',
+    },
+    socialMediaLinks: {
+      facebook: '',
+      twitter: '',
+      instagram: '',
+    }
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -23,6 +35,28 @@ const LabSignUpPage = () => {
     setFormData({
       ...formData,
       [name]: value,
+    });
+  };
+
+  const handleOperatingHoursChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      operatingHours: {
+        ...formData.operatingHours,
+        [name]: value,
+      },
+    });
+  };
+
+  const handleSocialMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      socialMediaLinks: {
+        ...formData.socialMediaLinks,
+        [name]: value,
+      },
     });
   };
 
@@ -60,6 +94,9 @@ const LabSignUpPage = () => {
         phoneNumber: formData.phone,
         location: formData.location
       });
+
+      // Save lab data to localStorage
+      localStorage.setItem('labData', JSON.stringify(formData));
 
       toast.success("Account created successfully!");
       router.push('/auth/login/lab');
@@ -166,6 +203,101 @@ const LabSignUpPage = () => {
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
             required
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Description</label>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            rows={3}
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+            placeholder="Describe your laboratory services and specialties"
+          />
+        </div>
+
+        {/* Operating Hours */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Operating Hours</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-600">Weekdays ```jsx
+              </label>
+              <input
+                type="text"
+                name="weekdays"
+                value={formData.operatingHours.weekdays}
+                onChange={handleOperatingHoursChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="e.g., 9:00 AM - 5:00 PM"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600">Saturday</label>
+              <input
+                type="text"
+                name="saturday" 
+                value={formData.operatingHours.saturday}
+                onChange={handleOperatingHoursChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="e.g., 9:00 AM - 2:00 PM"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600">Sunday</label>
+              <input
+                type="text"
+                name="sunday"
+                value={formData.operatingHours.sunday}
+                onChange={handleOperatingHoursChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="e.g., Closed"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600">Holidays</label>
+              <input
+                type="text"
+                name="holidays"
+                value={formData.operatingHours.holidays}
+                onChange={handleOperatingHoursChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="e.g., Closed"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Social Media Links */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Social Media Links</label>
+          <div className="space-y-3">
+            <input
+              type="text"
+              name="facebook"
+              value={formData.socialMediaLinks.facebook}
+              onChange={handleSocialMediaChange}
+              placeholder="Facebook URL"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+            <input
+              type="text"
+              name="twitter"
+              value={formData.socialMediaLinks.twitter}
+              onChange={handleSocialMediaChange}
+              placeholder="Twitter URL"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+            <input
+              type="text"
+              name="instagram"
+              value={formData.socialMediaLinks.instagram}
+              onChange={handleSocialMediaChange}
+              placeholder="Instagram URL"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+          </div>
         </div>
 
         <div>
