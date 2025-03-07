@@ -7,9 +7,10 @@ interface SignUpLayoutProps {
   title: string;
   description: string;
   children: React.ReactNode;
+  userType: string; // Add userType prop
 }
 
-const SignUpLayout = ({ title, description, children }: SignUpLayoutProps) => {
+const SignUpLayout = ({ title, description, children, userType }: SignUpLayoutProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
       <div className="max-w-4xl w-full bg-white rounded-2xl shadow-xl flex overflow-hidden">
@@ -80,7 +81,7 @@ const SignUpLayout = ({ title, description, children }: SignUpLayoutProps) => {
             <div className="text-center">
               <p className="text-sm text-gray-600">
                 Already have an account?{' '}
-                <Link href="/auth/selection" className="text-blue-600 hover:text-blue-700 font-semibold">
+                <Link href={`/auth/login/${userType}`} className="text-blue-600 hover:text-blue-700 font-semibold">
                   Sign in
                 </Link>
               </p>

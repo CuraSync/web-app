@@ -90,6 +90,7 @@ const PatientSignUpPage = () => {
     <SignUpLayout
       title="Patient Portal"
       description="Access quality healthcare services and manage your medical records efficiently."
+      userType="patient"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
