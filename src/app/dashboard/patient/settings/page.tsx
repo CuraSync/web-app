@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from 'react';
 import { Users, HelpCircle, LogOut, Settings as SettingsIcon, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -10,11 +11,12 @@ const SettingsPage = () => {
   const [profileData, setProfileData] = useState(() => {
     const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
     return {
+      patientId: 'PAT12345',
       firstName: savedData.firstName || 'Sarah',
       lastName: savedData.lastName || 'Johnson',
       fullName: savedData.fullName || 'Sarah Johnson',
       email: savedData.email || 'sarah.johnson@example.com',
-      nic: savedData.nic || '',
+      nic: '982760149V',
       password: '****',
       phone: savedData.phone || '+1 (555) 123-4567',
       address: savedData.address || '123 Main St, City, Country',
@@ -137,6 +139,28 @@ const SettingsPage = () => {
 
             <h2 className="text-lg font-semibold mt-6 mb-4">Personal Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Patient ID - Read Only */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Patient ID</label>
+                <input
+                  type="text"
+                  value={profileData.patientId}
+                  className="w-full px-3 py-2 border rounded-md bg-gray-100"
+                  disabled
+                />
+              </div>
+
+              {/* NIC - Read Only */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">NIC</label>
+                <input
+                  type="text"
+                  value={profileData.nic}
+                  className="w-full px-3 py-2 border rounded-md bg-gray-100"
+                  disabled
+                />
+              </div>
+
               {/* First Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
