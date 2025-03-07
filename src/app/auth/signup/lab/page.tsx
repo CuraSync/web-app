@@ -2,8 +2,12 @@
 import React, { useState } from 'react';
 import SignUpLayout from '@/components/auth/SignUpLayout';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import axios from 'axios';
 
 const LabSignUpPage = () => {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     labName: '',
     email: '',
@@ -30,8 +34,45 @@ const LabSignUpPage = () => {
       return;
     }
 
-    // Add your form submission logic here
-    toast.success("Account created successfully!");
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    // Validate required fields
+    const requiredFields = ['labName', 'email', 'licenceNumber', 'password', 'phone', 'location'];
+    const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
+    if (missingFields.length > 0) {
+      toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await axios.post('https://curasync-backend.onrender.com/lab/register', {
+        labName: formData.labName,
+        email: formData.email,
+        licenceNumber: formData.licenceNumber,
+        password: formData.password,
+        phoneNumber: formData.phone,
+        location: formData.location
+      });
+
+      toast.success("Account created successfully!");
+      router.push('/auth/login/lab');
+    } catch (error: any) {
+      if (error.response) {
+        toast.error(error.response.data.message || "Registration failed");
+      } else {
+        toast.error("An error occurred during registration");
+      }
+      console.error('Registration error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -130,9 +171,20 @@ const LabSignUpPage = () => {
         <div>
           <button
             type="submit"
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading}
           >
-            Create Account
+            {isLoading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creating Account...
+              </>
+            ) : (
+              'Create Account'
+            )}
           </button>
         </div>
       </form>
