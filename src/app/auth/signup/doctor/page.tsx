@@ -87,6 +87,7 @@ const DoctorSignUpPage = () => {
     <SignUpLayout
       title="Doctor Portal"
       description="Join our network of healthcare professionals and provide quality care to patients."
+      userType="doctor"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
