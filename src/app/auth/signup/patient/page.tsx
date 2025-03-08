@@ -9,12 +9,10 @@ const PatientSignUpPage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    patientId: 'PAT' + Math.random().toString(36).substr(2, 9).toUpperCase(),
     firstName: '',
     lastName: '',
     fullName: '',
     email: '',
-    nic: '982760149V', // Static NIC
     password: '',
     confirmPassword: '',
     phone: '',
@@ -65,12 +63,14 @@ const PatientSignUpPage = () => {
         lastName: formData.lastName,
         fullName: formData.fullName,
         email: formData.email,
-        nic: formData.nic,
         password: formData.password,
         phoneNumber: formData.phone,
         address: formData.address,
         dateOfBirth: formData.dateOfBirth
       });
+
+      // Save patient data to localStorage
+      localStorage.setItem('patientData', JSON.stringify(formData));
 
       toast.success("Account created successfully!");
       router.push('/auth/login/patient');
@@ -94,28 +94,6 @@ const PatientSignUpPage = () => {
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Patient ID - Read Only */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Patient ID</label>
-            <input
-              type="text"
-              value={formData.patientId}
-              className="w-full px-3 py-2 border rounded-md bg-gray-100 cursor-not-allowed"
-              disabled
-            />
-          </div>
-
-          {/* NIC - Read Only */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">NIC</label>
-            <input
-              type="text"
-              value={formData.nic}
-              className="w-full px-3 py-2 border rounded-md bg-gray-100 cursor-not-allowed"
-              disabled
-            />
-          </div>
-
           {/* First Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
