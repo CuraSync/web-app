@@ -29,19 +29,27 @@ const PatientDashboard = () => {
 
   const [allergies, setAllergies] = useState(() => {
     const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
-    const allergyText = savedData.allergies || "Penicillin, Peanuts, Pollen";
-    // Parse allergies string into an array of objects if it exists
-    return allergyText
-      ? allergyText.split(',').map((item: string, index: number) => ({
-          severity: index === 0 ? "Severe" : index === 1 ? "Moderate" : "Mild", 
-          type: item.trim().toLowerCase().includes("penicillin") ? "Drug" : item.trim().toLowerCase().includes("peanuts") ? "Food" : "Environmental",
-          name: item.trim(),
-        }))
-      : [
-          { severity: "Severe", type: "Drug", name: "Penicillin" },
-          { severity: "Moderate", type: "Food", name: "Peanuts" },
-          { severity: "Mild", type: "Environmental", name: "Pollen" },
-        ];
+    
+    // Check if allergies data already exists and is in the correct format
+    if (savedData.allergies && Array.isArray(savedData.allergies)) {
+      return savedData.allergies;
+    }
+    
+    // Otherwise, check if it's a string that needs to be parsed
+    const allergyText = typeof savedData.allergies === 'string' 
+      ? savedData.allergies 
+      : "Penicillin, Peanuts, Pollen";
+      
+    // Parse allergies string into an array of objects
+    return allergyText.split(',').map((item: string, index: number) => ({
+      severity: index === 0 ? "Severe" : index === 1 ? "Moderate" : "Mild", 
+      type: item.trim().toLowerCase().includes("penicillin") 
+        ? "Drug" 
+        : item.trim().toLowerCase().includes("peanuts") 
+          ? "Food" 
+          : "Environmental",
+      name: item.trim(),
+    }));
   });
 
   const [vitalStats, setVitalStats] = useState(() => {

@@ -1,34 +1,22 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, HelpCircle, LogOut, Settings as SettingsIcon, Upload, Plus, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../sidebar/sidebar';
 import { toast } from 'sonner';
 
-type AllergyItem = {
+// Define an interface for allergy items
+interface AllergyItem {
   name: string;
   severity: 'Severe' | 'Moderate' | 'Low';
-};
+}
 
 const SettingsPage = () => {
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [newAllergy, setNewAllergy] = useState('');
-  const [newAllergySeverity, setNewAllergySeverity] = useState<'Severe' | 'Moderate' | 'Low'>('Moderate');
+  const [allergies, setAllergies] = useState<AllergyItem[]>([]);
   const [profileData, setProfileData] = useState(() => {
     const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
-    // Convert existing string allergies to structured format if needed
-    let allergies: AllergyItem[] = [];
-    if (savedData.allergies && Array.isArray(savedData.allergies)) {
-      allergies = savedData.allergies;
-    } else if (savedData.medicationAllergies) {
-      // Convert old string format to new structured format
-      allergies = savedData.medicationAllergies.split(',')
-        .map((item: string) => item.trim())
-        .filter((item: string) => item)
-        .map((item: string) => ({ name: item, severity: 'Moderate' as const }));
-    }
-
     return {
       patientId: 'PAT12345',
       firstName: savedData.firstName || 'Sarah',
@@ -44,13 +32,30 @@ const SettingsPage = () => {
       weight: savedData.weight || '65',
       bmi: savedData.bmi || '22.5',
       bloodType: savedData.bloodType || 'A+',
-      allergies: allergies,
       guardianName: savedData.guardianName || '',
       guardianContact: savedData.guardianContact || '',
       guardianEmail: savedData.guardianEmail || '',
       profilePic: savedData.profilePic || '',
     };
   });
+
+  // Initialize allergies from localStorage
+  useEffect(() => {
+    const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+    if (savedData.allergies && Array.isArray(savedData.allergies)) {
+      setAllergies(savedData.allergies);
+    } else if (typeof savedData.medicationAllergies === 'string' && savedData.medicationAllergies) {
+      // Convert old format to new format
+      const allergyItems = savedData.medicationAllergies.split(',').map((name: string) => ({
+        name: name.trim(),
+        severity: 'Moderate' as const
+      }));
+      setAllergies(allergyItems);
+    } else {
+      // Start with an empty allergy item if none exist
+      setAllergies([{ name: '', severity: 'Moderate' }]);
+    }
+  }, []);
 
   const calculateBMI = (height: string, weight: string) => {
     if (height && weight) {
@@ -98,8 +103,39 @@ const SettingsPage = () => {
     }
   };
 
+  // Handle changes to allergy items
+  const handleAllergyChange = (index: number, field: 'name' | 'severity', value: string) => {
+    const newAllergies = [...allergies];
+    newAllergies[index] = {
+      ...newAllergies[index],
+      [field]: value
+    };
+    setAllergies(newAllergies);
+  };
+
+  // Add a new allergy field
+  const addAllergyField = () => {
+    setAllergies([...allergies, { name: '', severity: 'Moderate' }]);
+  };
+
+  // Remove an allergy field
+  const removeAllergyField = (index: number) => {
+    if (allergies.length > 1) {
+      const newAllergies = allergies.filter((_, i) => i !== index);
+      setAllergies(newAllergies);
+    }
+  };
+
   const handleSaveProfile = () => {
-    localStorage.setItem('patientData', JSON.stringify(profileData));
+    // Filter out empty allergy entries
+    const filteredAllergies = allergies.filter(item => item.name.trim() !== '');
+    
+    // Save all data including the allergies array
+    localStorage.setItem('patientData', JSON.stringify({
+      ...profileData,
+      allergies: filteredAllergies
+    }));
+    
     toast.success("Profile updated successfully");
   };
 
@@ -107,33 +143,6 @@ const SettingsPage = () => {
     localStorage.removeItem('userRole');
     router.push('/auth/login/patient');
     toast.success("Logged out successfully");
-  };
-
-  const handleAddAllergy = () => {
-    if (newAllergy.trim()) {
-      setProfileData(prev => ({
-        ...prev,
-        allergies: [...prev.allergies, { name: newAllergy.trim(), severity: newAllergySeverity }]
-      }));
-      setNewAllergy('');
-      setNewAllergySeverity('Moderate');
-    }
-  };
-
-  const handleRemoveAllergy = (index: number) => {
-    setProfileData(prev => ({
-      ...prev,
-      allergies: prev.allergies.filter((_, i) => i !== index)
-    }));
-  };
-
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'Severe': return 'bg-red-100 text-red-800 border-red-200';
-      case 'Moderate': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'Low': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
   };
 
   return (
@@ -338,55 +347,52 @@ const SettingsPage = () => {
                 />
               </div>
 
-              {/* Medication Allergies - Enhanced with + icon and severity dropdown */}
+              {/* Allergies Section - Modified */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Medication Allergies</label>
-                
-                {/* Display existing allergies with severity indicators */}
-                {profileData.allergies && profileData.allergies.length > 0 && (
-                  <div className="mb-3 flex flex-wrap gap-2">
-                    {profileData.allergies.map((allergy, index) => (
-                      <div key={index} className={`flex items-center px-3 py-1 rounded-full border ${getSeverityColor(allergy.severity)}`}>
-                        <span>{allergy.name}</span>
-                        <span className="ml-2 text-xs font-medium">({allergy.severity})</span>
-                        <button 
-                          type="button"
-                          onClick={() => handleRemoveAllergy(index)}
-                          className="ml-2 text-gray-500 hover:text-gray-700"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {/* Add new allergy with severity selection */}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newAllergy}
-                    onChange={(e) => setNewAllergy(e.target.value)}
-                    className="flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                    placeholder="Add a medication allergy"
-                  />
-                  <select
-                    value={newAllergySeverity}
-                    onChange={(e) => setNewAllergySeverity(e.target.value as 'Severe' | 'Moderate' | 'Low')}
-                    className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Medication Allergies</label>
+                  <button 
+                    type="button" 
+                    onClick={addAllergyField}
+                    className="flex items-center text-sm text-blue-600 hover:text-blue-800"
                   >
-                    <option value="Severe">Severe</option>
-                    <option value="Moderate">Moderate</option>
-                    <option value="Low">Low</option>
-                  </select>
-                  <button
-                    type="button"
-                    onClick={handleAddAllergy}
-                    className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center"
-                  >
-                    <Plus className="w-5 h-5" />
+                    <Plus className="w-4 h-4 mr-1" /> Add Allergy
                   </button>
                 </div>
+                
+                {allergies.map((allergy, index) => (
+                  <div key={index} className="flex items-center space-x-2 mb-2">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={allergy.name}
+                        onChange={(e) => handleAllergyChange(index, 'name', e.target.value)}
+                        placeholder="Allergy name"
+                        className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="w-1/3">
+                      <select
+                        value={allergy.severity}
+                        onChange={(e) => handleAllergyChange(index, 'severity', e.target.value as any)}
+                        className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="Severe">Severe</option>
+                        <option value="Moderate">Moderate</option>
+                        <option value="Low">Low</option>
+                      </select>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => removeAllergyField(index)}
+                      className="p-1 text-gray-500 hover:text-red-500"
+                      title="Remove"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                ))}
+                <p className="text-xs text-gray-500 mt-1">Add all medication allergies with their severity levels.</p>
               </div>
 
               {/* Guardian Information */}
