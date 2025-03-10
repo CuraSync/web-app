@@ -36,18 +36,6 @@ const DoctorDashboard = () => {
               <p className="text-3xl font-bold text-blue-600">24</p>
               <p className="text-sm text-gray-500 mt-2">+3 new this week</p>
             </div>
-            
-            <div className="bg-white rounded-lg shadow p-6 border border-gray-100">
-              <h2 className="text-lg font-semibold mb-2">Appointments Today</h2>
-              <p className="text-3xl font-bold text-green-600">8</p>
-              <p className="text-sm text-gray-500 mt-2">2 completed, 6 remaining</p>
-            </div>
-            
-            <div className="bg-white rounded-lg shadow p-6 border border-gray-100">
-              <h2 className="text-lg font-semibold mb-2">Pending Reports</h2>
-              <p className="text-3xl font-bold text-yellow-600">5</p>
-              <p className="text-sm text-gray-500 mt-2">3 lab results, 2 prescriptions</p>
-            </div>
           </div>
           
           <div className="mt-8">
