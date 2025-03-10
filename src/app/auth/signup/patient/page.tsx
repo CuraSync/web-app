@@ -42,6 +42,12 @@ const PatientSignUpPage = () => {
       return;
     }
 
+    // Validate NIC format (assuming a simple format check)
+    if (!formData.nic || formData.nic.length < 10) {
+      toast.error("Please enter a valid NIC number");
+      return;
+    }
+
     // Validate required fields
     const requiredFields = ['firstName', 'lastName', 'fullName', 'email', 'nic', 'password', 'phone', 'address', 'dateOfBirth'];
     const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
@@ -65,8 +71,11 @@ const PatientSignUpPage = () => {
         dateOfBirth: formData.dateOfBirth
       });
 
-      // Save patient data to localStorage
-      localStorage.setItem('patientData', JSON.stringify(formData));
+      // Save patient data to localStorage, including NIC
+      localStorage.setItem('patientData', JSON.stringify({
+        ...formData,
+        nic: formData.nic // Explicitly store NIC
+      }));
 
       toast.success("Account created successfully!");
       

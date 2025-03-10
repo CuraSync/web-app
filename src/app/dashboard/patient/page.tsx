@@ -10,60 +10,86 @@ const PatientDashboard = () => {
 
   // Initialize state with data from localStorage
   const [patientInfo, setPatientInfo] = useState(() => {
-    const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+    if (typeof window !== 'undefined') {
+      const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+      return {
+        name: savedData.fullName || "Sarah Johnson",
+        dob: savedData.dateOfBirth || "15 May 1985",
+        bloodType: savedData.bloodType || "A+",
+        nic: savedData.nic || "", // Add NIC to patient info
+      };
+    }
     return {
-      name: savedData.fullName || "Sarah Johnson",
-      dob: savedData.dateOfBirth || "15 May 1985",
-      bloodType: savedData.bloodType || "A+",
+      name: "Sarah Johnson",
+      dob: "15 May 1985",
+      bloodType: "A+",
+      nic: "",
     };
   });
 
   const [emergencyContact, setEmergencyContact] = useState(() => {
-    const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+    if (typeof window !== 'undefined') {
+      const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+      return {
+        name: savedData.emergencyContactName || "Michael Johnson",
+        relation: savedData.emergencyContactRelation || "Spouse",
+        phone: savedData.emergencyContactPhone || "+1 (555) 876-5432",
+      };
+    }
     return {
-      name: savedData.emergencyContactName || "Michael Johnson",
-      relation: savedData.emergencyContactRelation || "Spouse",
-      phone: savedData.emergencyContactPhone || "+1 (555) 876-5432",
+      name: "Michael Johnson",
+      relation: "Spouse",
+      phone: "+1 (555) 876-5432",
     };
   });
 
   const [allergies, setAllergies] = useState(() => {
-    const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
-    
-    // Check if allergies data already exists and is in the correct format
-    if (savedData.allergies && Array.isArray(savedData.allergies)) {
-      return savedData.allergies;
-    }
-    
-    // Otherwise, check if it's a string that needs to be parsed
-    const allergyText = typeof savedData.allergies === 'string' 
-      ? savedData.allergies 
-      : "Penicillin, Peanuts, Pollen";
+    if (typeof window !== 'undefined') {
+      const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
       
-    // Parse allergies string into an array of objects
-    return allergyText.split(',').map((item: string, index: number) => ({
-      severity: index === 0 ? "Severe" : index === 1 ? "Moderate" : "Mild", 
-      type: item.trim().toLowerCase().includes("penicillin") 
-        ? "Drug" 
-        : item.trim().toLowerCase().includes("peanuts") 
-          ? "Food" 
-          : "Environmental",
-      name: item.trim(),
-    }));
+      if (savedData.allergies && Array.isArray(savedData.allergies)) {
+        return savedData.allergies;
+      }
+      
+      const allergyText = typeof savedData.allergies === 'string' 
+        ? savedData.allergies 
+        : "Penicillin, Peanuts, Pollen";
+        
+      return allergyText.split(',').map((item: string, index: number) => ({
+        severity: index === 0 ? "Severe" : index === 1 ? "Moderate" : "Mild", 
+        type: item.trim().toLowerCase().includes("penicillin") 
+          ? "Drug" 
+          : item.trim().toLowerCase().includes("peanuts") 
+            ? "Food" 
+            : "Environmental",
+        name: item.trim(),
+      }));
+    }
+    return [];
   });
 
   const [vitalStats, setVitalStats] = useState(() => {
-    const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+    if (typeof window !== 'undefined') {
+      const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+      return {
+        height: savedData.height ? `${savedData.height} cm` : "170 cm",
+        weight: savedData.weight ? `${savedData.weight} kg` : "70 kg",
+        bmi: savedData.bmi || "24.2",
+      };
+    }
     return {
-      height: savedData.height ? `${savedData.height} cm` : "170 cm",
-      weight: savedData.weight ? `${savedData.weight} kg` : "70 kg",
-      bmi: savedData.bmi || "24.2",
+      height: "170 cm",
+      weight: "70 kg",
+      bmi: "24.2",
     };
   });
 
   const [lastUpdated, setLastUpdated] = useState(() => {
-    const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
-    return savedData.lastUpdated || "25 Jan 2025";
+    if (typeof window !== 'undefined') {
+      const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
+      return savedData.lastUpdated || "25 Jan 2025";
+    }
+    return "25 Jan 2025";
   });
 
   useEffect(() => {
@@ -100,12 +126,15 @@ const PatientDashboard = () => {
           <div className="bg-white rounded-lg shadow-sm border p-6 flex justify-between items-start">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600 text-xl font-semibold">{patientInfo.name.split(' ').map((n: string) => n[0]).join('')}</span>
+                <span className="text-blue-600 text-xl font-semibold">
+                  {patientInfo.name.split(' ').map((n: string) => n[0]).join('')}
+                </span>
               </div>
               <div>
                 <h2 className="text-xl font-bold">{patientInfo.name}</h2>
                 <p className="text-gray-600">DOB: {patientInfo.dob}</p>
                 <p className="text-gray-600">Blood Type: {patientInfo.bloodType}</p>
+                <p className="text-gray-600">NIC: {patientInfo.nic}</p>
               </div>
             </div>
           </div>

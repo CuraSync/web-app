@@ -1,11 +1,10 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Users, HelpCircle, LogOut, Settings as SettingsIcon, Upload, Plus, X } from 'lucide-react';
+import { Users, HelpCircle, LogOut, Settings as SettingsIcon, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../sidebar/sidebar';
 import { toast } from 'sonner';
 
-// Define an interface for allergy items
 interface AllergyItem {
   name: string;
   severity: 'Severe' | 'Moderate' | 'Low';
@@ -23,7 +22,7 @@ const SettingsPage = () => {
       lastName: savedData.lastName || 'Johnson',
       fullName: savedData.fullName || 'Sarah Johnson',
       email: savedData.email || 'sarah.johnson@example.com',
-      nic: '982760149V',
+      nic: savedData.nic || '', // Get NIC from localStorage
       password: '****',
       phone: savedData.phone || '+1 (555) 123-4567',
       address: savedData.address || '123 Main St, City, Country',
@@ -103,37 +102,11 @@ const SettingsPage = () => {
     }
   };
 
-  // Handle changes to allergy items
-  const handleAllergyChange = (index: number, field: 'name' | 'severity', value: string) => {
-    const newAllergies = [...allergies];
-    newAllergies[index] = {
-      ...newAllergies[index],
-      [field]: value
-    };
-    setAllergies(newAllergies);
-  };
-
-  // Add a new allergy field
-  const addAllergyField = () => {
-    setAllergies([...allergies, { name: '', severity: 'Moderate' }]);
-  };
-
-  // Remove an allergy field
-  const removeAllergyField = (index: number) => {
-    if (allergies.length > 1) {
-      const newAllergies = allergies.filter((_, i) => i !== index);
-      setAllergies(newAllergies);
-    }
-  };
-
   const handleSaveProfile = () => {
-    // Filter out empty allergy entries
-    const filteredAllergies = allergies.filter(item => item.name.trim() !== '');
-    
     // Save all data including the allergies array
     localStorage.setItem('patientData', JSON.stringify({
       ...profileData,
-      allergies: filteredAllergies
+      allergies
     }));
     
     toast.success("Profile updated successfully");
@@ -210,8 +183,9 @@ const SettingsPage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">NIC</label>
                 <input
                   type="text"
+                  name="nic"
                   value={profileData.nic}
-                  className="w-full px-3 py-2 border rounded-md bg-gray-100"
+                  className="w-full px-3 py-2 border rounded-md bg-gray-100 cursor-not-allowed"
                   disabled
                 />
               </div>
@@ -345,54 +319,6 @@ const SettingsPage = () => {
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
-              </div>
-
-              {/* Allergies Section - Modified */}
-              <div className="md:col-span-2">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">Medication Allergies</label>
-                  <button 
-                    type="button" 
-                    onClick={addAllergyField}
-                    className="flex items-center text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    <Plus className="w-4 h-4 mr-1" /> Add Allergy
-                  </button>
-                </div>
-                
-                {allergies.map((allergy, index) => (
-                  <div key={index} className="flex items-center space-x-2 mb-2">
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={allergy.name}
-                        onChange={(e) => handleAllergyChange(index, 'name', e.target.value)}
-                        placeholder="Allergy name"
-                        className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div className="w-1/3">
-                      <select
-                        value={allergy.severity}
-                        onChange={(e) => handleAllergyChange(index, 'severity', e.target.value as any)}
-                        className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="Severe">Severe</option>
-                        <option value="Moderate">Moderate</option>
-                        <option value="Low">Low</option>
-                      </select>
-                    </div>
-                    <button 
-                      type="button" 
-                      onClick={() => removeAllergyField(index)}
-                      className="p-1 text-gray-500 hover:text-red-500"
-                      title="Remove"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                ))}
-                <p className="text-xs text-gray-500 mt-1">Add all medication allergies with their severity levels.</p>
               </div>
 
               {/* Guardian Information */}
