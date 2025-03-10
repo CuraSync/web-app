@@ -5,9 +5,6 @@ import { useRouter } from 'next/navigation';
 import PharmacySidebar from '../sidebar/sidebar';
 import { toast } from 'sonner';
 
-// Define the base URL for your API
-const API_BASE_URL = 'https://your-backend-api.com';
-
 const SettingsPage = () => {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -32,7 +29,7 @@ const SettingsPage = () => {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/pharmacy/profile`, {
+        const response = await fetch(`/api/pharmacy/profile`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`, // Include auth token
           },
@@ -61,7 +58,7 @@ const SettingsPage = () => {
   const handleInviteSend = async () => {
     if (email) {
       try {
-        const response = await fetch(`${API_BASE_URL}/pharmacy/invite`, {
+        const response = await fetch(`/api/pharmacy/invite`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -109,7 +106,7 @@ const SettingsPage = () => {
       formData.append('profilePic', file);
 
       try {
-        const response = await fetch(`${API_BASE_URL}/pharmacy/upload-profile-pic`, {
+        const response = await fetch(`/api/pharmacy/upload-profile-pic`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
@@ -134,7 +131,7 @@ const SettingsPage = () => {
 
   const handleSaveProfile = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/pharmacy/profile`, {
+      const response = await fetch(`/api/pharmacy/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
