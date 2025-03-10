@@ -110,7 +110,7 @@ const DoctorSidebar = () => {
       </div>
       
       <div className="mt-auto p-6 border-t border-gray-200">
-        <div className="flex items-center">
+        <Link href="/dashboard/doctor/profile" className="flex items-center">
           <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
             JM
           </div>
@@ -118,7 +118,7 @@ const DoctorSidebar = () => {
             <p className="text-sm font-medium text-gray-900">Dr. James Martin</p>
             <p className="text-xs text-gray-500">General Practitioner</p>
           </div>
-        </div>
+        </Link>
         <button 
           className="mt-4 w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
           onClick={handleLogout}
