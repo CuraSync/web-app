@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import SignUpLayout from '@/components/auth/SignUpLayout';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
 
 const LabSignUpPage = () => {
   const router = useRouter();
@@ -86,26 +85,16 @@ const LabSignUpPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://curasync-backend.onrender.com/lab/register', {
-        labName: formData.labName,
-        email: formData.email,
-        licenceNumber: formData.licenceNumber,
-        password: formData.password,
-        phoneNumber: formData.phone,
-        location: formData.location
-      });
-
-      // Save lab data to localStorage
+      // Store lab data in localStorage
       localStorage.setItem('labData', JSON.stringify(formData));
+      
+      // Set the user role
+      localStorage.setItem('userRole', 'lab');
 
       toast.success("Account created successfully!");
       router.push('/auth/login/lab');
     } catch (error: any) {
-      if (error.response) {
-        toast.error(error.response.data.message || "Registration failed");
-      } else {
-        toast.error("An error occurred during registration");
-      }
+      toast.error("An error occurred during registration. Please try again.");
       console.error('Registration error:', error);
     } finally {
       setIsLoading(false);
@@ -222,8 +211,7 @@ const LabSignUpPage = () => {
           <label className="block text-sm font-medium text-gray-700 mb-2">Operating Hours</label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-600">Weekdays ```jsx
-              </label>
+              <label className="block text-sm text-gray-600">Weekdays</label>
               <input
                 type="text"
                 name="weekdays"
