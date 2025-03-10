@@ -13,8 +13,8 @@ const PatientSignUpPage = () => {
     lastName: '',
     fullName: '',
     email: '',
+    nic: '',
     password: '',
-    confirmPassword: '',
     phone: '',
     address: '',
     dateOfBirth: '',
@@ -34,11 +34,6 @@ const PatientSignUpPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -48,7 +43,7 @@ const PatientSignUpPage = () => {
     }
 
     // Validate required fields
-    const requiredFields = ['firstName', 'lastName', 'fullName', 'email', 'password', 'phone', 'address', 'dateOfBirth'];
+    const requiredFields = ['firstName', 'lastName', 'fullName', 'email', 'nic', 'password', 'phone', 'address', 'dateOfBirth'];
     const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
     if (missingFields.length > 0) {
       toast.error(`Please fill in all required fields: ${missingFields.join(', ')}`);
@@ -63,6 +58,7 @@ const PatientSignUpPage = () => {
         lastName: formData.lastName,
         fullName: formData.fullName,
         email: formData.email,
+        nic: formData.nic,
         password: formData.password,
         phoneNumber: formData.phone,
         address: formData.address,
@@ -73,7 +69,12 @@ const PatientSignUpPage = () => {
       localStorage.setItem('patientData', JSON.stringify(formData));
 
       toast.success("Account created successfully!");
-      router.push('/auth/login/patient');
+      
+      // Redirect to login page after successful registration
+      setTimeout(() => {
+        router.push('/auth/login/patient');
+      }, 1500);
+      
     } catch (error: any) {
       if (error.response) {
         toast.error(error.response.data.message || "Registration failed");
@@ -128,8 +129,9 @@ const PatientSignUpPage = () => {
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
               required
+              readOnly
             />
           </div>
 
@@ -146,6 +148,19 @@ const PatientSignUpPage = () => {
             />
           </div>
 
+          {/* NIC */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">NIC *</label>
+            <input
+              type="text"
+              name="nic"
+              value={formData.nic}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
           {/* Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
@@ -153,19 +168,6 @@ const PatientSignUpPage = () => {
               type="password"
               name="password"
               value={formData.password}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-
-          {/* Confirm Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password *</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
               onChange={handleChange}
               className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
