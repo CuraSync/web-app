@@ -1,11 +1,10 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MessageSquare, Clock, ArrowRightLeft, X, Search, UserPlus } from 'lucide-react';
 import DoctorSidebar from '@/components/doctor/Sidebar';
 import { toast } from 'sonner';
 
-// Define interfaces for type safety
 interface Patient {
   id: number;
   priority: string;
@@ -483,9 +482,6 @@ const PatientsPage = () => {
                     Chat
                   </th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Profile
-                  </th>
-                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -493,7 +489,7 @@ const PatientsPage = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredPatients.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-3 py-4 text-center text-gray-500">
+                    <td colSpan={9} className="px-3 py-4 text-center text-gray-500">
                       No patients found matching your criteria
                     </td>
                   </tr>
@@ -546,11 +542,6 @@ const PatientsPage = () => {
                             {patient.chatStatus ? 'On' : 'Off'}
                           </span>
                         </div>
-                      </td>
-                      <td className="px-3 py-4 whitespace-nowrap">
-                        <button className="px-2 py-1 text-xs border border-blue-500 text-blue-500 rounded-md hover:bg-blue-50">
-                          View Profile
-                        </button>
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">

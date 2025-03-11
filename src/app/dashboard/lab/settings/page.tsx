@@ -1,80 +1,39 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Users, HelpCircle, LogOut, Settings as SettingsIcon, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import PharmacySidebar from '../sidebar/sidebar';
+import Sidebar from '../../lab/sidebar/sidebar';
 import { toast } from 'sonner';
 
 const SettingsPage = () => {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [profileData, setProfileData] = useState({
-    pharmacyId: '',
-    pharmacyName: '',
-    location: '',
-    email: '',
+    labId: 'LAB12345', // Example ID
+    labName: 'City Lab',
+    email: 'info@citylab.com',
+    licenceNumber: 'LIC-987654',
     password: '********', // Placeholder for password
-    contactNo: '',
-    GovRegId: '',
-    description: '',
+    phoneNumber: '+1 (555) 123-4567',
+    location: '123 Main St, City, Country',
+    description: 'Your trusted local lab providing quality diagnostic services.',
+    operatingHours: 'Mon-Fri: 9AM - 5PM',
+    rating: '4.8',
     profilePic: '',
-    socialMediaLinks: {
-      facebook: '',
-      twitter: '',
-      instagram: '',
-    },
+    contactInformation: 'Contact us at +1 (555) 123-4567 or email info@citylab.com',
   });
-
-  // Fetch pharmacy profile data on component mount
-  useEffect(() => {
-    const fetchProfileData = async () => {
-      try {
-        const response = await fetch(`/api/pharmacy/profile`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`, // Include auth token
-          },
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch profile data');
-        }
-        const data = await response.json();
-        setProfileData(data);
-      } catch (error) {
-        toast.error('Failed to load profile data');
-        console.error(error);
-      }
-    };
-
-    fetchProfileData();
-  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('userRole');
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('authToken'); // Assuming you have an auth token
     toast.success("Logged out successfully");
-    router.push('/auth/login/pharmacy');
+    router.push('/auth/login/lab');
   };
 
-  const handleInviteSend = async () => {
+  const handleInviteSend = () => {
     if (email) {
-      try {
-        const response = await fetch(`/api/pharmacy/invite`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          },
-          body: JSON.stringify({ email }),
-        });
-        if (!response.ok) {
-          throw new Error('Failed to send invitation');
-        }
-        toast.success(`Invitation sent to ${email}`);
-        setEmail('');
-      } catch (error) {
-        toast.error('Failed to send invitation');
-        console.error(error);
-      }
+      toast.success(`Invitation sent to ${email}`);
+      setEmail(''); // Clear the input after sending
     } else {
       toast.error("Please enter an email address");
     }
@@ -88,70 +47,28 @@ const SettingsPage = () => {
     });
   };
 
-  const handleSocialMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setProfileData({
-      ...profileData,
-      socialMediaLinks: {
-        ...profileData.socialMediaLinks,
-        [name]: value,
-      },
-    });
-  };
-
-  const handleProfilePicChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const formData = new FormData();
-      formData.append('profilePic', file);
-
-      try {
-        const response = await fetch(`/api/pharmacy/upload-profile-pic`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          },
-          body: formData,
-        });
-        if (!response.ok) {
-          throw new Error('Failed to upload profile picture');
-        }
-        const data = await response.json();
+      const reader = new FileReader();
+      reader.onload = () => {
         setProfileData({
           ...profileData,
-          profilePic: data.profilePicUrl, // Assuming the backend returns the URL
+          profilePic: reader.result as string,
         });
-        toast.success('Profile picture updated successfully');
-      } catch (error) {
-        toast.error('Failed to upload profile picture');
-        console.error(error);
-      }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleSaveProfile = async () => {
-    try {
-      const response = await fetch(`/api/pharmacy/profile`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-        },
-        body: JSON.stringify(profileData),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
-      }
-      toast.success('Profile updated successfully');
-    } catch (error) {
-      toast.error('Failed to update profile');
-      console.error(error);
-    }
+  const handleSaveProfile = () => {
+    // Simulate saving changes locally
+    toast.success('Profile updated successfully');
   };
 
   return (
     <div className="min-h-screen flex font-sans bg-white text-gray-900">
-      <PharmacySidebar />
+      <Sidebar />
       <div className="p-8 flex-1 flex justify-center items-center">
         <div className="w-full max-w-4xl border rounded-lg shadow-md bg-white border-gray-200">
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -164,7 +81,7 @@ const SettingsPage = () => {
           {/* Profile Section */}
           <div className="p-8">
             <div className="flex items-center pb-8 border-b border-gray-200">
-              <div className="relative w-20 h-20 overflow-hidden rounded-full bg-green-100 flex items-center justify-center">
+              <div className="relative w-20 h-20 overflow-hidden rounded-full bg-purple-100 flex items-center justify-center">
                 {profileData.profilePic ? (
                   <img
                     src={profileData.profilePic}
@@ -172,7 +89,7 @@ const SettingsPage = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-green-600 text-2xl font-semibold">MP</span>
+                  <span className="text-purple-800 text-2xl font-semibold">CL</span>
                 )}
                 <label htmlFor="profile-pic" className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer">
                   <Upload className="w-4 h-4" />
@@ -186,30 +103,19 @@ const SettingsPage = () => {
                 </label>
               </div>
               <div className="ml-6">
-                <p className="text-xl font-medium">{profileData.pharmacyName}</p>
+                <p className="text-xl font-medium">{profileData.labName}</p>
                 <p className="text-base text-blue-500">{profileData.email}</p>
               </div>
             </div>
 
-            {/* Editable Pharmacy Information */}
+            {/* Editable Lab Information */}
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Pharmacy Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Lab Name</label>
                 <input
                   type="text"
-                  name="pharmacyName"
-                  value={profileData.pharmacyName}
-                  onChange={handleProfileChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                <input
-                  type="text"
-                  name="location"
-                  value={profileData.location}
+                  name="labName"
+                  value={profileData.labName}
                   onChange={handleProfileChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
@@ -227,22 +133,33 @@ const SettingsPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Licence Number</label>
                 <input
-                  type="tel"
-                  name="contactNo"
-                  value={profileData.contactNo}
+                  type="text"
+                  name="licenceNumber"
+                  value={profileData.licenceNumber}
                   onChange={handleProfileChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Government Registration ID</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <input
+                  type="tel"
+                  name="phoneNumber"
+                  value={profileData.phoneNumber}
+                  onChange={handleProfileChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
                 <input
                   type="text"
-                  name="GovRegId"
-                  value={profileData.GovRegId}
+                  name="location"
+                  value={profileData.location}
                   onChange={handleProfileChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
@@ -260,33 +177,25 @@ const SettingsPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Social Media Links</label>
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    name="facebook"
-                    placeholder="Facebook"
-                    value={profileData.socialMediaLinks.facebook}
-                    onChange={handleSocialMediaChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                  <input
-                    type="text"
-                    name="twitter"
-                    placeholder="Twitter"
-                    value={profileData.socialMediaLinks.twitter}
-                    onChange={handleSocialMediaChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                  <input
-                    type="text"
-                    name="instagram"
-                    placeholder="Instagram"
-                    value={profileData.socialMediaLinks.instagram}
-                    onChange={handleSocialMediaChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Operating Hours</label>
+                <input
+                  type="text"
+                  name="operatingHours"
+                  value={profileData.operatingHours}
+                  onChange={handleProfileChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Information</label>
+                <textarea
+                  name="contactInformation"
+                  value={profileData.contactInformation}
+                  onChange={handleProfileChange}
+                  rows={2}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
               </div>
             </div>
 
@@ -333,6 +242,17 @@ const SettingsPage = () => {
                 <svg className="w-8 h-8 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                 </svg>
+              </button>
+            </div>
+
+            {/* Logout Section */}
+            <div className="py-8">
+              <button
+                onClick={handleLogout}
+                className="flex items-center text-base text-gray-700 hover:text-gray-900 transition-colors"
+              >
+                <LogOut className="w-8 h-8 text-gray-500" />
+                <span className="ml-4">Logout</span>
               </button>
             </div>
           </div>

@@ -36,18 +36,6 @@ const DoctorDashboard = () => {
               <p className="text-3xl font-bold text-blue-600">24</p>
               <p className="text-sm text-gray-500 mt-2">+3 new this week</p>
             </div>
-            
-            <div className="bg-white rounded-lg shadow p-6 border border-gray-100">
-              <h2 className="text-lg font-semibold mb-2">Appointments Today</h2>
-              <p className="text-3xl font-bold text-green-600">8</p>
-              <p className="text-sm text-gray-500 mt-2">2 completed, 6 remaining</p>
-            </div>
-            
-            <div className="bg-white rounded-lg shadow p-6 border border-gray-100">
-              <h2 className="text-lg font-semibold mb-2">Pending Reports</h2>
-              <p className="text-3xl font-bold text-yellow-600">5</p>
-              <p className="text-sm text-gray-500 mt-2">3 lab results, 2 prescriptions</p>
-            </div>
           </div>
           
           <div className="mt-8">
@@ -82,47 +70,6 @@ const DoctorDashboard = () => {
                 </svg>
                 <span>View Doctors</span>
               </button>
-            </div>
-          </div>
-          
-          <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <ul className="divide-y divide-gray-200">
-                <li className="p-4 hover:bg-gray-50">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                      NK
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-900">Nithya Kumar had a checkup</p>
-                      <p className="text-sm text-gray-500">Today at 2:00 PM</p>
-                    </div>
-                  </div>
-                </li>
-                <li className="p-4 hover:bg-gray-50">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-                      VP
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-900">Varun P scheduled an appointment</p>
-                      <p className="text-sm text-gray-500">Yesterday at 5:30 PM</p>
-                    </div>
-                  </div>
-                </li>
-                <li className="p-4 hover:bg-gray-50">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600">
-                      RK
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-900">Lab results received for Rahul K</p>
-                      <p className="text-sm text-gray-500">2 days ago</p>
-                    </div>
-                  </div>
-                </li>
-              </ul>
             </div>
           </div>
         </main>
