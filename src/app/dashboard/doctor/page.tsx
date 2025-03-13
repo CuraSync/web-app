@@ -2,12 +2,26 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DoctorSidebar from '@/components/doctor/Sidebar';
+import api from '@/utils/api'
 
 const DoctorDashboard = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
+  const [name, setName] = useState('');
+
+  //Example GET 
+  const fetchData = async () => {
+    try {
+      const response = await api.get('/doctor/home');
+      setName(response.data.name);
+      console.log(response.data);
+    } catch (error) {
+      console.error("Request failed:", error);
+    }
+  }
 
   useEffect(() => {
+    fetchData();
     const userRole = localStorage.getItem('userRole');
     if (userRole !== 'doctor') {
       router.push('/auth/login/doctor');
