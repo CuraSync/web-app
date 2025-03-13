@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { MessageSquare, Clock, ArrowRightLeft, X, Search, UserPlus } from 'lucide-react';
 import DoctorSidebar from '@/components/doctor/Sidebar';
 import { toast } from 'sonner';
+import api from '@/utils/api';
+
 
 interface Patient {
   id: number;
@@ -159,6 +161,22 @@ const PatientsPage = () => {
       [...defaultPatients, ...JSON.parse(savedPatients)] : 
       defaultPatients;
   });
+
+
+  // Fetch list of patients
+  const fetchList = async () => {
+    try {
+      const response = await api.get("/doctor/patient");
+      console.log(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  
+  useEffect(() => {
+    fetchList();
+  }, []);
+  
 
   useEffect(() => {
     const userRole = localStorage.getItem('userRole');
