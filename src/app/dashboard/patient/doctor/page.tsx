@@ -4,6 +4,7 @@ import { MessageCircle, Calendar, User, Search, List, Grid } from 'lucide-react'
 import { useRouter } from 'next/navigation';
 import Sidebar from '../sidebar/sidebar'; // Import the Sidebar component
 
+
 const DoctorSearch = () => {
   const router = useRouter();
   const [viewMode, setViewMode] = useState('cards');

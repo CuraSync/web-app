@@ -49,7 +49,6 @@ const PatientLogin = () => {
         deviceId = uuidv4();
         localStorage.setItem("deviceId", deviceId);
       }
-
       const response = await axios.post(
         "https://curasync-backend.onrender.com/login",
         {

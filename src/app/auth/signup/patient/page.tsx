@@ -25,7 +25,6 @@ const PatientSignUpPage = () => {
     setFormData(prev => ({
       ...prev,
       [name]: value,
-      // Update fullName when first or last name changes
       ...(name === 'firstName' || name === 'lastName' ? {
         fullName: `${name === 'firstName' ? value : prev.firstName} ${name === 'lastName' ? value : prev.lastName}`.trim()
       } : {})
@@ -35,20 +34,17 @@ const PatientSignUpPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast.error("Please enter a valid email address");
       return;
     }
 
-    // Validate NIC format (assuming a simple format check)
     if (!formData.nic || formData.nic.length < 10) {
       toast.error("Please enter a valid NIC number");
       return;
     }
 
-    // Validate required fields
     const requiredFields = ['firstName', 'lastName', 'fullName', 'email', 'nic', 'password', 'phone', 'address', 'dateOfBirth'];
     const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
     if (missingFields.length > 0) {
@@ -71,15 +67,30 @@ const PatientSignUpPage = () => {
         dateOfBirth: formData.dateOfBirth
       });
 
-      // Save patient data to localStorage, including NIC
-      localStorage.setItem('patientData', JSON.stringify({
-        ...formData,
-        nic: formData.nic // Explicitly store NIC
-      }));
+      // Prepare data in the format expected by Settings page
+      const patientData = {
+        firstname: formData.firstName,
+        lastname: formData.lastName,
+        address: formData.address,
+        bloodType: '', // Default empty as not collected in signup
+        bmi: '', // Will be calculated later
+        dateOfBirth: formData.dateOfBirth,
+        email: formData.email,
+        guardianContactNumber: '',
+        guardianRelation: '',
+        guardianName: '',
+        height: '',
+        medicationAllergies: [],
+        nic: formData.nic,
+        phoneNumber: formData.phone,
+        profilepic: '',
+        updateAt: new Date().toISOString(),
+        weight: ''
+      };
 
+      localStorage.setItem('patientData', JSON.stringify(patientData));
       toast.success("Account created successfully!");
       
-      // Redirect to login page after successful registration
       setTimeout(() => {
         router.push('/auth/login/patient');
       }, 1500);

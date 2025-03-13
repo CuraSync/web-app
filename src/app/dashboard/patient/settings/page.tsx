@@ -1,91 +1,109 @@
+
 "use client";
-import React, { useState, useEffect } from 'react';
-import { Users, HelpCircle, LogOut, Settings as SettingsIcon, Upload } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import Sidebar from '../sidebar/sidebar';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from "react";
+import {
+  Users,
+  HelpCircle,
+  LogOut,
+  Settings as SettingsIcon,
+  Upload,
+  Loader2,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import Sidebar from "../sidebar/sidebar";
+import { toast } from "sonner";
+import api from "@/utils/api";
 
 interface AllergyItem {
   name: string;
-  severity: 'Severe' | 'Moderate' | 'Low';
+  severity: "Severe" | "Moderate" | "Low";
+}
+
+interface PatientInfo {
+  firstname: string;
+  lastname: string;
+  address: string;
+  bloodType: string;
+  bmi: string;
+  dateOfBirth: string;
+  email: string;
+  guardianContactNumber: string;
+  guardianRelation: string;
+  guardianName: string;
+  height: string;
+  medicationAllergies: AllergyItem[];
+  nic: string;
+  patientId: string;
+  phoneNumber: string;
+  profilepic: string;
+  updateAt: string;
+  weight: string;
 }
 
 const SettingsPage = () => {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [allergies, setAllergies] = useState<AllergyItem[]>([]);
-  const [profileData, setProfileData] = useState(() => {
-    const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
-    return {
-      patientId: 'PAT12345',
-      firstName: savedData.firstName || 'Sarah',
-      lastName: savedData.lastName || 'Johnson',
-      fullName: savedData.fullName || 'Sarah Johnson',
-      email: savedData.email || 'sarah.johnson@example.com',
-      nic: savedData.nic || '', // Get NIC from localStorage
-      password: '****',
-      phone: savedData.phone || '+1 (555) 123-4567',
-      address: savedData.address || '123 Main St, City, Country',
-      dateOfBirth: savedData.dateOfBirth || '1990-05-15',
-      height: savedData.height || '170',
-      weight: savedData.weight || '65',
-      bmi: savedData.bmi || '22.5',
-      bloodType: savedData.bloodType || 'A+',
-      guardianName: savedData.guardianName || '',
-      guardianContact: savedData.guardianContact || '',
-      guardianEmail: savedData.guardianEmail || '',
-      profilePic: savedData.profilePic || '',
-    };
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [patientInfo, setPatientInfo] = useState<PatientInfo>({
+    firstname: "",
+    lastname: "",
+    address: "",
+    bloodType: "",
+    bmi: "",
+    dateOfBirth: "",
+    email: "",
+    guardianContactNumber: "",
+    guardianRelation: "",
+    guardianName: "",
+    height: "",
+    medicationAllergies: [],
+    nic: "",
+    patientId: "",
+    phoneNumber: "",
+    profilepic: "",
+    updateAt: "",
+    weight: "",
   });
 
-  // Initialize allergies from localStorage
-  useEffect(() => {
-    const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
-    if (savedData.allergies && Array.isArray(savedData.allergies)) {
-      setAllergies(savedData.allergies);
-    } else if (typeof savedData.medicationAllergies === 'string' && savedData.medicationAllergies) {
-      // Convert old format to new format
-      const allergyItems = savedData.medicationAllergies.split(',').map((name: string) => ({
-        name: name.trim(),
-        severity: 'Moderate' as const
-      }));
-      setAllergies(allergyItems);
-    } else {
-      // Start with an empty allergy item if none exist
-      setAllergies([{ name: '', severity: 'Moderate' }]);
+  const fetchSettingsData = async () => {
+    try {
+      const response = await api.post<PatientInfo>("/patient/settings");
+      setPatientInfo(response.data);
+      localStorage.setItem('patientData', JSON.stringify(response.data)); // Update localStorage with server data
+      console.log("Fetched settings data:", response.data);
+    } catch (error) {
+      console.error("Request failed:", error);
+      toast.error("Failed to load settings data");
+      
+      // Fallback to localStorage if API fails
+      const storedData = localStorage.getItem('patientData');
+      if (storedData) {
+        setPatientInfo(JSON.parse(storedData));
+      }
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
-
-  const calculateBMI = (height: string, weight: string) => {
-    if (height && weight) {
-      const heightInMeters = parseFloat(height) / 100;
-      const weightInKg = parseFloat(weight);
-      return (weightInKg / (heightInMeters * heightInMeters)).toFixed(1);
-    }
-    return '';
   };
 
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setProfileData(prev => {
-      // For height and weight, ensure value is not negative
-      let newValue = value;
-      if ((name === 'height' || name === 'weight') && value !== '') {
-        newValue = Math.max(0, parseFloat(value)).toString();
-      }
+  const handleSaveProfile = async () => {
+    try {
+      setIsSaving(true);
+      
+      await api.post("/patient/profile", {
+        ...patientInfo,
+        updateAt: new Date().toISOString()
+      });
 
-      const newData = { ...prev, [name]: newValue };
+      toast.success("Profile updated successfully");
+      localStorage.setItem("patientData", JSON.stringify(patientInfo));
       
-      // Recalculate BMI if height or weight changes
-      if (name === 'height' || name === 'weight') {
-        newData.bmi = calculateBMI(
-          name === 'height' ? newValue : prev.height,
-          name === 'weight' ? newValue : prev.weight
-        );
-      }
-      
-      return newData;
-    });
+      router.refresh();
+    } catch (error) {
+      console.error("Save failed:", error);
+      toast.error("Failed to save profile");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,30 +111,60 @@ const SettingsPage = () => {
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
-        setProfileData({
-          ...profileData,
-          profilePic: reader.result as string,
-        }); 
+        setPatientInfo((prev) => ({
+          ...prev,
+          profilepic: reader.result as string,
+        }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSaveProfile = () => {
-    // Save all data including the allergies array
-    localStorage.setItem('patientData', JSON.stringify({
-      ...profileData,
-      allergies
-    }));
-    
-    toast.success("Profile updated successfully");
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPatientInfo((prev) => {
+      let newValue = value;
+      if ((name === "height" || name === "weight") && value !== "") {
+        newValue = Math.max(0, parseFloat(value)).toString();
+      }
+
+      const newData = { ...prev, [name]: newValue };
+
+      if (name === "height" || name === "weight") {
+        const heightInMeters = name === "height" ? parseFloat(newValue) / 100 : parseFloat(prev.height) / 100;
+        const weightInKg = name === "weight" ? parseFloat(newValue) : parseFloat(prev.weight);
+        if (heightInMeters && weightInKg) {
+          newData.bmi = (weightInKg / (heightInMeters * heightInMeters)).toFixed(1);
+        }
+      }
+
+      return newData;
+    });
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('userRole');
-    router.push('/auth/login/patient');
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("patientData");
+    router.push("/auth/login/patient");
     toast.success("Logged out successfully");
   };
+
+  useEffect(() => {
+    const userRole = localStorage.getItem("userRole");
+    if (userRole !== "patient") {
+      router.push("/auth/login/patient");
+    } else {
+      fetchSettingsData();
+    }
+  }, [router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex bg-white">
@@ -125,30 +173,27 @@ const SettingsPage = () => {
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Settings</h1>
-            <button
-              onClick={handleSaveProfile}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              Save Changes
-            </button>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            {/* Profile Picture */}
             <div className="flex items-center pb-8 border-b border-gray-200">
               <div className="relative w-20 h-20 overflow-hidden rounded-full bg-blue-100 flex items-center justify-center">
-                {profileData.profilePic ? (
+                {patientInfo.profilepic ? (
                   <img
-                    src={profileData.profilePic}
+                    src={patientInfo.profilepic}
                     alt="Profile"
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <span className="text-blue-600 text-2xl font-semibold">
-                    {profileData.firstName[0]}{profileData.lastName[0]}
+                    {patientInfo.firstname[0]}
+                    {patientInfo.lastname[0]}
                   </span>
                 )}
-                <label htmlFor="profile-pic" className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer">
+                <label
+                  htmlFor="profile-pic"
+                  className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer hover:bg-blue-700 transition-colors"
+                >
                   <Upload className="w-4 h-4" />
                   <input
                     type="file"
@@ -160,201 +205,232 @@ const SettingsPage = () => {
                 </label>
               </div>
               <div className="ml-6">
-                <p className="text-xl font-medium">{profileData.fullName}</p>
-                <p className="text-base text-blue-500">{profileData.email}</p>
+                <p className="text-xl font-medium">
+                  {patientInfo.firstname} {patientInfo.lastname}
+                </p>
+                <p className="text-base text-blue-500">{patientInfo.email}</p>
               </div>
             </div>
 
             <h2 className="text-lg font-semibold mt-6 mb-4">Personal Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Patient ID - Read Only */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Patient ID</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Patient ID
+                </label>
                 <input
                   type="text"
-                  value={profileData.patientId}
+                  value={patientInfo.patientId}
                   className="w-full px-3 py-2 border rounded-md bg-gray-100"
                   disabled
                 />
               </div>
 
-              {/* NIC - Read Only */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">NIC</label>
                 <input
                   type="text"
-                  name="nic"
-                  value={profileData.nic}
+                  value={patientInfo.nic}
                   className="w-full px-3 py-2 border rounded-md bg-gray-100 cursor-not-allowed"
                   disabled
                 />
               </div>
 
-              {/* First Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  First Name
+                </label>
                 <input
                   type="text"
-                  name="firstName"
-                  value={profileData.firstName}
+                  name="firstname"
+                  value={patientInfo.firstname}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
-              {/* Last Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Name
+                </label>
                 <input
                   type="text"
-                  name="lastName"
-                  value={profileData.lastName}
+                  name="lastname"
+                  value={patientInfo.lastname}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
-              {/* Full Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                 Email Address
+                </label>
                 <input
                   type="text"
-                  name="fullName"
-                  value={profileData.fullName}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={profileData.email}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Phone */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={profileData.phone}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Date of Birth */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                <input
-                  type="date"
-                  name="dateOfBirth"
-                  value={profileData.dateOfBirth}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Address */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                <input
-                  type="text"
-                  name="address"
-                  value={profileData.address}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Height */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
-                <input
-                  type="number"
-                  name="height"
-                  value={profileData.height}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Weight */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
-                <input
-                  type="number"
-                  name="weight"
-                  value={profileData.weight}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* BMI - Calculated */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">BMI (Calculated)</label>
-                <input
-                  type="text"
-                  value={profileData.bmi}
+                  value={patientInfo.email}
                   className="w-full px-3 py-2 border rounded-md bg-gray-100"
                   disabled
                 />
               </div>
 
-              {/* Blood Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Blood Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  name="phoneNumber"
+                  value={patientInfo.phoneNumber}
+                  onChange={handleProfileChange}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                 Date of Birth
+                </label>
+                <input
+                  type="date"
+                  name="dateOfBirth"
+                  value={patientInfo.dateOfBirth}
+                  onChange={handleProfileChange}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={patientInfo.address}
+                  onChange={handleProfileChange}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Height (cm)
+                </label>
+                <input
+                  type="number"
+                  name="height"
+                  value={patientInfo.height}
+                  onChange={handleProfileChange}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Weight (kg)
+                </label>
+                <input
+                  type="number"
+                  name="weight"
+                  value={patientInfo.weight}
+                  onChange={handleProfileChange}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  BMI (Calculated)
+                </label>
+                <input
+                  type="text"
+                  value={patientInfo.bmi}
+                  className="w-full px-3 py-2 border rounded-md bg-gray-100"
+                  disabled
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Blood Type
+                </label>
                 <input
                   type="text"
                   name="bloodType"
-                  value={profileData.bloodType}
+                  value={patientInfo.bloodType}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
-              {/* Guardian Information */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Guardian Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Guardian Name
+                </label>
                 <input
                   type="text"
                   name="guardianName"
-                  value={profileData.guardianName}
+                  value={patientInfo.guardianName}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Guardian Contact Number</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Guardian Contact Number
+                </label>
                 <input
                   type="tel"
-                  name="guardianContact"
-                  value={profileData.guardianContact}
+                  name="guardianContactNumber"
+                  value={patientInfo.guardianContactNumber}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Guardian Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Guardian Relation
+                </label>
                 <input
-                  type="email"
-                  name="guardianEmail"
-                  value={profileData.guardianEmail}
+                  type="text"
+                  name="guardianRelation"
+                  value={patientInfo.guardianRelation}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
+          </div>
+
+          <div className="mt-6 flex space-x-4">
+            <button
+              onClick={handleSaveProfile}
+              disabled={isSaving}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <SettingsIcon className="w-4 h-4 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </button>
+            
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center transition-colors"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </button>
           </div>
         </div>
       </div>
