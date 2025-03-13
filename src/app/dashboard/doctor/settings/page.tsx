@@ -1,10 +1,17 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { Users, HelpCircle, LogOut, Settings as SettingsIcon, Upload } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import DoctorSidebar from '@/components/doctor/Sidebar';
-import { toast } from 'sonner';
-import api from '@/utils/api';
+import React, { useState, useEffect } from "react";
+import {
+  Users,
+  HelpCircle,
+  LogOut,
+  Settings as SettingsIcon,
+  Upload,
+  Loader2,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import Sidebar from "@/components/doctor/Sidebar";
+import { toast } from "sonner";
+import api from "@/utils/api";
 
 interface DoctorProfile {
   doctorId: string;
@@ -26,6 +33,8 @@ interface DoctorProfile {
   profilePic: string | null;
 }
 
+type ProfileField = keyof DoctorProfile;
+
 const SettingsPage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
@@ -35,9 +44,9 @@ const SettingsPage = () => {
   const [newCertification, setNewCertification] = useState('');
 
   useEffect(() => {
-    const userRole = localStorage.getItem('userRole');
-    if (userRole !== 'doctor') {
-      router.push('/auth/login/doctor');
+    const userRole = localStorage.getItem("userRole");
+    if (userRole !== "doctor") {
+      router.push("/auth/login/doctor");
       return;
     }
 
@@ -56,33 +65,26 @@ const SettingsPage = () => {
     }
   };
 
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleProfileChange = (field: ProfileField, value: any) => {
     if (!profile) return;
 
-    const { name, value } = e.target;
-    setProfile(prevProfile => {
-      if (!prevProfile) return null;
-
-      const newProfile = { ...prevProfile };
-
-      if (name === 'currentWorkingHospitals') {
-        newProfile[name] = value.split(',').map(item => item.trim()).filter(Boolean);
-      } else {
-        newProfile[name] = value;
-      }
-
-      return newProfile;
+    setProfile(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        [field]: value
+      };
     });
   };
 
   const handleAddEducation = () => {
     if (!profile || !newEducation.trim()) return;
 
-    setProfile(prevProfile => {
-      if (!prevProfile) return null;
+    setProfile(prev => {
+      if (!prev) return null;
       return {
-        ...prevProfile,
-        education: [...prevProfile.education, newEducation.trim()]
+        ...prev,
+        education: [...prev.education, newEducation.trim()]
       };
     });
     setNewEducation('');
@@ -91,11 +93,11 @@ const SettingsPage = () => {
   const handleRemoveEducation = (index: number) => {
     if (!profile) return;
 
-    setProfile(prevProfile => {
-      if (!prevProfile) return null;
+    setProfile(prev => {
+      if (!prev) return null;
       return {
-        ...prevProfile,
-        education: prevProfile.education.filter((_, i) => i !== index)
+        ...prev,
+        education: prev.education.filter((_, i) => i !== index)
       };
     });
   };
@@ -103,11 +105,11 @@ const SettingsPage = () => {
   const handleAddCertification = () => {
     if (!profile || !newCertification.trim()) return;
 
-    setProfile(prevProfile => {
-      if (!prevProfile) return null;
+    setProfile(prev => {
+      if (!prev) return null;
       return {
-        ...prevProfile,
-        certifications: [...prevProfile.certifications, newCertification.trim()]
+        ...prev,
+        certifications: [...prev.certifications, newCertification.trim()]
       };
     });
     setNewCertification('');
@@ -116,11 +118,11 @@ const SettingsPage = () => {
   const handleRemoveCertification = (index: number) => {
     if (!profile) return;
 
-    setProfile(prevProfile => {
-      if (!prevProfile) return null;
+    setProfile(prev => {
+      if (!prev) return null;
       return {
-        ...prevProfile,
-        certifications: prevProfile.certifications.filter((_, i) => i !== index)
+        ...prev,
+        certifications: prev.certifications.filter((_, i) => i !== index)
       };
     });
   };
@@ -131,10 +133,10 @@ const SettingsPage = () => {
 
     try {
       const response = await api.doctor.uploadProfilePic(file);
-      setProfile(prevProfile => {
-        if (!prevProfile) return null;
+      setProfile(prev => {
+        if (!prev) return null;
         return {
-          ...prevProfile,
+          ...prev,
           profilePic: response.data.profilePicUrl
         };
       });
@@ -151,26 +153,12 @@ const SettingsPage = () => {
 
     try {
       setIsSaving(true);
-
-      // Create a clean copy of the data
-      const updateData = {
-        ...profile,
-        education: profile.education.filter(Boolean),
-        certifications: profile.certifications.filter(Boolean),
-        currentWorkingHospitals: profile.currentWorkingHospitals.filter(Boolean),
-        // Ensure fullName is updated based on first and last name
-        fullName: `${profile.firstName} ${profile.lastName}`.trim()
-      };
-
-      await api.doctor.updateProfile(updateData);
-      
-      // Refresh the profile data
-      await fetchDoctorProfile();
-      
+      await api.doctor.updateProfile(profile);
       toast.success('Profile updated successfully');
-    } catch (error: any) {
+      router.refresh();
+    } catch (error) {
       console.error('Failed to update profile:', error);
-      toast.error(error.response?.data?.message || 'Failed to update profile');
+      toast.error('Failed to update profile');
     } finally {
       setIsSaving(false);
     }
@@ -195,32 +183,14 @@ const SettingsPage = () => {
 
   return (
     <div className="min-h-screen flex bg-white">
-      <DoctorSidebar />
+      <Sidebar />
       <div className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Settings</h1>
-            <button
-              onClick={handleSaveProfile}
-              disabled={isSaving}
-              className={`px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center`}
-            >
-              {isSaving ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Saving...
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </button>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border p-6">
-            {/* Profile Picture */}
             <div className="flex items-center pb-8 border-b border-gray-200">
               <div className="relative w-20 h-20 overflow-hidden rounded-full bg-blue-100 flex items-center justify-center">
                 {profile.profilePic ? (
@@ -251,97 +221,86 @@ const SettingsPage = () => {
               </div>
             </div>
 
-            {/* Personal Information */}
-            <div className="mt-6">
-              <h2 className="text-lg font-semibold mb-4">Personal Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={profile.firstName}
-                    onChange={handleProfileChange}
-                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+            <h2 className="text-lg font-semibold mt-6 mb-4">Personal Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <input
+                  type="text"
+                  value={profile.firstName}
+                  onChange={(e) => handleProfileChange('firstName', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={profile.lastName}
-                    onChange={handleProfileChange}
-                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <input
+                  type="text"
+                  value={profile.lastName}
+                  onChange={(e) => handleProfileChange('lastName', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={profile.email}
-                    onChange={handleProfileChange}
-                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={profile.email}
+                  onChange={(e) => handleProfileChange('email', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                  <input
-                    type="tel"
-                    name="phoneNumber"
-                    value={profile.phoneNumber}
-                    onChange={handleProfileChange}
-                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <input
+                  type="tel"
+                  value={profile.phoneNumber}
+                  onChange={(e) => handleProfileChange('phoneNumber', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
-                  <input
-                    type="text"
-                    name="specialization"
-                    value={profile.specialization || ''}
-                    onChange={handleProfileChange}
-                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                <input
+                  type="text"
+                  value={profile.specialization || ''}
+                  onChange={(e) => handleProfileChange('specialization', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Years of Experience</label>
-                  <input
-                    type="text"
-                    name="yearsOfExperience"
-                    value={profile.yearsOfExperience || ''}
-                    onChange={handleProfileChange}
-                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Years of Experience</label>
+                <input
+                  type="text"
+                  value={profile.yearsOfExperience || ''}
+                  onChange={(e) => handleProfileChange('yearsOfExperience', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Current Hospital</label>
-                  <input
-                    type="text"
-                    name="currentWorkingHospitals"
-                    value={profile.currentWorkingHospitals.join(', ')}
-                    onChange={handleProfileChange}
-                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Current Hospital</label>
+                <input
+                  type="text"
+                  value={profile.currentWorkingHospitals.join(', ')}
+                  onChange={(e) => handleProfileChange('currentWorkingHospitals', e.target.value.split(',').map(h => h.trim()))}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Availability</label>
-                  <input
-                    type="text"
-                    name="availability"
-                    value={profile.availability || ''}
-                    onChange={handleProfileChange}
-                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Availability</label>
+                <input
+                  type="text"
+                  value={profile.availability || ''}
+                  onChange={(e) => handleProfileChange('availability', e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
               </div>
             </div>
 
@@ -415,23 +374,40 @@ const SettingsPage = () => {
             <div className="mt-6">
               <h2 className="text-lg font-semibold mb-4">About</h2>
               <textarea
-                name="description"
                 value={profile.description || ''}
-                onChange={handleProfileChange}
+                onChange={(e) => handleProfileChange('description', e.target.value)}
                 rows={4}
                 placeholder="Tell us about yourself and your practice"
                 className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
-            {/* Logout Button */}
-            <div className="mt-8 pt-6 border-t">
+            {/* Save and Logout Buttons */}
+            <div className="mt-8 pt-6 border-t flex justify-between">
+              <button
+                onClick={handleSaveProfile}
+                disabled={isSaving}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <SettingsIcon className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </button>
+              
               <button
                 onClick={handleLogout}
-                className="flex items-center text-red-600 hover:text-red-700"
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center"
               >
-                <LogOut className="w-5 h-5 mr-2" />
-                <span>Logout</span>
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
               </button>
             </div>
           </div>

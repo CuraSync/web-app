@@ -82,7 +82,10 @@ axiosInstance.interceptors.response.use(
 
 // Helper functions for common API operations
 const api = {
-  ...axiosInstance,
+  get: (url: string) => axiosInstance.get(url),
+  post: (url: string, data?: any) => axiosInstance.post(url, data),
+  put: (url: string, data?: any) => axiosInstance.put(url, data),
+  delete: (url: string) => axiosInstance.delete(url),
   
   // Doctor profile operations
   doctor: {
