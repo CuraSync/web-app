@@ -1,34 +1,61 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import DoctorSidebar from '@/components/doctor/Sidebar';
-import api from '@/utils/api'
+import api from '@/utils/api';
+
+interface DoctorStats {
+  totalPatients: number;
+  newPatients: number;
+  appointments: number;
+  appointmentChange: number;
+  rating: number;
+  reviews: number;
+}
 
 const DoctorDashboard = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [name, setName] = useState('');
-
-  //Example GET 
-  const fetchData = async () => {
-    try {
-      const response = await api.get('/doctor/home');
-      setName(response.data.name);
-      console.log(response.data);
-    } catch (error) {
-      console.error("Request failed:", error);
-    }
-  }
+  const [doctorData, setDoctorData] = useState<any>(null);
+  const [stats, setStats] = useState<DoctorStats>({
+    totalPatients: 0,
+    newPatients: 0,
+    appointments: 0,
+    appointmentChange: 0,
+    rating: 0,
+    reviews: 0
+  });
 
   useEffect(() => {
-    fetchData();
     const userRole = localStorage.getItem('userRole');
     if (userRole !== 'doctor') {
       router.push('/auth/login/doctor');
-    } else {
+      return;
+    }
+
+    fetchDoctorData();
+  }, [router]);
+
+  const fetchDoctorData = async () => {
+    try {
+      const response = await api.get('/doctor/home');
+      setDoctorData(response.data);
+      // You would typically get these stats from your backend
+      // For now using placeholder stats
+      setStats({
+        totalPatients: 24,
+        newPatients: 3,
+        appointments: 156,
+        appointmentChange: 5,
+        rating: parseFloat(response.data.rating) || 4.8,
+        reviews: 450
+      });
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Failed to fetch doctor data:', error);
       setIsLoading(false);
     }
-  }, [router]);
+  };
 
   if (isLoading) {
     return <div className="min-h-screen bg-gray-50 p-8">Loading...</div>;
@@ -36,10 +63,8 @@ const DoctorDashboard = () => {
 
   return (
     <div className="min-h-screen flex bg-white">
-      {/* Sidebar */}
       <DoctorSidebar />
       
-      {/* Main Content */}
       <div className="flex-1">
         <main className="p-6">
           <h1 className="text-2xl font-bold mb-6">Doctor Dashboard</h1>
@@ -47,8 +72,20 @@ const DoctorDashboard = () => {
             {/* Dashboard Summary Cards */}
             <div className="bg-white rounded-lg shadow p-6 border border-gray-100">
               <h2 className="text-lg font-semibold mb-2">Total Patients</h2>
-              <p className="text-3xl font-bold text-blue-600">24</p>
-              <p className="text-sm text-gray-500 mt-2">+3 new this week</p>
+              <p className="text-3xl font-bold text-blue-600">{stats.totalPatients}</p>
+              <p className="text-sm text-gray-500 mt-2">+{stats.newPatients} new this week</p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6 border border-gray-100">
+              <h2 className="text-lg font-semibold mb-2">Appointments</h2>
+              <p className="text-3xl font-bold text-blue-600">{stats.appointments}</p>
+              <p className="text-sm text-green-500 mt-2">+{stats.appointmentChange}% from last month</p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6 border border-gray-100">
+              <h2 className="text-lg font-semibold mb-2">Rating</h2>
+              <p className="text-3xl font-bold text-blue-600">{stats.rating}</p>
+              <p className="text-sm text-gray-500 mt-2">Based on {stats.reviews} reviews</p>
             </div>
           </div>
           
@@ -65,15 +102,7 @@ const DoctorDashboard = () => {
                 <span>View Patients</span>
               </button>
               
-              <button 
-                onClick={() => router.push('/dashboard/doctor/messages')}
-                className="bg-green-50 hover:bg-green-100 p-4 rounded-lg flex flex-col items-center justify-center transition-colors"
-              >
-                <svg className="w-8 h-8 text-green-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-                <span>Messages</span>
-              </button>
+              
               
               <button 
                 onClick={() => router.push('/dashboard/doctor/doctors')}
