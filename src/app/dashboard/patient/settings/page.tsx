@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState, useEffect } from "react";
 import {
@@ -30,6 +29,7 @@ interface PatientInfo {
   guardianContactNumber: string;
   guardianRelation: string;
   guardianName: string;
+  guardianEmail: string;
   height: string;
   medicationAllergies: AllergyItem[];
   nic: string;
@@ -55,6 +55,7 @@ const SettingsPage = () => {
     guardianContactNumber: "",
     guardianRelation: "",
     guardianName: "",
+    guardianEmail: "",
     height: "",
     medicationAllergies: [],
     nic: "",
@@ -69,14 +70,12 @@ const SettingsPage = () => {
     try {
       const response = await api.post("/patient/settings");
       setPatientInfo(response.data);
-      localStorage.setItem('patientData', JSON.stringify(response.data)); // Update localStorage with server data
+      localStorage.setItem("patientData", JSON.stringify(response.data));
       console.log("Fetched settings data:", response.data);
     } catch (error) {
       console.error("Request failed:", error);
       toast.error("Failed to load settings data");
-      
-      // Fallback to localStorage if API fails
-      const storedData = localStorage.getItem('patientData');
+      const storedData = localStorage.getItem("patientData");
       if (storedData) {
         setPatientInfo(JSON.parse(storedData));
       }
@@ -88,15 +87,24 @@ const SettingsPage = () => {
   const handleSaveProfile = async () => {
     try {
       setIsSaving(true);
-      
-      await api.post("/patient/profile", {
-        ...patientInfo,
-        updateAt: new Date().toISOString()
-      });
+
+      // Construct payload matching the dashboard req body example (allergy entries now include severity)
+      const payload = {
+        height: Number(patientInfo.height),
+        weight: Number(patientInfo.weight),
+        bmi: parseFloat(patientInfo.bmi),
+        bloodType: patientInfo.bloodType,
+        medicationAllergies: patientInfo.medicationAllergies,
+        guardianName: patientInfo.guardianName,
+        guardianContactNumber: patientInfo.guardianContactNumber,
+        guardianEmail: patientInfo.guardianEmail,
+        profilePic: patientInfo.profilepic,
+      };
+
+      await api.post("/patient/profile", payload);
 
       toast.success("Profile updated successfully");
       localStorage.setItem("patientData", JSON.stringify(patientInfo));
-      
       router.refresh();
     } catch (error) {
       console.error("Save failed:", error);
@@ -127,17 +135,16 @@ const SettingsPage = () => {
       if ((name === "height" || name === "weight") && value !== "") {
         newValue = Math.max(0, parseFloat(value)).toString();
       }
-
       const newData = { ...prev, [name]: newValue };
 
       if (name === "height" || name === "weight") {
-        const heightInMeters = name === "height" ? parseFloat(newValue) / 100 : parseFloat(prev.height) / 100;
+        const heightInMeters =
+          name === "height" ? parseFloat(newValue) / 100 : parseFloat(prev.height) / 100;
         const weightInKg = name === "weight" ? parseFloat(newValue) : parseFloat(prev.weight);
         if (heightInMeters && weightInKg) {
           newData.bmi = (weightInKg / (heightInMeters * heightInMeters)).toFixed(1);
         }
       }
-
       return newData;
     });
   };
@@ -167,7 +174,7 @@ const SettingsPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex bg-white">
+    <div className="min-h-screen flex bg-white overflow-hidden">
       <Sidebar />
       <div className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
@@ -214,6 +221,7 @@ const SettingsPage = () => {
 
             <h2 className="text-lg font-semibold mt-6 mb-4">Personal Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* [Existing fields remain unchanged] */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Patient ID
@@ -225,7 +233,6 @@ const SettingsPage = () => {
                   disabled
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">NIC</label>
                 <input
@@ -235,7 +242,6 @@ const SettingsPage = () => {
                   disabled
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   First Name
@@ -248,7 +254,6 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Last Name
@@ -261,10 +266,9 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                 Email Address
+                  Email Address
                 </label>
                 <input
                   type="text"
@@ -273,7 +277,6 @@ const SettingsPage = () => {
                   disabled
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Phone Number
@@ -286,10 +289,9 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                 Date of Birth
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date of Birth
                 </label>
                 <input
                   type="date"
@@ -299,7 +301,6 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Address
@@ -312,7 +313,6 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Height (cm)
@@ -325,7 +325,6 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Weight (kg)
@@ -338,7 +337,6 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   BMI (Calculated)
@@ -350,7 +348,6 @@ const SettingsPage = () => {
                   disabled
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Blood Type
@@ -363,7 +360,6 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Guardian Name
@@ -376,7 +372,6 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Guardian Contact Number
@@ -389,18 +384,83 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Guardian Relation
+                  Guardian Email
                 </label>
                 <input
-                  type="text"
-                  name="guardianRelation"
-                  value={patientInfo.guardianRelation}
+                  type="email"
+                  name="guardianEmail"
+                  value={patientInfo.guardianEmail}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
+              </div>
+
+              {/* Medication Allergies Section */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Medication Allergies
+                </label>
+                {patientInfo.medicationAllergies.map((allergy, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={allergy.name}
+                      onChange={(e) => {
+                        const updatedAllergies = [...patientInfo.medicationAllergies];
+                        updatedAllergies[index].name = e.target.value;
+                        setPatientInfo((prev) => ({
+                          ...prev,
+                          medicationAllergies: updatedAllergies,
+                        }));
+                      }}
+                      placeholder="Allergy name"
+                      className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    />
+                    <select
+                      value={allergy.severity}
+                      onChange={(e) => {
+                        const updatedAllergies = [...patientInfo.medicationAllergies];
+                        updatedAllergies[index].severity = e.target.value as "Severe" | "Moderate" | "Low";
+                        setPatientInfo((prev) => ({
+                          ...prev,
+                          medicationAllergies: updatedAllergies,
+                        }));
+                      }}
+                      className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Severe">Severe</option>
+                      <option value="Moderate">Moderate</option>
+                      <option value="Low">Low</option>
+                    </select>
+                    <button
+                      onClick={() =>
+                        setPatientInfo((prev) => ({
+                          ...prev,
+                          medicationAllergies: prev.medicationAllergies.filter((_, i) => i !== index),
+                        }))
+                      }
+                      className="px-2 py-1 bg-red-500 text-white rounded-md"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() =>
+                    setPatientInfo((prev) => ({
+                      ...prev,
+                      medicationAllergies: [
+                        ...prev.medicationAllergies,
+                        { name: "", severity: "Low" },
+                      ],
+                    }))
+                  }
+                  className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md"
+                >
+                  Add Allergy
+                </button>
               </div>
             </div>
           </div>
@@ -423,7 +483,7 @@ const SettingsPage = () => {
                 </>
               )}
             </button>
-            
+
             <button
               onClick={handleLogout}
               className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center transition-colors"

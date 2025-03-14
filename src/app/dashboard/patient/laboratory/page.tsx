@@ -1,8 +1,9 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MessageSquare, Clock, Plus, Trash2, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../sidebar/sidebar';
+import api from '@/utils/api';
 
 const LaboratoryPage = () => {
   const router = useRouter();
@@ -51,6 +52,18 @@ const LaboratoryPage = () => {
       hasMessage: false
     }
   ];
+  
+  const ListFetchHomeData = async () => {
+    try {
+      const response = await api.get("/patient/laboratories");
+      console.log(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    ListFetchHomeData();
+  }, []);
 
   // Filter laboratories based on search query
   const filteredLaboratories = laboratories.filter(lab => 
