@@ -9,50 +9,10 @@ const LaboratoryPage = () => {
   const router = useRouter();
   const [addedLaboratories, setAddedLaboratories] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const laboratories = [
-    {
-      id: '1',
-      name: 'Lab A',
-      specialty: 'Pathology',
-      address: '123 Medical Center, Downtown',
-      availableTime: '09:00 AM',
-      hasMessage: true
-    },
-    {
-      id: '2',
-      name: 'Lab B',
-      specialty: 'Microbiology',
-      address: '456 Health Street, Uptown',
-      availableTime: '10:30 AM',
-      hasMessage: true
-    },
-    {
-      id: '3',
-      name: 'Lab C',
-      specialty: 'Radiology',
-      address: '789 Wellness Avenue, Midtown',
-      availableTime: '11:45 AM',
-      hasMessage: false
-    },
-    {
-      id: '4',
-      name: 'Lab D',
-      specialty: 'Biochemistry',
-      address: '101 Care Boulevard, Westside',
-      availableTime: '02:15 PM',
-      hasMessage: true
-    },
-    {
-      id: '5',
-      name: 'Lab E',
-      specialty: 'Hematology',
-      address: '202 Treatment Road, Eastside',
-      availableTime: '03:30 PM',
-      hasMessage: false
-    }
-  ];
-  
+
+
+  const [laboratories, setLaboratories] = useState<any[]>([]);
+
   const ListFetchHomeData = async () => {
     try {
       const response = await api.get("/patient/laboratories");
@@ -127,12 +87,7 @@ const LaboratoryPage = () => {
 
           {/* Available Laboratories */}
           <div className="bg-white rounded-lg shadow-sm mb-8">
-            <h2 className="text-xl font-semibold p-4 border-b">Available Laboratories</h2>
-            {filteredLaboratories.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                No laboratories found matching your search.
-              </div>
-            ) : (
+          
               <div className="divide-y">
                 {filteredLaboratories.map(laboratory => (
                   <div key={laboratory.id} className="p-4 hover:bg-gray-50">
@@ -157,7 +112,7 @@ const LaboratoryPage = () => {
                   </div>
                 ))}
               </div>
-            )}
+            
           </div>
 
           {/* Selected Laboratories */}
