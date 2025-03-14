@@ -84,20 +84,6 @@ const PharmacyPage = () => {
             </div>
           </div>
 
-          {/* Available Pharmacies */}
-          <div className="bg-white rounded-lg shadow-sm mb-8">
-              <div className="divide-y">
-                {filteredPharmacies.map(pharmacy => (
-                  <div key={pharmacy.id} className="p-4 hover:bg-gray-50">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{pharmacy.name}</h3>
-                      <p className="text-sm text-gray-500">{pharmacy.address}</p>
-                      <p className="text-sm text-gray-500">Owner: {pharmacy.patientName}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-          </div>
 
           {/* Selected Pharmacies */}
           <div className="bg-white rounded-lg shadow-sm">

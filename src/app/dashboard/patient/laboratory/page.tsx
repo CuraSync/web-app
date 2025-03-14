@@ -85,36 +85,6 @@ const LaboratoryPage = () => {
             </div>
           </div>
 
-          {/* Available Laboratories */}
-          <div className="bg-white rounded-lg shadow-sm mb-8">
-          
-              <div className="divide-y">
-                {filteredLaboratories.map(laboratory => (
-                  <div key={laboratory.id} className="p-4 hover:bg-gray-50">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center text-white font-bold mr-4">
-                        {laboratory.name.charAt(0)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-medium text-gray-900">{laboratory.name}</h3>
-                            <p className="text-sm text-gray-500">{laboratory.specialty}</p>
-                            <p className="text-sm text-gray-500">{laboratory.address}</p>
-                          </div>
-                          <div className="flex items-center text-gray-500">
-                            <Clock className="w-4 h-4 mr-1" />
-                            <span>{laboratory.availableTime}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            
-          </div>
-
           {/* Selected Laboratories */}
           <div className="bg-white rounded-lg shadow-sm">
             <h2 className="text-xl font-semibold p-4 border-b">Selected Laboratories</h2>

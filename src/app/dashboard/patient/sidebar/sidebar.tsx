@@ -113,7 +113,7 @@ const Sidebar = () => {
             className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
           >
             <FaCog className="w-5 h-5" />
-            <span>Settings</span>
+            <span>Profile</span>
           </Link>
         </nav>
 

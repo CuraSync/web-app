@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import Sidebar from "../sidebar/sidebar";
 import { toast } from "sonner";
+import axios from "axios";
 import api from "@/utils/api";
 
 interface AllergyItem {
@@ -29,7 +30,6 @@ interface PatientInfo {
   guardianContactNumber: string;
   guardianRelation: string;
   guardianName: string;
-  guardianEmail: string;
   height: string;
   medicationAllergies: AllergyItem[];
   nic: string;
@@ -44,6 +44,7 @@ const SettingsPage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [patientInfo, setPatientInfo] = useState<PatientInfo>({
     firstname: "",
     lastname: "",
@@ -55,7 +56,6 @@ const SettingsPage = () => {
     guardianContactNumber: "",
     guardianRelation: "",
     guardianName: "",
-    guardianEmail: "",
     height: "",
     medicationAllergies: [],
     nic: "",
@@ -69,27 +69,17 @@ const SettingsPage = () => {
   const fetchSettingsData = async () => {
     try {
       const response = await api.post("/patient/settings");
-      setPatientInfo(response.data);
+      console.log("Server Response:", response.data);
+      setPatientInfo(response.data as PatientInfo);
       localStorage.setItem("patientData", JSON.stringify(response.data));
       console.log("Fetched settings data:", response.data);
-    } catch (error) {
-      console.error("Request failed:", error);
-      toast.error("Failed to load settings data");
-      const storedData = localStorage.getItem("patientData");
-      if (storedData) {
-        setPatientInfo(JSON.parse(storedData));
-      }
-    } finally {
+    }finally {
       setIsLoading(false);
     }
   };
-
   const handleSaveProfile = async () => {
     try {
-      setIsSaving(true);
-
-      // Construct payload matching the dashboard req body example (allergy entries now include severity)
-      const payload = {
+      await api.post("/patient/profile", {
         height: Number(patientInfo.height),
         weight: Number(patientInfo.weight),
         bmi: parseFloat(patientInfo.bmi),
@@ -97,35 +87,54 @@ const SettingsPage = () => {
         medicationAllergies: patientInfo.medicationAllergies,
         guardianName: patientInfo.guardianName,
         guardianContactNumber: patientInfo.guardianContactNumber,
-        guardianEmail: patientInfo.guardianEmail,
         profilePic: patientInfo.profilepic,
-      };
-
-      await api.post("/patient/profile", payload);
-
+      });
       toast.success("Profile updated successfully");
-      localStorage.setItem("patientData", JSON.stringify(patientInfo));
       router.refresh();
     } catch (error) {
-      console.error("Save failed:", error);
-      toast.error("Failed to save profile");
-    } finally {
-      setIsSaving(false);
+      toast.error("Failed to update profile");
+      console.error(error);
     }
   };
+  
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPatientInfo((prev) => ({
-          ...prev,
-          profilepic: reader.result as string,
-        }));
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      return;
     }
+
+    if (!file.type.match(/image\/(jpeg|jpg|png|gif|webp)/i)) {
+      toast.error("Only JPG, PNG, GIF, or WebP images are allowed");
+      return;
+    }
+
+    setIsUploading(true);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPatientInfo((prev) => ({
+        ...prev,
+        profilepic: reader.result as string,
+      }));
+      setIsUploading(false);
+      toast.success("Profile picture ready to save");
+    };
+
+    reader.onerror = () => {
+      toast.error("Failed to read the image");
+      setIsUploading(false);
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  const removeProfilePic = () => {
+    setPatientInfo((prev) => ({ ...prev, profilepic: "" }));
+    toast.success("Profile picture removed");
   };
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -149,13 +158,7 @@ const SettingsPage = () => {
     });
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("patientData");
-    router.push("/auth/login/patient");
-    toast.success("Logged out successfully");
-  };
-
+  
   useEffect(() => {
     const userRole = localStorage.getItem("userRole");
     if (userRole !== "patient") {
@@ -185,7 +188,11 @@ const SettingsPage = () => {
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center pb-8 border-b border-gray-200">
               <div className="relative w-20 h-20 overflow-hidden rounded-full bg-blue-100 flex items-center justify-center">
-                {patientInfo.profilepic ? (
+                {isUploading ? (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 animate-spin text-white" />
+                  </div>
+                ) : patientInfo.profilepic && patientInfo.profilepic !== "" ? (
                   <img
                     src={patientInfo.profilepic}
                     alt="Profile"
@@ -193,8 +200,8 @@ const SettingsPage = () => {
                   />
                 ) : (
                   <span className="text-blue-600 text-2xl font-semibold">
-                    {patientInfo.firstname[0]}
-                    {patientInfo.lastname[0]}
+                    {patientInfo.firstname[0] || "F"}
+                    {patientInfo.lastname[0] || "L"}
                   </span>
                 )}
                 <label
@@ -221,7 +228,6 @@ const SettingsPage = () => {
 
             <h2 className="text-lg font-semibold mt-6 mb-4">Personal Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* [Existing fields remain unchanged] */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Patient ID
@@ -384,20 +390,6 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Guardian Email
-                </label>
-                <input
-                  type="email"
-                  name="guardianEmail"
-                  value={patientInfo.guardianEmail}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Medication Allergies Section */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Medication Allergies
@@ -484,13 +476,6 @@ const SettingsPage = () => {
               )}
             </button>
 
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center transition-colors"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </button>
           </div>
         </div>
       </div>

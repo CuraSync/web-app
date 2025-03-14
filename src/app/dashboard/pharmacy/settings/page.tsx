@@ -190,8 +190,6 @@ const SettingsPage = () => {
     setContacts(contacts.filter((_, index) => index !== indexToRemove));
   };
 
-
-
   
   return (
     <div className="min-h-screen flex font-sans bg-white text-gray-900">
