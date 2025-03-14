@@ -9,44 +9,10 @@ const PharmacyPage = () => {
   const router = useRouter();
   const [addedPharmacies, setAddedPharmacies] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const[pharmacies, setpharmacies] = useState<any[]>([]);
   
-  const pharmacies = [
-    {
-      id: 1,
-      name: "MedPlus Pharmacy",
-      address: "123 Healthcare Ave, Medical District",
-      patientName: "Sarah Johnson",
-      hasMessage: true
-    },
-    {
-      id: 2,
-      name: "HealthCare Pharmacy",
-      address: "456 Wellness Blvd, Central Square",
-      patientName: "Sarah Johnson",
-      hasMessage: true
-    },
-    {
-      id: 3,
-      name: "CityMed Drugstore",
-      address: "789 Medicine Lane, Uptown",
-      patientName: "Sarah Johnson",
-      hasMessage: false
-    },
-    {
-      id: 4,
-      name: "QuickRx Pharmacy",
-      address: "101 Health Street, Downtown",
-      patientName: "Sarah Johnson",
-      hasMessage: true
-    },
-    {
-      id: 5,
-      name: "Wellness Pharmacy",
-      address: "202 Care Road, Westside",
-      patientName: "Sarah Johnson",
-      hasMessage: false
-    }
-  ];
+
 
   const ListFetchHomeData = async () => {
     try {
@@ -120,12 +86,6 @@ const PharmacyPage = () => {
 
           {/* Available Pharmacies */}
           <div className="bg-white rounded-lg shadow-sm mb-8">
-            <h2 className="text-xl font-semibold p-4 border-b">Available Pharmacies</h2>
-            {filteredPharmacies.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                No pharmacies found matching your search.
-              </div>
-            ) : (
               <div className="divide-y">
                 {filteredPharmacies.map(pharmacy => (
                   <div key={pharmacy.id} className="p-4 hover:bg-gray-50">
@@ -137,7 +97,6 @@ const PharmacyPage = () => {
                   </div>
                 ))}
               </div>
-            )}
           </div>
 
           {/* Selected Pharmacies */}
