@@ -1,8 +1,9 @@
 "use client";
-import React, { useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import { MessageSquare, Plus, Trash2, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../sidebar/sidebar';
+import api from "@/utils/api";
 
 const PharmacyPage = () => {
   const router = useRouter();
@@ -46,6 +47,18 @@ const PharmacyPage = () => {
       hasMessage: false
     }
   ];
+
+  const ListFetchHomeData = async () => {
+    try {
+      const response = await api.get("/patient/pharmacies");
+      console.log(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    ListFetchHomeData();
+  }, []);
 
   // Filter pharmacies based on search query
   const filteredPharmacies = pharmacies.filter(pharmacy => 
