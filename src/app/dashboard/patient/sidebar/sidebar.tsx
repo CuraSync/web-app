@@ -35,15 +35,6 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Header with Hamburger Menu */}
-      <div className="absolute top-0 left-0 w-full shadow-md p-4 flex justify-between items-center z-30">
-        <button
-          className="md:hidden p-3 text-gray-600 focus:outline-none"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          <FaBars className="w-6 h-6" />
-        </button>
-      </div>
 
       {/* Overlay */}
       {isOpen && (

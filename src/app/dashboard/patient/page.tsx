@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "./sidebar/sidebar";
+import { FaUser } from "react-icons/fa";
 import api from "@/utils/api";
 
 // Define the shape of the state object and API response
@@ -52,27 +53,8 @@ const PatientDashboard = () => {
   // fetchHomeData with proper typing for the API response
   const fetchHomeData = async () => {
     try {
-      const response = await api.get<PatientInfo>("/patient/home");
-      setPatientInfo({
-        firstname: response.data.firstname || "",
-        lastname: response.data.lastname || "",
-        address: response.data.address || "",
-        bloodType: response.data.bloodType || "",
-        bmi: response.data.bmi || "",
-        dateOfBirth: response.data.dateOfBirth || "",
-        email: response.data.email || "",
-        guardianContactNumber: response.data.guardianContactNumber || "",
-        guardianRelation: response.data.guardianRelation || "",
-        guardianName: response.data.guardianName || "",
-        height: response.data.height || "",
-        medicationAllergies: response.data.medicationAllergies || [],
-        nic: response.data.nic || "",
-        patientId: response.data.patientId || "",
-        phoneNumber: response.data.phoneNumber || "",
-        profilepic: response.data.profilepic || "",
-        updateAt: response.data.updateAt || "",
-        weight: response.data.weight || "",
-      });
+      const response = await api.get("/patient/home");
+      setPatientInfo(response.data);
     } catch (error) {
       console.error("Request failed:", error);
     }
@@ -97,22 +79,24 @@ const PatientDashboard = () => {
         <header className="border-b p-4 flex items-center justify-between">
           <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-4"></div>
-            <button className="px-4 py-1 border border-blue-600 text-blue-600 rounded-md">
-              Patient
-            </button>
+            <h1 className="text-2xl font-bold mb-6">Patient Dashboard</h1>
           </div>
         </header>
 
-        <div className="p-6">
+      
           {/* Patient Info Card */}
           <div className="bg-white rounded-lg shadow-sm border p-6 flex justify-between items-start">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600 text-xl font-semibold">
-                  {patientInfo.firstname
-                    ? patientInfo.firstname.split(" ").map((n) => n[0]).join("")
-                    : ""}
-                </span>
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+                {patientInfo.profilepic ? (
+                  <img
+                    src={patientInfo.profilepic}
+                    alt={patientInfo.firstname}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <FaUser className="text-blue-600 text-2xl" />
+                )}
               </div>
               <div>
                 <h2 className="text-xl font-bold">
@@ -193,7 +177,7 @@ const PatientDashboard = () => {
               </button>
             </div>
           </div>
-        </div>
+        
       </main>
     </div>
   );

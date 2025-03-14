@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useState, useEffect } from "react";
 import {
@@ -7,13 +8,16 @@ import {
   Settings as SettingsIcon,
   Upload,
   Loader2,
-  X,
-  Camera
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../sidebar/sidebar";
 import { toast } from "sonner";
 import api from "@/utils/api";
+
+interface AllergyItem {
+  name: string;
+  severity: "Severe" | "Moderate" | "Low";
+}
 
 interface PatientInfo {
   firstname: string;
@@ -27,7 +31,7 @@ interface PatientInfo {
   guardianRelation: string;
   guardianName: string;
   height: string;
-  medicationAllergies: { severity: string; type: string; name: string }[];
+  medicationAllergies: AllergyItem[];
   nic: string;
   patientId: string;
   phoneNumber: string;
@@ -40,7 +44,6 @@ const SettingsPage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [patientInfo, setPatientInfo] = useState<PatientInfo>({
     firstname: "",
     lastname: "",
@@ -66,7 +69,7 @@ const SettingsPage = () => {
     try {
       const response = await api.post("/patient/settings");
       setPatientInfo(response.data);
-      localStorage.setItem('patientData', JSON.stringify(response.data));
+      localStorage.setItem('patientData', JSON.stringify(response.data)); // Update localStorage with server data
       console.log("Fetched settings data:", response.data);
     } catch (error) {
       console.error("Request failed:", error);
@@ -80,52 +83,6 @@ const SettingsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    
-    if (!file) return;
-    
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image size should be less than 5MB");
-      return;
-    }
-    
-    // Validate file type
-    if (!file.type.match(/image\/(jpeg|jpg|png|gif|webp)/i)) {
-      toast.error("Only JPG, PNG, GIF, or WebP images are allowed");
-      return;
-    }
-    
-    setIsUploading(true);
-    
-    const reader = new FileReader();
-    
-    reader.onload = () => {
-      setPatientInfo(prev => ({
-        ...prev,
-        profilepic: reader.result as string
-      }));
-      setIsUploading(false);
-      toast.success("Profile picture ready to save");
-    };
-    
-    reader.onerror = () => {
-      toast.error("Failed to read the image");
-      setIsUploading(false);
-    };
-    
-    reader.readAsDataURL(file);
-  };
-
-  const removeProfilePic = () => {
-    setPatientInfo(prev => ({
-      ...prev,
-      profilepic: ""
-    }));
-    toast.success("Profile picture removed");
   };
 
   const handleSaveProfile = async () => {
@@ -147,6 +104,42 @@ const SettingsPage = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPatientInfo((prev) => ({
+          ...prev,
+          profilepic: reader.result as string,
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPatientInfo((prev) => {
+      let newValue = value;
+      if ((name === "height" || name === "weight") && value !== "") {
+        newValue = Math.max(0, parseFloat(value)).toString();
+      }
+
+      const newData = { ...prev, [name]: newValue };
+
+      if (name === "height" || name === "weight") {
+        const heightInMeters = name === "height" ? parseFloat(newValue) / 100 : parseFloat(prev.height) / 100;
+        const weightInKg = name === "weight" ? parseFloat(newValue) : parseFloat(prev.weight);
+        if (heightInMeters && weightInKg) {
+          newData.bmi = (weightInKg / (heightInMeters * heightInMeters)).toFixed(1);
+        }
+      }
+
+      return newData;
+    });
   };
 
   const handleLogout = () => {
@@ -185,36 +178,28 @@ const SettingsPage = () => {
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center pb-8 border-b border-gray-200">
               <div className="relative w-20 h-20 overflow-hidden rounded-full bg-blue-100 flex items-center justify-center">
-                {isUploading ? (
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
-                  </div>
-                ) : patientInfo.profilepic ? (
-                  <>
-                    <img
-                      src={patientInfo.profilepic}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                    />
-                    <button 
-                      onClick={removeProfilePic}
-                      className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full hover:bg-red-700"
-                      title="Remove profile picture"
-                    >
-                      <X size={14} />
-                    </button>
-                  </>
+                {patientInfo.profilepic ? (
+                  <img
+                    src={patientInfo.profilepic}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <Camera size={40} className="text-gray-400" />
+                  <span className="text-blue-600 text-2xl font-semibold">
+                    {patientInfo.firstname[0]}
+                    {patientInfo.lastname[0]}
+                  </span>
                 )}
-                
-                <label htmlFor="profile-pic" className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 shadow-md">
-                  <Upload size={16} />
+                <label
+                  htmlFor="profile-pic"
+                  className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer hover:bg-blue-700 transition-colors"
+                >
+                  <Upload className="w-4 h-4" />
                   <input
                     type="file"
                     id="profile-pic"
                     className="hidden"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    accept="image/*"
                     onChange={handleProfilePicChange}
                   />
                 </label>
@@ -231,12 +216,35 @@ const SettingsPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Patient ID
+                </label>
+                <input
+                  type="text"
+                  value={patientInfo.patientId}
+                  className="w-full px-3 py-2 border rounded-md bg-gray-100"
+                  disabled
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">NIC</label>
+                <input
+                  type="text"
+                  value={patientInfo.nic}
+                  className="w-full px-3 py-2 border rounded-md bg-gray-100 cursor-not-allowed"
+                  disabled
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   First Name
                 </label>
                 <input
                   type="text"
+                  name="firstname"
                   value={patientInfo.firstname}
-                  onChange={(e) => setPatientInfo({ ...patientInfo, firstname: e.target.value })}
+                  onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -247,18 +255,19 @@ const SettingsPage = () => {
                 </label>
                 <input
                   type="text"
+                  name="lastname"
                   value={patientInfo.lastname}
-                  onChange={(e) => setPatientInfo({ ...patientInfo, lastname: e.target.value })}
+                  onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
+                 Email Address
                 </label>
                 <input
-                  type="email"
+                  type="text"
                   value={patientInfo.email}
                   className="w-full px-3 py-2 border rounded-md bg-gray-100"
                   disabled
@@ -271,56 +280,22 @@ const SettingsPage = () => {
                 </label>
                 <input
                   type="tel"
+                  name="phoneNumber"
                   value={patientInfo.phoneNumber}
-                  onChange={(e) => setPatientInfo({ ...patientInfo, phoneNumber: e.target.value })}
+                  onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date of Birth
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                 Date of Birth
                 </label>
                 <input
                   type="date"
+                  name="dateOfBirth"
                   value={patientInfo.dateOfBirth}
-                  onChange={(e) => setPatientInfo({ ...patientInfo, dateOfBirth: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Blood Type
-                </label>
-                <input
-                  type="text"
-                  value={patientInfo.bloodType}
-                  onChange={(e) => setPatientInfo({ ...patientInfo, bloodType: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Height (cm)
-                </label>
-                <input
-                  type="number"
-                  value={patientInfo.height}
-                  onChange={(e) => setPatientInfo({ ...patientInfo, height: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Weight (kg)
-                </label>
-                <input
-                  type="number"
-                  value={patientInfo.weight}
-                  onChange={(e) => setPatientInfo({ ...patientInfo, weight: e.target.value })}
+                  onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -331,8 +306,60 @@ const SettingsPage = () => {
                 </label>
                 <input
                   type="text"
+                  name="address"
                   value={patientInfo.address}
-                  onChange={(e) => setPatientInfo({ ...patientInfo, address: e.target.value })}
+                  onChange={handleProfileChange}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Height (cm)
+                </label>
+                <input
+                  type="number"
+                  name="height"
+                  value={patientInfo.height}
+                  onChange={handleProfileChange}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Weight (kg)
+                </label>
+                <input
+                  type="number"
+                  name="weight"
+                  value={patientInfo.weight}
+                  onChange={handleProfileChange}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  BMI (Calculated)
+                </label>
+                <input
+                  type="text"
+                  value={patientInfo.bmi}
+                  className="w-full px-3 py-2 border rounded-md bg-gray-100"
+                  disabled
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Blood Type
+                </label>
+                <input
+                  type="text"
+                  name="bloodType"
+                  value={patientInfo.bloodType}
+                  onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -343,20 +370,22 @@ const SettingsPage = () => {
                 </label>
                 <input
                   type="text"
+                  name="guardianName"
                   value={patientInfo.guardianName}
-                  onChange={(e) => setPatientInfo({ ...patientInfo, guardianName: e.target.value })}
+                  onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Guardian Contact
+                  Guardian Contact Number
                 </label>
                 <input
                   type="tel"
+                  name="guardianContactNumber"
                   value={patientInfo.guardianContactNumber}
-                  onChange={(e) => setPatientInfo({ ...patientInfo, guardianContactNumber: e.target.value })}
+                  onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -367,40 +396,41 @@ const SettingsPage = () => {
                 </label>
                 <input
                   type="text"
+                  name="guardianRelation"
                   value={patientInfo.guardianRelation}
-                  onChange={(e) => setPatientInfo({ ...patientInfo, guardianRelation: e.target.value })}
+                  onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
+          </div>
 
-            <div className="mt-6 flex space-x-4">
-              <button
-                onClick={handleSaveProfile}
-                disabled={isSaving}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <SettingsIcon className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </>
-                )}
-              </button>
-              
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center transition-colors"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </button>
-            </div>
+          <div className="mt-6 flex space-x-4">
+            <button
+              onClick={handleSaveProfile}
+              disabled={isSaving}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <SettingsIcon className="w-4 h-4 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </button>
+            
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center transition-colors"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </button>
           </div>
         </div>
       </div>

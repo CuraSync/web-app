@@ -1,11 +1,18 @@
 "use client";
 import React from 'react';
-import Layout from '@/components/patient/Layout';
+import Sidebar from './sidebar/sidebar';
 
 export default function PatientLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <Layout>{children}</Layout>;
+  return (
+    <div className="min-h-screen flex bg-white">
+      <Sidebar />
+      <div className="flex-1 ml-64">
+        {children}
+      </div>
+    </div>
+  );
 }
