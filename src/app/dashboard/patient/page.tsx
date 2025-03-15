@@ -99,12 +99,16 @@ const PatientDashboard = () => {
                 )}
               </div>
               <div>
-                <h2 className="text-xl font-bold">
-                  {patientInfo.firstname} {patientInfo.lastname}
-                </h2>
-                <p className="text-gray-600">DOB: {patientInfo.dateOfBirth}</p>
-                <p className="text-gray-600">Blood Type: {patientInfo.bloodType}</p>
-                <p className="text-gray-600">NIC: {patientInfo.nic}</p>
+               <div>
+                  <div>
+                  <h2 className="text-xl font-bold">
+                      Name: {patientInfo.firstname || ''} {patientInfo.lastname || ''}
+                    </h2>
+                    <p className="text-gray-600">DOB: {new Date(patientInfo.dateOfBirth).toLocaleDateString()}</p>
+                    <p className="text-gray-600">Blood Type: {patientInfo.bloodType}</p>
+                    <p className="text-gray-600">NIC: {patientInfo.nic}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

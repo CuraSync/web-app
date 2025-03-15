@@ -11,7 +11,6 @@ import {
 import { useRouter } from "next/navigation";
 import Sidebar from "../sidebar/sidebar";
 import { toast } from "sonner";
-import axios from "axios";
 import api from "@/utils/api";
 
 interface AllergyItem {
@@ -68,18 +67,22 @@ const SettingsPage = () => {
 
   const fetchSettingsData = async () => {
     try {
-      const response = await api.post("/patient/settings");
+      const response = await api.get("/patient/profile");
       console.log("Server Response:", response.data);
       setPatientInfo(response.data as PatientInfo);
       localStorage.setItem("patientData", JSON.stringify(response.data));
-      console.log("Fetched settings data:", response.data);
-    }finally {
+    } catch (error) {
+      console.error("Failed to fetch settings:", error);
+      toast.error("Failed to load profile data");
+    } finally {
       setIsLoading(false);
     }
   };
+
   const handleSaveProfile = async () => {
     try {
-      await api.post("/patient/profile", {
+      setIsSaving(true);
+      const response = await api.post("/patient/profile", {
         height: Number(patientInfo.height),
         weight: Number(patientInfo.weight),
         bmi: parseFloat(patientInfo.bmi),
@@ -87,16 +90,25 @@ const SettingsPage = () => {
         medicationAllergies: patientInfo.medicationAllergies,
         guardianName: patientInfo.guardianName,
         guardianContactNumber: patientInfo.guardianContactNumber,
+        guardianRelation: patientInfo.guardianRelation,
+        address: patientInfo.address,
+        phoneNumber: patientInfo.phoneNumber,
         profilePic: patientInfo.profilepic,
+        dateOfBirth: patientInfo.dateOfBirth
       });
+
+      console.log("Update response:", response.data);
       toast.success("Profile updated successfully");
-      router.refresh();
-    } catch (error) {
-      toast.error("Failed to update profile");
-      console.error(error);
+      
+      // Refresh the profile data
+      await fetchSettingsData();
+    } catch (error: any) {
+      console.error("Update error:", error);
+      toast.error(error.response?.data?.message || "Failed to update profile");
+    } finally {
+      setIsSaving(false);
     }
   };
-  
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -116,9 +128,9 @@ const SettingsPage = () => {
 
     const reader = new FileReader();
     reader.onload = () => {
-      setPatientInfo((prev) => ({
+      setPatientInfo(prev => ({
         ...prev,
-        profilepic: reader.result as string,
+        profilepic: reader.result as string
       }));
       setIsUploading(false);
       toast.success("Profile picture ready to save");
@@ -133,13 +145,13 @@ const SettingsPage = () => {
   };
 
   const removeProfilePic = () => {
-    setPatientInfo((prev) => ({ ...prev, profilepic: "" }));
+    setPatientInfo(prev => ({ ...prev, profilepic: "" }));
     toast.success("Profile picture removed");
   };
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setPatientInfo((prev) => {
+    setPatientInfo(prev => {
       let newValue = value;
       if ((name === "height" || name === "weight") && value !== "") {
         newValue = Math.max(0, parseFloat(value)).toString();
@@ -147,8 +159,7 @@ const SettingsPage = () => {
       const newData = { ...prev, [name]: newValue };
 
       if (name === "height" || name === "weight") {
-        const heightInMeters =
-          name === "height" ? parseFloat(newValue) / 100 : parseFloat(prev.height) / 100;
+        const heightInMeters = name === "height" ? parseFloat(newValue) / 100 : parseFloat(prev.height) / 100;
         const weightInKg = name === "weight" ? parseFloat(newValue) : parseFloat(prev.weight);
         if (heightInMeters && weightInKg) {
           newData.bmi = (weightInKg / (heightInMeters * heightInMeters)).toFixed(1);
@@ -158,7 +169,6 @@ const SettingsPage = () => {
     });
   };
 
-  
   useEffect(() => {
     const userRole = localStorage.getItem("userRole");
     if (userRole !== "patient") {
@@ -192,7 +202,7 @@ const SettingsPage = () => {
                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                     <Loader2 className="w-6 h-6 animate-spin text-white" />
                   </div>
-                ) : patientInfo.profilepic && patientInfo.profilepic !== "" ? (
+                ) : patientInfo.profilepic ? (
                   <img
                     src={patientInfo.profilepic}
                     alt="Profile"
@@ -200,14 +210,10 @@ const SettingsPage = () => {
                   />
                 ) : (
                   <span className="text-blue-600 text-2xl font-semibold">
-                    {patientInfo.firstname[0] || "F"}
-                    {patientInfo.lastname[0] || "L"}
+                    {patientInfo.firstname[0]}{patientInfo.lastname[0]}
                   </span>
                 )}
-                <label
-                  htmlFor="profile-pic"
-                  className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer hover:bg-blue-700 transition-colors"
-                >
+                <label htmlFor="profile-pic" className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer hover:bg-blue-700 transition-colors">
                   <Upload className="w-4 h-4" />
                   <input
                     type="file"
@@ -239,15 +245,19 @@ const SettingsPage = () => {
                   disabled
                 />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">NIC</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  NIC
+                </label>
                 <input
                   type="text"
                   value={patientInfo.nic}
-                  className="w-full px-3 py-2 border rounded-md bg-gray-100 cursor-not-allowed"
+                  className="w-full px-3 py-2 border rounded-md bg-gray-100"
                   disabled
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   First Name
@@ -260,6 +270,7 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Last Name
@@ -272,17 +283,19 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address
                 </label>
                 <input
-                  type="text"
+                  type="email"
                   value={patientInfo.email}
                   className="w-full px-3 py-2 border rounded-md bg-gray-100"
                   disabled
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Phone Number
@@ -295,6 +308,7 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Date of Birth
@@ -307,7 +321,8 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              <div className="md:col-span-2">
+
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Address
                 </label>
@@ -319,6 +334,7 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Height (cm)
@@ -331,6 +347,7 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Weight (kg)
@@ -343,6 +360,7 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   BMI (Calculated)
@@ -354,6 +372,7 @@ const SettingsPage = () => {
                   disabled
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Blood Type
@@ -366,6 +385,7 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Guardian Name
@@ -378,6 +398,7 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Guardian Contact Number
@@ -390,92 +411,105 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              <div className="md:col-span-2">
+
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Medication Allergies
+                  Guardian Relation
                 </label>
-                {patientInfo.medicationAllergies.map((allergy, index) => (
-                  <div key={index} className="flex gap-2 mb-2">
-                    <input
-                      type="text"
-                      value={allergy.name}
-                      onChange={(e) => {
-                        const updatedAllergies = [...patientInfo.medicationAllergies];
-                        updatedAllergies[index].name = e.target.value;
-                        setPatientInfo((prev) => ({
-                          ...prev,
-                          medicationAllergies: updatedAllergies,
-                        }));
-                      }}
-                      placeholder="Allergy name"
-                      className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                    />
-                    <select
-                      value={allergy.severity}
-                      onChange={(e) => {
-                        const updatedAllergies = [...patientInfo.medicationAllergies];
-                        updatedAllergies[index].severity = e.target.value as "Severe" | "Moderate" | "Low";
-                        setPatientInfo((prev) => ({
-                          ...prev,
-                          medicationAllergies: updatedAllergies,
-                        }));
-                      }}
-                      className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="Severe">Severe</option>
-                      <option value="Moderate">Moderate</option>
-                      <option value="Low">Low</option>
-                    </select>
-                    <button
-                      onClick={() =>
-                        setPatientInfo((prev) => ({
-                          ...prev,
-                          medicationAllergies: prev.medicationAllergies.filter((_, i) => i !== index),
-                        }))
-                      }
-                      className="px-2 py-1 bg-red-500 text-white rounded-md"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-                <button
-                  onClick={() =>
-                    setPatientInfo((prev) => ({
-                      ...prev,
-                      medicationAllergies: [
-                        ...prev.medicationAllergies,
-                        { name: "", severity: "Low" },
-                      ],
-                    }))
-                  }
-                  className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md"
-                >
-                  Add Allergy
-                </button>
+                <input
+                  type="text"
+                  name="guardianRelation"
+                  value={patientInfo.guardianRelation}
+                  onChange={handleProfileChange}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                />
               </div>
             </div>
-          </div>
 
-          <div className="mt-6 flex space-x-4">
-            <button
-              onClick={handleSaveProfile}
-              disabled={isSaving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <SettingsIcon className="w-4 h-4 mr-2" />
-                  Save Changes
-                </>
-              )}
-            </button>
+            {/* Medication Allergies */}
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-4">Medication Allergies</h3>
+              {patientInfo.medicationAllergies.map((allergy, index) => (
+                <div key={index} className="flex gap-4 mb-4">
+                  <input
+                    type="text"
+                    value={allergy.name}
+                    onChange={(e) => {
+                      const newAllergies = [...patientInfo.medicationAllergies];
+                      newAllergies[index].name = e.target.value;
+                      setPatientInfo(prev => ({
+                        ...prev,
+                        medicationAllergies: newAllergies
+                      }));
+                    }}
+                    placeholder="Allergy name"
+                    className="flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  />
+                  <select
+                    value={allergy.severity}
+                    onChange={(e) => {
+                      const newAllergies = [...patientInfo.medicationAllergies];
+                      newAllergies[index].severity = e.target.value as "Severe" | "Moderate" | "Low";
+                      setPatientInfo(prev => ({
+                        ...prev,
+                        medicationAllergies: newAllergies
+                      }));
+                    }}
+                    className="w-32 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Moderate">Moderate</option>
+                    <option value="Severe">Severe</option>
+                  </select>
+                  <button
+                    onClick={() => {
+                      const newAllergies = patientInfo.medicationAllergies.filter((_, i) => i !== index);
+                      setPatientInfo(prev => ({
+                        ...prev,
+                        medicationAllergies: newAllergies
+                      }));
+                    }}
+                    className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => {
+                  setPatientInfo(prev => ({
+                    ...prev,
+                    medicationAllergies: [
+                      ...prev.medicationAllergies,
+                      { name: "", severity: "Low" }
+                    ]
+                  }));
+                }}
+                className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-md"
+              >
+                + Add Allergy
+              </button>
+            </div>
 
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={handleSaveProfile}
+                disabled={isSaving}
+                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <SettingsIcon className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

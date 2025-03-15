@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { FaChartBar, FaCog, FaEnvelope, FaBell, FaBars, FaUserMd, FaFlask, FaPrescriptionBottleAlt } from "react-icons/fa";
+import { FaChartBar, FaCog, FaEnvelope, FaBell, FaBars, FaUserMd, FaFlask, FaPrescriptionBottleAlt, FaUser } from "react-icons/fa";
 import { LogOut, X } from "lucide-react";
 import api from "@/utils/api";
 
@@ -19,7 +19,7 @@ const Sidebar = () => {
       toast.success("Logged out successfully");
     }, 0);
   }, [router]);
-  
+
   const fetchHomeData = async () => {
     try {
       const response = await api.get("/patient/home");
@@ -35,8 +35,15 @@ const Sidebar = () => {
 
   return (
     <>
+      
+        <button
+          className="md:hidden p-3 text-gray-600 focus:outline-none"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <FaBars className="w-6 h-6" />
+        </button>
 
-      {/* Overlay */}
+
       {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
@@ -44,13 +51,11 @@ const Sidebar = () => {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed md:relative top-0 left-0 w-64 bg-white h-full md:h-auto border-r p-6 flex flex-col transform ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0 transition-transform duration-300 z-50`}
       >
-        {/* Close Button */}
         <button
           className="absolute top-4 right-4 md:hidden text-gray-600"
           onClick={() => setIsOpen(false)}
@@ -120,10 +125,10 @@ const Sidebar = () => {
         <div className="mt-auto p-6 border-t border-gray-200">
           <div className="flex items-center">
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-800 font-semibold">
-              {name ? name.charAt(0).toUpperCase() : ''}
+              {name ? name.charAt(0).toUpperCase() : <FaUser className="w-5 h-5" />}
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">{name}</p>
+              <p className="text-sm font-medium text-gray-900">{name || "Loading..."}</p>
             </div>
           </div>
           <button
