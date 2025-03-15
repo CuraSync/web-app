@@ -4,41 +4,64 @@ import { useRouter } from 'next/navigation';
 import DoctorSidebar from '@/components/doctor/Sidebar';
 import Link from 'next/link';
 import { Settings } from 'lucide-react';
+import api from '@/utils/api';
+import { toast } from 'sonner';
+
+interface DoctorProfile {
+  doctorId?: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+  slmcRegisterNumber: string;
+  nic: string;
+  phoneNumber: string;
+  specialization: string | null;
+  education: string[];
+  certifications: string[];
+  yearsOfExperience: string | null;
+  rating: string | null;
+  currentWorkingHospitals: string[];
+  availability: string | null;
+  description: string | null;
+  profilePic: string | null;
+}
 
 const DoctorProfileView = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [profileData, setProfileData] = useState({
-    doctorId: 'DOC12345',
-    firstName: 'James',
-    lastName: 'Martin',
-    fullName: 'Dr. James Martin',
-    email: 'doctor@example.com',
-    slmcNumber: 'SLMC-12345',
-    nic: '982760149V',
-    phone: '+1 (555) 123-4567',
-    specialization: 'General Practitioner',
-    education: 'MD - Harvard Medical School',
-    certifications: 'Board Certified in Internal Medicine',
-    yearsOfExperience: '10',
-    rating: '4.8',
-    currentHospitals: 'City Hospital',
-    availability: 'Mon, Wed, Fri: 9AM - 5PM',
-    description: 'Experienced general practitioner with over 10 years of clinical experience. Specializing in preventive care and chronic disease management.',
-    profilePic: '',
-  });
+  const [profileData, setProfileData] = useState<DoctorProfile | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const userRole = localStorage.getItem('userRole');
     if (userRole !== 'doctor') {
       router.push('/auth/login/doctor');
-    } else {
+      return;
+    }
+
+    fetchDoctorProfile();
+  }, [router]);
+
+  const fetchDoctorProfile = async () => {
+    try {
+      const response = await api.doctor.getProfile();
+      setProfileData(response.data);
+    } catch (error) {
+      console.error('Failed to fetch doctor profile:', error);
+      setError('Failed to load profile data');
+      toast.error('Failed to load profile data');
+    } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  };
 
   if (isLoading) {
     return <div className="min-h-screen bg-gray-50 p-8">Loading...</div>;
+  }
+
+  if (error || !profileData) {
+    return <div className="min-h-screen bg-gray-50 p-8">{error || 'Failed to load profile data'}</div>;
   }
 
   return (
@@ -60,19 +83,29 @@ const DoctorProfileView = () => {
           <div className="bg-white rounded-xl shadow-sm border p-6">
             {/* Profile Header */}
             <div className="flex items-center pb-6 border-b border-gray-200">
-              <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-3xl font-semibold">
-                {profileData.firstName[0]}{profileData.lastName[0]}
-              </div>
+              {profileData.profilePic ? (
+                <img 
+                  src={profileData.profilePic} 
+                  alt={profileData.fullName}
+                  className="w-24 h-24 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-3xl font-semibold">
+                  {profileData.firstName[0]}{profileData.lastName[0]}
+                </div>
+              )}
               <div className="ml-6">
                 <h2 className="text-2xl font-bold">{profileData.fullName}</h2>
-                <p className="text-lg text-gray-600">{profileData.specialization}</p>
+                <p className="text-lg text-gray-600">{profileData.specialization || 'General Practitioner'}</p>
                 <div className="flex items-center mt-2">
                   <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                    {profileData.doctorId}
+                    {profileData.doctorId || 'ID Not Set'}
                   </span>
-                  <span className="ml-4 flex items-center text-yellow-500">
-                    ★ {profileData.rating}
-                  </span>
+                  {profileData.rating && (
+                    <span className="ml-4 flex items-center text-yellow-500">
+                      ★ {profileData.rating}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -82,10 +115,10 @@ const DoctorProfileView = () => {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Professional Information</h3>
                 <div className="space-y-3">
-                  <p><span className="font-medium">SLMC Number:</span> {profileData.slmcNumber}</p>
+                  <p><span className="font-medium">SLMC Number:</span> {profileData.slmcRegisterNumber}</p>
                   <p><span className="font-medium">NIC:</span> {profileData.nic}</p>
-                  <p><span className="font-medium">Experience:</span> {profileData.yearsOfExperience} years</p>
-                  <p><span className="font-medium">Current Hospital:</span> {profileData.currentHospitals}</p>
+                  <p><span className="font-medium">Experience:</span> {profileData.yearsOfExperience || 'Not specified'}</p>
+                  <p><span className="font-medium">Current Hospitals:</span> {profileData.currentWorkingHospitals.join(', ') || 'Not specified'}</p>
                 </div>
               </div>
 
@@ -93,8 +126,8 @@ const DoctorProfileView = () => {
                 <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
                 <div className="space-y-3">
                   <p><span className="font-medium">Email:</span> {profileData.email}</p>
-                  <p><span className="font-medium">Phone:</span> {profileData.phone}</p>
-                  <p><span className="font-medium">Availability:</span> {profileData.availability}</p>
+                  <p><span className="font-medium">Phone:</span> {profileData.phoneNumber}</p>
+                  <p><span className="font-medium">Availability:</span> {profileData.availability || 'Not specified'}</p>
                 </div>
               </div>
             </div>
@@ -103,35 +136,59 @@ const DoctorProfileView = () => {
             <div className="mt-6">
               <h3 className="text-lg font-semibold mb-4">Education & Certifications</h3>
               <div className="space-y-3">
-                <p><span className="font-medium">Education:</span> {profileData.education}</p>
-                <p><span className="font-medium">Certifications:</span> {profileData.certifications}</p>
+                <div>
+                  <p className="font-medium mb-2">Education:</p>
+                  {profileData.education.length > 0 ? (
+                    <ul className="list-disc list-inside">
+                      {profileData.education.map((edu, index) => (
+                        <li key={index} className="text-gray-700">{edu}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500">No education details provided</p>
+                  )}
+                </div>
+                <div>
+                  <p className="font-medium mb-2">Certifications:</p>
+                  {profileData.certifications.length > 0 ? (
+                    <ul className="list-disc list-inside">
+                      {profileData.certifications.map((cert, index) => (
+                        <li key={index} className="text-gray-700">{cert}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500">No certifications provided</p>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Description */}
             <div className="mt-6">
               <h3 className="text-lg font-semibold mb-4">About</h3>
-              <p className="text-gray-700">{profileData.description}</p>
+              <p className="text-gray-700">
+                {profileData.description || 'No description provided'}
+              </p>
             </div>
 
             {/* Statistics */}
             <div className="mt-8 grid grid-cols-3 gap-6">
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h4 className="text-sm font-medium text-gray-500">Total Patients</h4>
-                <p className="text-2xl font-bold text-gray-900 mt-1">1,248</p>
-                <p className="text-sm text-green-600 mt-1">+12% from last month</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">-</p>
+                <p className="text-sm text-gray-600 mt-1">Statistics not available</p>
               </div>
               
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h4 className="text-sm font-medium text-gray-500">Appointments</h4>
-                <p className="text-2xl font-bold text-gray-900 mt-1">156</p>
-                <p className="text-sm text-green-600 mt-1">+5% from last month</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">-</p>
+                <p className="text-sm text-gray-600 mt-1">Statistics not available</p>
               </div>
               
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h4 className="text-sm font-medium text-gray-500">Average Rating</h4>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{profileData.rating}</p>
-                <p className="text-sm text-green-600 mt-1">Based on 450 reviews</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{profileData.rating || '-'}</p>
+                <p className="text-sm text-gray-600 mt-1">Based on reviews</p>
               </div>
             </div>
           </div>
