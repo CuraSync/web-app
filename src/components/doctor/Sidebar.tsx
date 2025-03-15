@@ -28,7 +28,7 @@ const DoctorSidebar = () => {
     { href: '/dashboard/doctor', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/dashboard/doctor/patients', icon: Users, label: 'Patients' },
     { href: '/dashboard/doctor/doctors', icon: Users, label: 'Doctors' },
-    { href: '/dashboard/doctor/notification', icon: Bell, label: 'Notifications' },
+    { href: '/dashboard/doctor/notification', icon: Bell, label: 'Requests' },
     { href: '/dashboard/doctor/settings', icon: Settings, label: 'Settings' },
   ];
 
@@ -84,7 +84,7 @@ const DoctorSidebar = () => {
                 >
                   <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
                   <span className="font-medium">{item.label}</span>
-                  {item.label === 'Notifications' && (
+                  {item.label === 'Requests' && (
                     <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                       3
                     </span>
