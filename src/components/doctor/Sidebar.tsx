@@ -61,9 +61,9 @@ const DoctorSidebar = () => {
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
           <Link href="/" className="flex items-center">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">
-              CS
-            </div>
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white">
+            <img src="/assets/logo/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+          </div>
             <span className="ml-3 text-xl font-bold text-gray-900">CuraSync</span>
           </Link>
           
