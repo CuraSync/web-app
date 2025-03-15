@@ -56,7 +56,6 @@ const LaboratoryPage = () => {
       <Sidebar />
       <div className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
-          
           {/* Search Bar with Add Button */}
           <div className="mb-8">
             <div className="flex gap-2">
@@ -133,7 +132,6 @@ const LaboratoryPage = () => {
     </div>
   );
 }
-
 export default LaboratoryPage;
 
 
