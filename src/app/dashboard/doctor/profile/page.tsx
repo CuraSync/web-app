@@ -170,27 +170,6 @@ const DoctorProfileView = () => {
                 {profileData.description || 'No description provided'}
               </p>
             </div>
-
-            {/* Statistics */}
-            <div className="mt-8 grid grid-cols-3 gap-6">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="text-sm font-medium text-gray-500">Total Patients</h4>
-                <p className="text-2xl font-bold text-gray-900 mt-1">-</p>
-                <p className="text-sm text-gray-600 mt-1">Statistics not available</p>
-              </div>
-              
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="text-sm font-medium text-gray-500">Appointments</h4>
-                <p className="text-2xl font-bold text-gray-900 mt-1">-</p>
-                <p className="text-sm text-gray-600 mt-1">Statistics not available</p>
-              </div>
-              
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="text-sm font-medium text-gray-500">Average Rating</h4>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{profileData.rating || '-'}</p>
-                <p className="text-sm text-gray-600 mt-1">Based on reviews</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>
