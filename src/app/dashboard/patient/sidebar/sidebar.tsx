@@ -23,7 +23,8 @@ const Sidebar = () => {
   const fetchHomeData = async () => {
     try {
       const response = await api.get("/patient/home");
-      setName(response.data.firstname + " " + response.data.lastname);
+      const data = response.data as { firstname: string; lastname: string };
+      setName(data.firstname + " " + data.lastname);
     } catch (error) {
       console.error("Error fetching patient data:", error);
     }
