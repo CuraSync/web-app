@@ -200,8 +200,8 @@ const SettingsPage = () => {
                   />
                 ) : (
                   <span className="text-blue-600 text-2xl font-semibold">
-                    {patientInfo.firstname || "F"}
-                    {patientInfo.lastname || "L"}
+                    {patientInfo.firstname || ""}
+                    {patientInfo.lastname || ""}
                   </span>
                 )}
                 <label

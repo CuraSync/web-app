@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import PharmacySidebar from "../../pharmacy/sidebar/sidebar";
 import { toast } from "sonner";
 import { Plus, Trash2, Upload, X, Camera, Star } from "lucide-react";
-import {FaStar} from "react-icons/fa";
 import api from "@/utils/api";
 
 const SettingsPage = () => {
@@ -17,11 +16,12 @@ const SettingsPage = () => {
   const [location, setLocation] = useState("");
   const [pharmacyId, setPharmacyId] = useState("");
   const [updatedAt, setUpdatedAt] = useState("");
+  const [createdAt, setCreatedAt] = useState("");
   const [profilePic, setProfilePic] = useState("");
   const [contactInformation, setContactInformation] = useState("");
   const [isUploading, setIsUploading] = useState(false);
-  const [rating, setRating] = useState<number | null>(null);
-  const [rateColor, setColor] = useState(null);
+  const [rating, setRating] = useState(0);
+
   
   interface Contact {
     type: string;
@@ -38,8 +38,10 @@ const SettingsPage = () => {
       setLocation(response.data.location || "");
       setPharmacyId(response.data.location || "");
       setUpdatedAt(response.data.updatedAt || "");
+      setCreatedAt(response.data.createdAt || "");
       setProfilePic(response.data.profilePic || "");
       setContactInformation(response.data.contactInformation || "");
+      setRating(response.data.rating || 0);
 
     } catch (error) {
       toast.error("Failed to load profile");
@@ -55,8 +57,10 @@ const SettingsPage = () => {
       setLocation(response.data.location);
       setPharmacyId(response.data.pharmacyId);
       setUpdatedAt(response.data.updatedAt);
+      setCreatedAt(response.data.createdAt);
       setContactInformation(response.data.contactInformation);
       setProfilePic(response.data.profilePic);
+      setRating(response.data.rating);
       console.log(response.data);
       
     } catch (error) {
@@ -109,19 +113,21 @@ const SettingsPage = () => {
   const handllocationChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setLocation(e.target.value);
   };
+
+  const handleRating = (value: number) => {
+    setRating(value);
+  };
   
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     
     if (!file) return;
-    
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image size should be less than 5MB");
       return;
     }
     
-    // Validate file type
+
     if (!file.type.match(/image\/(jpeg|jpg|png|gif|webp)/i)) {
       toast.error("Only JPG, PNG, GIF, or WebP images are allowed");
       return;
@@ -162,7 +168,8 @@ const SettingsPage = () => {
         pharmacyId,
         updatedAt,
         contactInformation: contactInfoString,
-        profilePic 
+        profilePic, 
+        rating
       });
       
       toast.success("Profile updated successfully");
@@ -189,7 +196,6 @@ const SettingsPage = () => {
     }
     setContacts(contacts.filter((_, index) => index !== indexToRemove));
   };
-
   
   return (
     <div className="min-h-screen flex font-sans bg-white text-gray-900">
@@ -200,7 +206,8 @@ const SettingsPage = () => {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-medium">Profile</h2>
               <div className="text-gray-500 text-sm">
-                Updated: {updatedAt}
+                Updated: {updatedAt}<br></br>
+                Created:{createdAt}
               </div>
             </div>
 
@@ -219,17 +226,17 @@ const SettingsPage = () => {
                     />
                     <button 
                       onClick={removeProfilePic}
-                      className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full hover:bg-red-700"
+                      className="absolute top-1 right-6 bg-red-600 text-white p-1 rounded-full hover:bg-red-700"
                       title="Remove profile picture"
                     >
-                      <X size={14} />
+                      <X size={20} />
                     </button>
                   </>
                 ) : (
-                  <Camera size={40} className="text-gray-400" />
+                  <Camera size={42} className="text-gray-400" />
                 )}
                 
-                <label htmlFor="profile-pic" className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 shadow-md">
+                <label htmlFor="profile-pic" className="absolute bottom-2 right-5 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 shadow-md">
                   <Upload size={16} />
                   <input
                     type="file"
@@ -250,7 +257,7 @@ const SettingsPage = () => {
               value={pharmacyId}
               readOnly
               rows={1}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none cursor-not-allowed text-gray-600"
             />
           </div>
 
@@ -261,7 +268,7 @@ const SettingsPage = () => {
               value={licenceNumber}
               readOnly
               rows={1}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none cursor-not-allowed text-gray-600"
             />
           </div>
 
@@ -319,23 +326,39 @@ const SettingsPage = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
             />
           </div>
-          {/* {[...Array(5)].map((star, index) => {
-            const currentRate = index + 1
-            return(
-              <>  
-                  <label>
-                    <input type="radio" name="rate"
-                    value={currentRate}
-                    onClick={()=> setRating(currentRate)}
-                    />
-                    <FaStar />
-                    color={currentRate <= (hover || rating) ? "yellow" : "grey"}
-                  </label>
-              </>
-            )
-          })} */}
-          <div>
-
+          <div className="p-6">
+            <span className="block text-gray-700 font-medium mb-2">Rating : </span>
+              <div className="flex flex-col">
+                <div className="flex items-center mb-2">
+                      <div className="flex">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <div key={star} className="relative w-8 h-8">
+                            <Star 
+                              className="absolute w-8 h-8 text-gray-300" 
+                            />
+                            <div 
+                              className="absolute w-4 h-8 overflow-hidden cursor-pointer"
+                              onClick={() => handleRating(star - 0.5)}
+                            >
+                              {rating >= star - 0.5 && (
+                                <Star className="absolute w-8 h-8 text-yellow-500 fill-yellow-500" />
+                              )}
+                            </div>
+                          
+                            <div 
+                              className="absolute left-4 w-4 h-8 overflow-hidden cursor-pointer"
+                              onClick={() => handleRating(star)}
+                            >
+                              {rating >= star && (
+                                <Star className="absolute -left-4 w-8 h-8 text-yellow-500 fill-yellow-500" />
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                  <span className="ml-2 text-gray-700">({rating}/5)</span>
+                </div>
+              </div>
           </div>
 
           <div className="p-6">
@@ -376,8 +399,7 @@ const SettingsPage = () => {
 
             <button
               onClick={addContactField}
-              className="flex items-center px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 mt-2"
-            >
+              className="flex items-center px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 mt-2">
               <Plus className="w-5 h-5 mr-2" /> Add Contact Method
             </button>
           </div>

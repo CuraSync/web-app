@@ -9,6 +9,7 @@ import api from "@/utils/api";
 interface PatientInfo {
   firstname: string;
   lastname: string;
+  fullName: string;
   address: string;
   bloodType: string;
   bmi: string;
@@ -32,6 +33,7 @@ const PatientDashboard = () => {
   const [patientInfo, setPatientInfo] = useState<PatientInfo>({
     firstname: "",
     lastname: "",
+    fullName:"",
     address: "",
     bloodType: "",
     bmi: "",
@@ -101,7 +103,7 @@ const PatientDashboard = () => {
                <div>
                   <div>
                   <h2 className="text-xl font-bold">
-                      Name: {patientInfo.firstname || ''} {patientInfo.lastname || ''}
+                      Name: {patientInfo.fullName || `${patientInfo.firstname} ${patientInfo.lastname}`}
                     </h2>
                     <p className="text-gray-600">DOB: {new Date(patientInfo.dateOfBirth).toLocaleDateString()}</p>
                     <p className="text-gray-600">Blood Type: {patientInfo.bloodType}</p>

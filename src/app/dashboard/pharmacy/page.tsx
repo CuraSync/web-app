@@ -13,8 +13,8 @@ export const PharmacyDashboard = () => {
   const [contactNo, setContactNo] = useState("");
   const [description, setDescription] = useState("");
   const [profilePic, setProfilePic] = useState("");
-  const [createdAt, setCreatedAt] = useState("");
   const [contactInformation, setContactInformation] = useState("");
+  const [rating, setRating] = useState("");
 
   const fetchHomeData = async () => {
     try {
@@ -26,8 +26,8 @@ export const PharmacyDashboard = () => {
       setContactNo(response.data.phoneNumber);
       setDescription(response.data.description);
       setProfilePic(response.data.profilePic);
-      setCreatedAt(response.data.createdAt);
       setContactInformation(response.data.contactInformation);
+      setRating(response.data.rating);
     } catch (error) {
       console.log(error);
     }
@@ -42,16 +42,12 @@ export const PharmacyDashboard = () => {
       {/* Sidebar */}
       <PharmacySidebar />
 
-      {/* Main Content */}
+      
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="p-6">
           <div className="border-b p-4 flex justify-between items-center">
-            <div className="inline-block px-4 py-1 bg-green-100 text-green-600 rounded-md text-sm font-medium">
-              Pharmacy
-            </div>
+          <h1 className="text-2xl font-bold mb-6">Pharmacy Dashboard</h1>
           </div>
-          <div className="text-gray-500 text-sm">Created:{createdAt}</div>
-
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
@@ -70,6 +66,7 @@ export const PharmacyDashboard = () => {
               <div>
                 <h2 className="text-xl font-bold">{name}</h2>
                 <p className="text-gray-600">License: {licenceNumber}</p>
+                <p className="text-gray-600">Rating: {rating}</p>
               </div>
             </div>
           </div>

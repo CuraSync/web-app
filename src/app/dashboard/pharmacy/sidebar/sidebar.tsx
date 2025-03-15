@@ -74,6 +74,16 @@ const Sidebar = () => {
                 <FaChartBar className="w-5 h-5" />
                 <span>{pharmacyName}</span>
               </Link>
+
+              <Link
+                href="/dashboard/pharmacy/patientlist"
+                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
+              >
+                <FaBell className="w-5 h-5" />
+                <span>Patient List</span>
+              </Link>
+
+
               <Link
                 href="/dashboard/pharmacy/notification"
                 className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
