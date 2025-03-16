@@ -28,6 +28,11 @@ interface PatientInfo {
   weight: string;
 }
 
+interface AllergyItem {
+  name: string;
+  severity: "Severe" | "Moderate" | "Low";
+}
+
 const PatientDashboard = () => {
   const router = useRouter();
   const [patientInfo, setPatientInfo] = useState<PatientInfo>({
@@ -55,7 +60,7 @@ const PatientDashboard = () => {
   // fetchHomeData with proper typing for the API response
   const fetchHomeData = async () => {
     try {
-      const response = await api.get("/patient/home");
+      const response = await api.get("/patient/profile");
       setPatientInfo(response.data);
     } catch (error) {
       console.error("Request failed:", error);

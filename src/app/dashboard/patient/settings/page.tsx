@@ -65,35 +65,99 @@ const SettingsPage = () => {
     updateAt: "",
     weight: "",
   });
+  useEffect(() => {
+    const initializeSettings = async () => {
+      const userRole = localStorage.getItem("userRole");
+      if (userRole !== "patient") {
+        router.push("/auth/login/patient");
+        return;
+      }
 
-  const fetchSettingsData = async () => {
-    try {
-      const response = await api.get("/patient/profile");
-      console.log("Server Response:", response.data);
-      setPatientInfo(response.data as PatientInfo);
-      localStorage.setItem("patientData", JSON.stringify(response.data));
-      console.log("Fetched settings data:", response.data);
-    }finally {
-      setIsLoading(false);
-    }
-  };
+      try {
+        const response = await api.get("/patient/profile");
+        const data = response.data as PatientInfo;
+        console.log("Raw API Response:", JSON.stringify(data, null, 2));
+
+        const normalizedData: PatientInfo = {
+          firstname: String(data.firstname ?? ""),
+          lastname: String(data.lastname ?? ""),
+          address: String(data.address ?? ""),
+          bloodType: String(data.bloodType ?? ""),
+          bmi: String(data.bmi ?? ""),
+          dateOfBirth: String(data.dateOfBirth ?? ""),
+          email: String(data.email ?? ""),
+          guardianContactNumber: String(data.guardianContactNumber ?? ""),
+          guardianRelation: String(data.guardianRelation ?? ""),
+          guardianName: String(data.guardianName ?? ""),
+          height: String(data.height ?? ""),
+          medicationAllergies: Array.isArray(data.medicationAllergies)
+            ? data.medicationAllergies.map((allergy: any) => ({
+                name: String(allergy?.name ?? ""),
+                severity: String(allergy?.severity ?? "Low") as "Severe" | "Moderate" | "Low",
+              }))
+            : [],
+          nic: String(data.nic ?? ""),
+          patientId: String(data.patientId ?? ""),
+          phoneNumber: String(data.phoneNumber ?? ""),
+          profilepic: String(data.profilepic ?? ""),
+          updateAt: String(data.updateAt ?? ""),
+          weight: String(data.weight ?? ""),
+        };
+
+        setPatientInfo(normalizedData);
+        localStorage.setItem("patientData", JSON.stringify(normalizedData));
+        console.log("Normalized Data:", JSON.stringify(normalizedData, null, 2));
+      } catch (error) {
+        console.error("Fetch Error:", error);
+        toast.error("Failed to load profile data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeSettings();
+  }, [router]);
+
   const handleSaveProfile = async () => {
+    setIsSaving(true);
     try {
-      await api.post("/patient/profile", {
-        height: Number(patientInfo.height),
-        weight: Number(patientInfo.weight),
-        bmi: parseFloat(patientInfo.bmi),
-        bloodType: patientInfo.bloodType,
-        medicationAllergies: patientInfo.medicationAllergies,
-        guardianName: patientInfo.guardianName,
-        guardianContactNumber: patientInfo.guardianContactNumber,
-        profilePic: patientInfo.profilepic,
-      });
+      const profileData = {
+        firstname: patientInfo.firstname || undefined,
+        lastname: patientInfo.lastname || undefined,
+        address: patientInfo.address || undefined,
+        phoneNumber: patientInfo.phoneNumber || undefined,
+        dateOfBirth: patientInfo.dateOfBirth || undefined,
+        height: patientInfo.height ? Number(patientInfo.height) : undefined,
+        weight: patientInfo.weight ? Number(patientInfo.weight) : undefined,
+        bmi: patientInfo.bmi ? parseFloat(patientInfo.bmi) : undefined,
+        bloodType: patientInfo.bloodType || undefined,
+        medicationAllergies: patientInfo.medicationAllergies.length > 0 
+          ? patientInfo.medicationAllergies.map(allergy => ({
+              name: allergy.name || "",
+              severity: allergy.severity || "Low"
+            }))
+          : [], // Explicitly send empty array if no allergies
+        guardianName: patientInfo.guardianName || undefined,
+        guardianContactNumber: patientInfo.guardianContactNumber || undefined,
+        profilepic: patientInfo.profilepic || undefined,
+      };
+
+      console.log("Sending to API:", JSON.stringify(profileData, null, 2));
+      const response = await api.post("/patient/profile", profileData);
+      console.log("API Response:", JSON.stringify(response.data, null, 2));
+
       toast.success("Profile updated successfully");
+      localStorage.setItem("patientData", JSON.stringify(patientInfo));
       router.refresh();
-    } catch (error) {
-      toast.error("Failed to update profile");
-      console.error(error);
+    } catch (error: any) {
+      console.error("Save Error:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      toast.error(error.response?.data?.message || "Failed to update profile");
+    } finally {
+      setIsSaving(false);
     }
   };
   
@@ -163,9 +227,7 @@ const SettingsPage = () => {
     const userRole = localStorage.getItem("userRole");
     if (userRole !== "patient") {
       router.push("/auth/login/patient");
-    } else {
-      fetchSettingsData();
-    }
+    } 
   }, [router]);
 
   if (isLoading) {
@@ -200,8 +262,8 @@ const SettingsPage = () => {
                   />
                 ) : (
                   <span className="text-blue-600 text-2xl font-semibold">
-                    {patientInfo.firstname || ""}
-                    {patientInfo.lastname || ""}
+                    {patientInfo.firstname || "F"}
+                    {patientInfo.lastname || "L"}
                   </span>
                 )}
                 <label
@@ -390,49 +452,38 @@ const SettingsPage = () => {
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Medication Allergies
-            </label>
-            {patientInfo.medicationAllergies && patientInfo.medicationAllergies.length > 0 ? (
-              patientInfo.medicationAllergies.map((allergy, index) => (
-                <div key={`allergy-${index}`} className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={allergy.name || ""}
-                    onChange={(e) => {
-                      const updatedAllergies = [...patientInfo.medicationAllergies];
-                      updatedAllergies[index] = {
-                        ...updatedAllergies[index],
-                        name: e.target.value,
-                      };
-                      setPatientInfo((prev) => ({
-                        ...prev,
-                        medicationAllergies: updatedAllergies,
-                      }));
-                    }}
-                    placeholder="Allergy name"
-                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
-                  <select
-                    value={allergy.severity || "Low"}
-                    onChange={(e) => {
-                      const updatedAllergies = [...patientInfo.medicationAllergies];
-                      updatedAllergies[index] = {
-                        ...updatedAllergies[index],
-                        severity: e.target.value as "Severe" | "Moderate" | "Low",
-                      };
-                      setPatientInfo((prev) => ({
-                        ...prev,
-                        medicationAllergies: updatedAllergies,
-                      }));
-                    }}
-                    className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="Severe">Severe</option>
-                    <option value="Moderate">Moderate</option>
-                    <option value="Low">Low</option>
-                  </select>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Medication Allergies</label>
+                  {patientInfo.medicationAllergies.length > 0 ? (
+                    patientInfo.medicationAllergies.map((allergy, index) => (
+                      <div key={`allergy-${index}`} className="flex gap-2 mb-2">
+                        <input
+                          type="text"
+                          value={allergy.name}
+                          onChange={(e) => {
+                            const updatedAllergies = [...patientInfo.medicationAllergies];
+                            updatedAllergies[index] = { ...updatedAllergies[index], name: e.target.value };
+                            setPatientInfo((prev) => ({ ...prev, medicationAllergies: updatedAllergies }));
+                          }}
+                          placeholder="Allergy name"
+                          className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                        />
+                        <select
+                          value={allergy.severity}
+                          onChange={(e) => {
+                            const updatedAllergies = [...patientInfo.medicationAllergies];
+                            updatedAllergies[index] = {
+                              ...updatedAllergies[index],
+                              severity: e.target.value as "Severe" | "Moderate" | "Low",
+                            };
+                            setPatientInfo((prev) => ({ ...prev, medicationAllergies: updatedAllergies }));
+                          }}
+                          className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="Severe">Severe</option>
+                          <option value="Moderate">Moderate</option>
+                          <option value="Low">Low</option>
+                        </select>
                   <button
                     onClick={() =>
                       setPatientInfo((prev) => ({

@@ -66,6 +66,13 @@ const PatientSignUpPage = () => {
         address: formData.address,
         dateOfBirth: formData.dateOfBirth
       });
+      // Assuming the API returns a token or patientId
+      const { token, patientId } = response.data; // Adjust based on your API response
+
+      // Store authentication data
+      localStorage.setItem('userRole', 'patient');
+      localStorage.setItem('token', token); // Store token if your API provides one
+      localStorage.setItem('patientId', patientId); // Store patientId if returned
 
       // Prepare data in the format expected by Settings page
       const patientData = {
