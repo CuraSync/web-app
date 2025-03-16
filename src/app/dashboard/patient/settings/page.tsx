@@ -20,8 +20,8 @@ interface AllergyItem {
 }
 
 interface PatientInfo {
-  firstname: string;
-  lastname: string;
+  firstName: string;
+  lastName: string;
   address: string;
   bloodType: string;
   bmi: string;
@@ -46,8 +46,8 @@ const SettingsPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [patientInfo, setPatientInfo] = useState<PatientInfo>({
-    firstname: "",
-    lastname: "",
+    firstName: "",
+    lastName: "",
     address: "",
     bloodType: "",
     bmi: "",
@@ -78,13 +78,22 @@ const SettingsPage = () => {
         const data = response.data as PatientInfo;
         console.log("Raw API Response:", JSON.stringify(data, null, 2));
 
+        // Normalize dateOfBirth to YYYY-MM-DD
+        const normalizeDate = (date: string | null | undefined) => {
+          if (!date) return "";
+          const parsedDate = new Date(date);
+          return isNaN(parsedDate.getTime())
+            ? ""
+            : parsedDate.toISOString().split("T")[0]; 
+        };
+
         const normalizedData: PatientInfo = {
-          firstname: String(data.firstname ?? ""),
-          lastname: String(data.lastname ?? ""),
+          firstName: String(data.firstName ?? ""),
+          lastName: String(data.lastName ?? ""),
           address: String(data.address ?? ""),
           bloodType: String(data.bloodType ?? ""),
           bmi: String(data.bmi ?? ""),
-          dateOfBirth: String(data.dateOfBirth ?? ""),
+          dateOfBirth: normalizeDate(data.dateOfBirth),
           email: String(data.email ?? ""),
           guardianContactNumber: String(data.guardianContactNumber ?? ""),
           guardianRelation: String(data.guardianRelation ?? ""),
@@ -122,8 +131,8 @@ const SettingsPage = () => {
     setIsSaving(true);
     try {
       const profileData = {
-        firstname: patientInfo.firstname || undefined,
-        lastname: patientInfo.lastname || undefined,
+        firstName: patientInfo.firstName || undefined,
+        lastName: patientInfo.lastName || undefined,
         address: patientInfo.address || undefined,
         phoneNumber: patientInfo.phoneNumber || undefined,
         dateOfBirth: patientInfo.dateOfBirth || undefined,
@@ -262,8 +271,8 @@ const SettingsPage = () => {
                   />
                 ) : (
                   <span className="text-blue-600 text-2xl font-semibold">
-                    {patientInfo.firstname || "F"}
-                    {patientInfo.lastname || "L"}
+                    {patientInfo.firstName || "F"}
+                    {patientInfo.lastName || "L"}
                   </span>
                 )}
                 <label
@@ -282,7 +291,7 @@ const SettingsPage = () => {
               </div>
               <div className="ml-6">
                 <p className="text-xl font-medium">
-                  {patientInfo.firstname} {patientInfo.lastname}
+                  {patientInfo.firstName} {patientInfo.lastName}
                 </p>
                 <p className="text-base text-blue-500">{patientInfo.email}</p>
               </div>
@@ -316,8 +325,8 @@ const SettingsPage = () => {
                 </label>
                 <input
                   type="text"
-                  name="firstname"
-                  value={patientInfo.firstname}
+                  name="firstName"
+                  value={patientInfo.firstName}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
@@ -328,8 +337,8 @@ const SettingsPage = () => {
                 </label>
                 <input
                   type="text"
-                  name="lastname"
-                  value={patientInfo.lastname}
+                  name="lastName"
+                  value={patientInfo.lastName}
                   onChange={handleProfileChange}
                   className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                 />
