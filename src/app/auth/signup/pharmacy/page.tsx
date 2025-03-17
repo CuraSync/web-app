@@ -37,18 +37,12 @@ const PharmacySignUpPage = () => {
 
     setIsLoading(true);
 
-
-      
-
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast.error("Please enter a valid email address");
       return;
     }
 
-
-    // Validate required fields
     const requiredFields = ['pharmacyName', 'email', 'licenceNumber', 'password', 'phone', 'location'];
     const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
     if (missingFields.length > 0) {

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation'; 
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { FaChartBar, FaCog, FaEnvelope, FaBell, FaBars, FaUser } from "react-icons/fa";
+import { FaChartBar, FaCog, FaEnvelope, FaBell, FaBars, FaUser, FaListUl } from "react-icons/fa";
 import { LogOut, X } from "lucide-react";
 import api from "@/utils/api";
 
@@ -37,7 +37,7 @@ const Sidebar = () => {
 
   return (
     <>
-          <div className="absolute top-0 left-0 w-full  shadow-md p-4 flex justify-between items-center z-30">
+          <div className="absolute top-0 left-0 w-full   p-4 flex justify-end items-center z-30">
             <button
               className="md:hidden p-3 text-gray-600 focus:outline-none"
               onClick={() => setIsOpen(!isOpen)}
@@ -79,18 +79,16 @@ const Sidebar = () => {
                 href="/dashboard/pharmacy/patientlist"
                 className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
               >
-                <FaBell className="w-5 h-5" />
+                <FaListUl className="w-5 h-5" />
                 <span>Patient List</span>
               </Link>
-
-
-              <Link
+              {/* <Link
                 href="/dashboard/pharmacy/notification"
                 className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
               >
                 <FaBell className="w-5 h-5" />
                 <span>Notification</span>
-              </Link>
+              </Link> */}
               <Link
                 href="/dashboard/pharmacy/settings"
                 className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"

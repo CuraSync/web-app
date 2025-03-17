@@ -36,7 +36,7 @@ const SettingsPage = () => {
       setDescription(response.data.description || "");
       setPharmacyName(response.data.pharmacyName || "");
       setLocation(response.data.location || "");
-      setPharmacyId(response.data.location || "");
+      setPharmacyId(response.data.pharmacyId || "");
       setUpdatedAt(response.data.updatedAt || "");
       setCreatedAt(response.data.createdAt || "");
       setProfilePic(response.data.profilePic || "");
@@ -198,10 +198,10 @@ const SettingsPage = () => {
   };
   
   return (
-    <div className="min-h-screen flex font-sans bg-white text-gray-900">
+    <div className="min-h-screen flex flex-col lg:flex-row font-sans bg-white text-gray-900">
       <PharmacySidebar />
       <div className="p-8 flex-1 flex justify-center items-center">
-        <div className="w-full max-w-4xl border rounded-lg shadow-md bg-white border-gray-200">
+        <div className="w-full max-w-fit border rounded-lg shadow-md bg-white border-gray-200">
           <div className="flex flex-col p-6 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-medium">Profile</h2>

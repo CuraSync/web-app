@@ -39,10 +39,7 @@ export const PharmacyDashboard = () => {
 
   return (
     <div className="min-h-screen flex bg-white">
-      {/* Sidebar */}
       <PharmacySidebar />
-
-      
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="p-6">
           <div className="border-b p-4 flex justify-between items-center">
@@ -96,7 +93,7 @@ export const PharmacyDashboard = () => {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border p-6">
-                  <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+                  <h3 className="text-lg font-semibold mb-4">Additional Contact Information</h3>
                   {contactInformation ? (
                     JSON.parse(contactInformation).map(
                       (contact: { type: string; value: string }, index: number) => (

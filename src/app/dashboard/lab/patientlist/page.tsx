@@ -1,10 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import PharmacySidebar from "../sidebar/sidebar";
+import LabSidebar from "../sidebar/sidebar";
 import api from "@/utils/api";
 
 interface Patient {
     patientId: string | number;
+    id: string;
     firstName: string;
     lastName: string;
 }
@@ -14,7 +15,7 @@ const PatientList = () => {
 
     const fetchList = async () => {
         try {
-            const response = await api.get("/pharmacy/patients");
+            const response = await api.get("/laboratory/patients");
             setPatients(response.data); 
         } catch (error) {
             console.error("Error fetching patient list:", error);
@@ -28,7 +29,7 @@ const PatientList = () => {
     return (
         <div className="min-h-screen flex">
             {/* Sidebar */}
-            <PharmacySidebar />
+            <LabSidebar />
 
             {/* Main Content */}
             <main className="flex-1 p-6 max-w-5xl mx-auto">
