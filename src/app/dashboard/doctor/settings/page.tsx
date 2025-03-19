@@ -7,6 +7,7 @@ import {
   Settings as SettingsIcon,
   Upload,
   Loader2,
+  X
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/doctor/Sidebar";
@@ -14,7 +15,6 @@ import { toast } from "sonner";
 import api from "@/utils/api";
 
 interface DoctorProfile {
-  doctorId: string;
   firstName: string;
   lastName: string;
   fullName: string;
@@ -33,15 +33,15 @@ interface DoctorProfile {
   profilePic: string | null;
 }
 
-type ProfileField = keyof DoctorProfile;
-
 const SettingsPage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [profile, setProfile] = useState<DoctorProfile | null>(null);
   const [newEducation, setNewEducation] = useState('');
   const [newCertification, setNewCertification] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     const userRole = localStorage.getItem("userRole");
@@ -65,7 +65,73 @@ const SettingsPage = () => {
     }
   };
 
-  const handleProfileChange = (field: ProfileField, value: any) => {
+  const handleProfilePicChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.match(/image\/(jpeg|jpg|png|gif|webp)/i)) {
+      toast.error("Only JPG, PNG, GIF, or WebP images are allowed");
+      return;
+    }
+
+    setImageFile(file);
+    setIsUploading(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append(
+      "upload_preset",
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "curasync_preset"
+    );
+
+    try {
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dxurgfxgr"}/image/upload`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      );
+
+      if (!response.ok) throw new Error('Upload failed');
+
+      const data = await response.json();
+      
+      if (profile) {
+        setProfile({
+          ...profile,
+          profilePic: data.secure_url
+        });
+      }
+
+      toast.success("Profile picture uploaded successfully");
+    } catch (error) {
+      console.error('Failed to upload image:', error);
+      toast.error("Failed to upload profile picture");
+    } finally {
+      setIsUploading(false);
+      setImageFile(null);
+    }
+  };
+
+  const removeProfilePic = () => {
+    if (profile) {
+      setProfile({
+        ...profile,
+        profilePic: null
+      });
+    }
+    toast.success("Profile picture removed");
+  };
+
+  const handleProfileChange = (field: keyof DoctorProfile, value: any) => {
     if (!profile) return;
 
     setProfile(prev => {
@@ -127,33 +193,35 @@ const SettingsPage = () => {
     });
   };
 
-  const handleProfilePicChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const response = await api.doctor.uploadProfilePic(file);
-      setProfile(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          profilePic: response.data.profilePicUrl
-        };
-      });
-
-      toast.success('Profile picture updated successfully');
-    } catch (error) {
-      console.error('Failed to upload profile picture:', error);
-      toast.error('Failed to upload profile picture');
-    }
-  };
-
   const handleSaveProfile = async () => {
     if (!profile) return;
 
     try {
       setIsSaving(true);
-      await api.doctor.updateProfile(profile);
+      
+      // Include all profile data including the profilePic URL
+      const profileData = {
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        fullName: profile.fullName,
+        email: profile.email,
+        slmcRegisterNumber: profile.slmcRegisterNumber,
+        nic: profile.nic,
+        phoneNumber: profile.phoneNumber,
+        specialization: profile.specialization,
+        education: profile.education,
+        certifications: profile.certifications,
+        yearsOfExperience: profile.yearsOfExperience,
+        currentWorkingHospitals: profile.currentWorkingHospitals,
+        availability: profile.availability,
+        description: profile.description,
+        profilePic: profile.profilePic
+      };
+
+      console.log("Sending to API:", JSON.stringify(profileData, null, 2));
+      const response = await api.post("/doctor/profile", profileData);
+      console.log("API Response:", JSON.stringify(response.data, null, 2));
+      
       toast.success('Profile updated successfully');
       router.refresh();
     } catch (error) {
@@ -182,7 +250,7 @@ const SettingsPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex bg-white">
+    <div className="min-h-screen flex flex-col lg:flex-row font-sans bg-white text-gray-900">
       <Sidebar />
       <div className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
@@ -193,24 +261,38 @@ const SettingsPage = () => {
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center pb-8 border-b border-gray-200">
               <div className="relative w-20 h-20 overflow-hidden rounded-full bg-blue-100 flex items-center justify-center">
-                {profile.profilePic ? (
-                  <img
-                    src={profile.profilePic}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
+                {isUploading ? (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+                  </div>
+                ) : profile.profilePic ? (
+                  <>
+                    <img
+                      src={profile.profilePic}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                    <button 
+                      onClick={removeProfilePic}
+                      className="absolute top-1 right-6 bg-red-600 text-white p-1 rounded-full hover:bg-red-700"
+                      title="Remove profile picture"
+                    >
+                      <X size={20} />
+                    </button>
+                  </>
                 ) : (
                   <span className="text-blue-600 text-2xl font-semibold">
                     {profile.firstName[0]}{profile.lastName[0]}
                   </span>
                 )}
-                <label htmlFor="profile-pic" className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer">
-                  <Upload className="w-4 h-4" />
+                
+                <label htmlFor="profile-pic" className="absolute bottom-2 right-5 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 shadow-md">
+                  <Upload size={16} />
                   <input
                     type="file"
                     id="profile-pic"
                     className="hidden"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
                     onChange={handleProfilePicChange}
                   />
                 </label>
@@ -304,7 +386,6 @@ const SettingsPage = () => {
               </div>
             </div>
 
-            {/* Education */}
             <div className="mt-6">
               <h2 className="text-lg font-semibold mb-4">Education</h2>
               <div className="space-y-4">
@@ -337,7 +418,6 @@ const SettingsPage = () => {
               </div>
             </div>
 
-            {/* Certifications */}
             <div className="mt-6">
               <h2 className="text-lg font-semibold mb-4">Certifications</h2>
               <div className="space-y-4">
@@ -370,7 +450,6 @@ const SettingsPage = () => {
               </div>
             </div>
 
-            {/* Description */}
             <div className="mt-6">
               <h2 className="text-lg font-semibold mb-4">About</h2>
               <textarea
@@ -382,7 +461,6 @@ const SettingsPage = () => {
               />
             </div>
 
-            {/* Save and Logout Buttons */}
             <div className="mt-8 pt-6 border-t flex justify-between">
               <button
                 onClick={handleSaveProfile}
