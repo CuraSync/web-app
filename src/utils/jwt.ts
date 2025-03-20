@@ -11,4 +11,10 @@ const decodeToken = (token: string) => {
   }
 };
 
-export default decodeToken;
+const getId = () => {
+  const refreshToken = localStorage.getItem("refreshToken");
+  const data = refreshToken ? decodeToken(refreshToken) : null;
+  return data ? data.id : null;
+};
+
+export { decodeToken, getId };
