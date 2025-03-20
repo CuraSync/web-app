@@ -18,7 +18,7 @@ const MessagesPage = () => {
   const [newMessage, setNewMessage] = useState<string>("");
 
   const searchParams = useSearchParams();
-  const selectedLaboratory = "L12345"; // Replace with dynamic laboratory ID if needed
+  const selectedLaboratory = searchParams.get("laboratoryId");
 
   useEffect(() => {
     fetchMessages();
@@ -87,7 +87,7 @@ const MessagesPage = () => {
         message: newMessage,
         addedDate: now.toISOString().split("T")[0],
         addedTime: now.toTimeString().substring(0, 5),
-        sender: "patient"
+        sender: "patient",
       });
       console.log(response.data);
     } catch (error) {

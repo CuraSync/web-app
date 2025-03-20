@@ -7,8 +7,8 @@ import api from '@/utils/api';
 
 interface laboratory{
   id:string;
-  laboratoryId:string;
-  laboratoryName:string;
+  labId:string;
+  labName:string;
   email:string;
   location:string;
 
@@ -16,7 +16,7 @@ interface laboratory{
 }
 const LaboratoryPage = () => {
   const router = useRouter();
-  const [addedLaboratories, setAddedLaboratories] = useState<any[]>([]);
+  const [addedLaboratories, setAddedLaboratories] = useState<laboratory[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [laboratories,setLaboratories] = useState<laboratory[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -38,13 +38,12 @@ const LaboratoryPage = () => {
 
   // Filter pharmacies based on search query
   const filteredLaboratories = laboratories.filter(laboratory => 
-    laboratory.laboratoryName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    laboratory.labName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     laboratory.location?.toLowerCase().includes(searchQuery.toLowerCase())
-   
   );
 
   const handleAddLaboratory = (laboratory: laboratory) => {
-    if (laboratory && !addedLaboratories.some(lab => lab.laboratoryId === laboratory.laboratoryId)) {
+    if (laboratory && !addedLaboratories.some(lab => lab.labId === laboratory.labId)) {
       setAddedLaboratories([...addedLaboratories, laboratory]);
       setSearchQuery('');
     }
@@ -55,7 +54,7 @@ const LaboratoryPage = () => {
   };
 
   const handleMessageClick = () => {
-    router.push('/dashboard/patient/message');
+    router.push('/dashboard/patient/laboratory/message');
   };
 
   return (
@@ -99,9 +98,9 @@ const LaboratoryPage = () => {
             ) : (
               <div className="divide-y">
                 {filteredLaboratories.map(laboratory => (
-                  <div key={laboratory.id || laboratory.laboratoryId} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                  <div key={laboratory.id || laboratory.labId} className="p-4 flex items-center justify-between hover:bg-gray-50">
                     <div>
-                      <h3 className="font-medium">{laboratory.laboratoryName}</h3>
+                      <h3 className="font-medium">{laboratory.labName}</h3>
                       <p className="text-sm text-gray-500">{laboratory.location}</p>
                     </div>
                    
@@ -122,9 +121,9 @@ const LaboratoryPage = () => {
           ) : (
             <div className="divide-y">
               {addedLaboratories.map(laboratory => (
-                <div key={laboratory.id || laboratory.laboratoryId} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                <div key={laboratory.id || laboratory.labId} className="p-4 flex items-center justify-between hover:bg-gray-50">
                   <div className="flex-1">
-                    <h3 className="font-medium">{laboratory.laboratoryName}</h3>
+                    <h3 className="font-medium">{laboratory.labName}</h3>
                     <p className="text-sm text-gray-500">{laboratory.location}</p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -135,7 +134,7 @@ const LaboratoryPage = () => {
                       <MessageSquare className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
                     </button>
                     <button
-                      onClick={() => handleRemoveLaboratory(laboratory.id || laboratory.laboratoryId)}
+                      onClick={() => handleRemoveLaboratory(laboratory.id || laboratory.labId)}
                       className="p-2 rounded-full hover:bg-red-100 text-red-500 transition-colors"
                     >
                       <Trash2 className="w-5 h-5" />

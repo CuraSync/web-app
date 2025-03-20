@@ -61,7 +61,7 @@ const PharmacyPage = () => {
   };
 
   const handleMessageClick = () => {
-    router.push('/dashboard/patient/message');
+    router.push("/dashboard/patient/pharmacy/message?pharmacyId=${pharmacyId}")
   };
 
 
