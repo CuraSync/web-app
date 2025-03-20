@@ -55,7 +55,7 @@ const SettingsPage = () => {
 
   const fetchDoctorProfile = async () => {
     try {
-      const response = await api.doctor.getProfile();
+      const response = await api.get('/doctor/profile');
       setProfile(response.data);
     } catch (error) {
       console.error('Failed to fetch doctor profile:', error);
@@ -218,9 +218,7 @@ const SettingsPage = () => {
         profilePic: profile.profilePic
       };
 
-      console.log("Sending to API:", JSON.stringify(profileData, null, 2));
-      const response = await api.post("/doctor/profile", profileData);
-      console.log("API Response:", JSON.stringify(response.data, null, 2));
+      await api.post("/doctor/profile", profileData);
       
       toast.success('Profile updated successfully');
       router.refresh();

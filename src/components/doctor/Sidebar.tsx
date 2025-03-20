@@ -35,7 +35,7 @@ const DoctorSidebar = () => {
   useEffect(() => {
     const fetchDoctorProfile = async () => {
       try {
-        const response = await api.doctor.getProfile();
+        const response = await api.get('/doctor/profile');
         if (response.data) {
           setDoctorProfile(response.data);
         }
@@ -97,7 +97,7 @@ const DoctorSidebar = () => {
       </div>
       
       <div className="p-6 border-t border-gray-200">
-        <Link href="/dashboard/doctor/profile" className="flex items-center">
+        <div className="flex items-center">
           <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
             {doctorProfile.firstName?.[0]}{doctorProfile.lastName?.[0]}
           </div>
@@ -109,7 +109,7 @@ const DoctorSidebar = () => {
               {doctorProfile.specialization || 'General Practitioner'}
             </p>
           </div>
-        </Link>
+        </div>
         <button 
           className="mt-4 w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
           onClick={handleLogout}

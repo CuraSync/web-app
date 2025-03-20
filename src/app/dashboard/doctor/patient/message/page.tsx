@@ -1,16 +1,14 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
 import io from "socket.io-client";
-
 import { useSearchParams } from "next/navigation";
 
 interface Message {
   patientId: string;
   message: string;
-  addedDate: string; // YYYY-MM-DD format
-  addedTime: string; // HH:MM format
+  addedDate: string;
+  addedTime: string;
   sender: "doctor" | "patient";
 }
 
@@ -28,7 +26,6 @@ const MessagesPage = () => {
     const token = localStorage.getItem("accessToken");
     const additionalData = { id: selectedPatient };
 
-    // Connect to WebSocket server with token and additional data in the handshake
     const socket = io(serverUrl, {
       auth: {
         token,
@@ -42,7 +39,6 @@ const MessagesPage = () => {
 
     socket.on("receive-message", (message: Message) => {
       setMessages((prevMessages) => [...prevMessages, message]);
-      console.log("Received message:", message);
     });
 
     return () => {
@@ -56,13 +52,11 @@ const MessagesPage = () => {
         patientId: selectedPatient,
       });
       setMessages(response.data);
-      console.log(response.data);
     } catch (error) {
       console.error("Request failed:", error);
     }
   };
 
-  // Sort messages by date and time
   const patientMessages = [...messages].sort((a, b) => {
     return (
       a.addedDate.localeCompare(b.addedDate) ||
@@ -70,7 +64,6 @@ const MessagesPage = () => {
     );
   });
 
-  // Format date for display
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("en-US", {
@@ -80,21 +73,19 @@ const MessagesPage = () => {
     });
   };
 
-  // Send new message
   const handleSendMessage = async () => {
     if (newMessage.trim() === "") return;
 
     const now = new Date();
 
     try {
-      const response = await api.post("/doctor/patient/sendMessage", {
+      await api.post("/doctor/patient/sendMessage", {
         patientId: selectedPatient,
         message: newMessage,
         addedDate: now.toISOString().split("T")[0],
         addedTime: now.toTimeString().substring(0, 5),
         sender: "doctor",
       });
-      console.log(response.data);
     } catch (error) {
       console.error("Request failed:", error);
     }
