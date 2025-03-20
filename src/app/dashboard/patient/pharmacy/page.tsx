@@ -28,9 +28,7 @@ const PharmacyPage = () => {
   const ListFetchHomeData = async () => {
     try {
       const response = await api.get("/patient/pharmacies");
-      // const fetchedPharmacies = response.data as Pharmacy[];
-      // setPharmacies(fetchedPharmacies);
-      // console.log("Fetched Pharmacies:", fetchedPharmacies); // Debug: Check the data
+     
       setPharmacies(response.data)
       console.log(response);
       setError(null);

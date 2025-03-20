@@ -5,41 +5,48 @@ import { useRouter } from 'next/navigation';
 import Sidebar from '../sidebar/sidebar';
 import api from '@/utils/api';
 
+interface laboratory{
+  id:string;
+  laboratoryId:string;
+  laboratoryName:string;
+  email:string;
+  location:string;
+
+
+}
 const LaboratoryPage = () => {
   const router = useRouter();
   const [addedLaboratories, setAddedLaboratories] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-
-
-  const [laboratories, setLaboratories] = useState<any[]>([]);
+  const [laboratories,setLaboratories] = useState<laboratory[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const ListFetchHomeData = async () => {
     try {
       const response = await api.get("/patient/laboratories");
-      console.log(response.data);
+      setLaboratories(response.data as laboratory[]);
+      console.log(response);
+      setError(null);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching laboratories:", error);
+      setError("Failed to load laboratories. Please try again.");
     }
   };
   useEffect(() => {
     ListFetchHomeData();
   }, []);
 
-  // Filter laboratories based on search query
-  const filteredLaboratories = laboratories.filter(lab => 
-    lab.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lab.specialty.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lab.address.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter pharmacies based on search query
+  const filteredLaboratories = laboratories.filter(laboratory => 
+    laboratory.laboratoryName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    laboratory.location?.toLowerCase().includes(searchQuery.toLowerCase())
+   
   );
 
-  const handleAddLaboratory = () => {
-    // Only add the first filtered laboratory if it exists and hasn't been added yet
-    if (filteredLaboratories.length > 0) {
-      const labToAdd = filteredLaboratories[0];
-      if (!addedLaboratories.some(lab => lab.id === labToAdd.id)) {
-        setAddedLaboratories([...addedLaboratories, labToAdd]);
-        setSearchQuery(''); // Clear search after adding
-      }
+  const handleAddLaboratory = (laboratory: laboratory) => {
+    if (laboratory && !addedLaboratories.some(lab => lab.laboratoryId === laboratory.laboratoryId)) {
+      setAddedLaboratories([...addedLaboratories, laboratory]);
+      setSearchQuery('');
     }
   };
 
@@ -70,13 +77,9 @@ const LaboratoryPage = () => {
                 <Search className="w-5 h-5 text-gray-400 absolute left-3 top-3.5" />
               </div>
               <button
-                onClick={handleAddLaboratory}
-                disabled={filteredLaboratories.length === 0 || addedLaboratories.some(lab => lab.id === filteredLaboratories[0]?.id)}
-                className={`px-6 py-3 rounded-lg flex items-center gap-2 ${
-                  filteredLaboratories.length === 0 || addedLaboratories.some(lab => lab.id === filteredLaboratories[0]?.id)
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                }`}
+                onClick={() => filteredLaboratories.length>0 && handleAddLaboratory (filteredLaboratories[0])}
+                className="px-4 py-3 bg-blue-500 text-white font-medium rounded-lg flex items-center gap-1 hover:bg-blue-600 transition-colors"
+                disabled={filteredLaboratories.length === 0}
               >
                 <Plus className="w-5 h-5" />
                 Add
@@ -84,52 +87,68 @@ const LaboratoryPage = () => {
             </div>
           </div>
 
-          {/* Selected Laboratories */}
-          <div className="bg-white rounded-lg shadow-sm">
-            <h2 className="text-xl font-semibold p-4 border-b">Selected Laboratories</h2>
-            {addedLaboratories.length === 0 ? (
+
+             {/* Available Laboratories */}
+        {searchQuery && (
+          <div className="bg-white rounded-lg shadow-sm mb-8">
+            <h2 className="text-xl font-semibold p-4 border-b">Search Results</h2>
+            {filteredLaboratories.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
-                No laboratories selected yet.
+                No Laboratories found matching your search.
               </div>
             ) : (
               <div className="divide-y">
-                {addedLaboratories.map(laboratory => (
-                  <div key={laboratory.id} className="p-4 flex items-center justify-between hover:bg-gray-50">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center text-white font-bold mr-4">
-                        {laboratory.name.charAt(0)}
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-gray-900">{laboratory.name}</h3>
-                        <p className="text-sm text-gray-500">{laboratory.specialty}</p>
-                        <div className="flex items-center text-sm text-gray-500 mt-1">
-                          <Clock className="w-4 h-4 mr-1" />
-                          <span>{laboratory.availableTime}</span>
-                        </div>
-                      </div>
+                {filteredLaboratories.map(laboratory => (
+                  <div key={laboratory.id || laboratory.laboratoryId} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                    <div>
+                      <h3 className="font-medium">{laboratory.laboratoryName}</h3>
+                      <p className="text-sm text-gray-500">{laboratory.location}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button 
-                        onClick={handleMessageClick}
-                        className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
-                      >
-                        <MessageSquare className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
-                      </button>
-                      <button
-                        onClick={() => handleRemoveLaboratory(laboratory.id)}
-                        className="p-2 rounded-full hover:bg-red-100 text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
+                   
                   </div>
                 ))}
               </div>
             )}
           </div>
+        )}
+
+          {/* Selected Laboratories */}
+        <div className="bg-white rounded-lg shadow-sm">
+          <h2 className="text-xl font-semibold p-4 border-b">Selected Laboratories</h2>
+          {addedLaboratories.length === 0 ? (
+            <div className="p-4 text-center text-gray-500">
+              No laboratories selected yet.
+            </div>
+          ) : (
+            <div className="divide-y">
+              {addedLaboratories.map(laboratory => (
+                <div key={laboratory.id || laboratory.laboratoryId} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                  <div className="flex-1">
+                    <h3 className="font-medium">{laboratory.laboratoryName}</h3>
+                    <p className="text-sm text-gray-500">{laboratory.location}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={handleMessageClick}
+                      className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
+                    >
+                      <MessageSquare className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
+                    </button>
+                    <button
+                      onClick={() => handleRemoveLaboratory(laboratory.id || laboratory.laboratoryId)}
+                      className="p-2 rounded-full hover:bg-red-100 text-red-500 transition-colors"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
+  </div>
   );
 }
 export default LaboratoryPage;
