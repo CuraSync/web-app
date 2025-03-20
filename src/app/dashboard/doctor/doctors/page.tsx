@@ -31,6 +31,8 @@ const DoctorsPage = () => {
     try {
       setIsLoading(true);
       const response = await api.get("/doctor/doctors");
+      console.log("Raw API response:", response.data); // ✅ Log raw response data
+
       const mappedDoctors = response.data.map((doctor: any) => ({
         firstName: doctor.firstName,
         lastName: doctor.lastName,
@@ -40,6 +42,9 @@ const DoctorsPage = () => {
         profilePic: doctor.profilePic,
         yearsOfExperience: doctor.yearsOfExperience || 0,
       }));
+
+      console.log("Mapped doctors:", mappedDoctors); // ✅ Log mapped data
+
       setDoctors(mappedDoctors);
     } catch (error) {
       console.error("Failed to fetch doctors:", error);
@@ -58,14 +63,19 @@ const DoctorsPage = () => {
     const matchesSpecialization = selectedSpecialization === "All" || 
       doctor.specialization === selectedSpecialization;
 
-    return matchesSearch && matchesSpecialization;
+    const isMatch = matchesSearch && matchesSpecialization;
+    console.log(`Filtering ${doctor.firstName} ${doctor.lastName}:`, isMatch); // ✅ Log filtering result
+
+    return isMatch;
   });
 
   const handleMessageClick = (doctorId: string) => {
+    console.log("Sending message to doctorId:", doctorId); // ✅ Log message action
     router.push(`/dashboard/doctor/doctor/message?doctorId=${doctorId}`);
   };
 
   const handleProfileClick = (doctorId: string) => {
+    console.log("Viewing profile for doctorId:", doctorId); // ✅ Log profile view action
     router.push(`/dashboard/doctor/profile/${doctorId}`);
   };
 
@@ -179,36 +189,13 @@ const DoctorsPage = () => {
                         </div>
                       </div>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">{doctor.specialization}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{doctor.hospital}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{doctor.yearsOfExperience} years</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {doctor.specialization}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {doctor.hospital}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {doctor.yearsOfExperience} years
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleMessageClick(doctor.doctorId)}
-                          className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
-                        >
-                          <MessageCircle className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
-                        </button>
-                        <button
-                          onClick={() => handleProfileClick(doctor.doctorId)}
-                          className="p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors"
-                        >
-                          <User className="w-5 h-5" />
-                        </button>
-                      </div>
+                      <button onClick={() => handleMessageClick(doctor.doctorId)}>
+                        <MessageCircle />
+                      </button>
                     </td>
                   </tr>
                 ))
