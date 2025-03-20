@@ -19,7 +19,7 @@ const MessagesPage = () => {
   const [newMessage, setNewMessage] = useState<string>("");
 
   const searchParams = useSearchParams();
-  const selectedPharmacy = searchParams.get("pharmacyId");
+  const selectedPharmacy = "PH41111";
 
   useEffect(() => {
     fetchMessages();
@@ -40,7 +40,7 @@ const MessagesPage = () => {
       console.log("Connected to WebSocket");
     });
 
-    socket.on("receive-message", (message) => {
+    socket.on("receive-message", (message: Message) => {
       setMessages((prevMessages) => [...prevMessages, message]);
       console.log("Received message:", message);
     });
@@ -52,7 +52,7 @@ const MessagesPage = () => {
 
   const fetchMessages = async () => {
     try {
-      const response = await api.post("/patient/patient/messages", {
+      const response = await api.post("/patient/pharmacy/messages", {
         pharmacyId: selectedPharmacy,
       });
       setMessages(response.data);
