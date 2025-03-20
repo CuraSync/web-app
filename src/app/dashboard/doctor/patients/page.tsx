@@ -56,6 +56,7 @@ const PatientsPage = () => {
     try {
       setIsLoading(true);
       const response = await api.get("/doctor/patient");
+      console.log("Fetched patients:", response.data);
       setPatients(response.data);
     } catch (error) {
       console.error("Failed to fetch patients:", error);
@@ -66,7 +67,9 @@ const PatientsPage = () => {
 
   const fetchMessages = async (patientId: string) => {
     try {
+      console.log("Fetching messages for patientId:", patientId);
       const response = await api.post("/doctor/patient/messages", { patientId });
+      console.log("Fetched messages:", response.data);
       setMessages(response.data);
     } catch (error) {
       console.error("Failed to fetch messages:", error);
@@ -89,12 +92,22 @@ const PatientsPage = () => {
       
       const messageId = generateUniqueId();
 
+      console.log("Sending message:", {
+        patientId: selectedPatient.patientId,
+        message: newMessage,
+        addedDate,
+        addedTime,
+        messageId
+      });
+
       await api.post("/doctor/patient/sendMessage", {
         patientId: selectedPatient.patientId,
         message: newMessage,
         addedDate,
         addedTime
       });
+
+      console.log("Message sent successfully!");
 
       // Add the new message to the messages list with a truly unique ID
       setMessages([...messages, {
@@ -119,6 +132,7 @@ const PatientsPage = () => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      console.log("Sending message on Enter key press");
       sendMessage();
     }
   };

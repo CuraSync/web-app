@@ -31,7 +31,7 @@ const DoctorsPage = () => {
     try {
       setIsLoading(true);
       const response = await api.get("/doctor/doctors");
-      console.log("Raw API response:", response.data); // ✅ Log raw response data
+      console.log("Raw API response:", response.data); 
 
       const mappedDoctors = response.data.map((doctor: any) => ({
         firstName: doctor.firstName,
@@ -43,7 +43,7 @@ const DoctorsPage = () => {
         yearsOfExperience: doctor.yearsOfExperience || 0,
       }));
 
-      console.log("Mapped doctors:", mappedDoctors); // ✅ Log mapped data
+      console.log("Mapped doctors:", mappedDoctors); 
 
       setDoctors(mappedDoctors);
     } catch (error) {
@@ -64,18 +64,18 @@ const DoctorsPage = () => {
       doctor.specialization === selectedSpecialization;
 
     const isMatch = matchesSearch && matchesSpecialization;
-    console.log(`Filtering ${doctor.firstName} ${doctor.lastName}:`, isMatch); // ✅ Log filtering result
+    console.log(`Filtering ${doctor.firstName} ${doctor.lastName}:`, isMatch); 
 
     return isMatch;
   });
 
   const handleMessageClick = (doctorId: string) => {
-    console.log("Sending message to doctorId:", doctorId); // ✅ Log message action
+    console.log("Sending message to doctorId:", doctorId); 
     router.push(`/dashboard/doctor/doctor/message?doctorId=${doctorId}`);
   };
 
   const handleProfileClick = (doctorId: string) => {
-    console.log("Viewing profile for doctorId:", doctorId); // ✅ Log profile view action
+    console.log("Viewing profile for doctorId:", doctorId); 
     router.push(`/dashboard/doctor/profile/${doctorId}`);
   };
 
