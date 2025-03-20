@@ -107,8 +107,7 @@ const api = {
       yearsOfExperience: data.yearsOfExperience,
       currentWorkingHospitals: data.currentWorkingHospitals,
       availability: data.availability,
-      description: data.description,
-      profilePic: data.profilePic // Added profilePic field
+      description: data.description
     }),
     
     // Upload profile picture

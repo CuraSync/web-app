@@ -35,7 +35,7 @@ interface PatientInfo {
   nic: string;
   patientId: string;
   phoneNumber: string;
-  profilepic: string;
+  profilePic: string;
   updateAt: string;
   weight: string;
 }
@@ -44,7 +44,9 @@ const SettingsPage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [image, setImage] = useState<File | null>(null);
   const [patientInfo, setPatientInfo] = useState<PatientInfo>({
     firstName: "",
     lastName: "",
@@ -61,7 +63,7 @@ const SettingsPage = () => {
     nic: "",
     patientId: "",
     phoneNumber: "",
-    profilepic: "",
+    profilePic: "",
     updateAt: "",
     weight: "",
   });
@@ -108,7 +110,7 @@ const SettingsPage = () => {
           nic: String(data.nic ?? ""),
           patientId: String(data.patientId ?? ""),
           phoneNumber: String(data.phoneNumber ?? ""),
-          profilepic: String(data.profilepic ?? ""),
+          profilePic: String(data.profilePic ?? ""),
           updateAt: String(data.updateAt ?? ""),
           weight: String(data.weight ?? ""),
         };
@@ -148,16 +150,18 @@ const SettingsPage = () => {
           : [], // Explicitly send empty array if no allergies
         guardianName: patientInfo.guardianName || undefined,
         guardianContactNumber: patientInfo.guardianContactNumber || undefined,
-        profilepic: patientInfo.profilepic || undefined,
+        profilePic: patientInfo.profilePic || undefined,
       };
 
       console.log("Sending to API:", JSON.stringify(profileData, null, 2));
-      const response = await api.post("/patient/profile", profileData);
-      console.log("API Response:", JSON.stringify(response.data, null, 2));
-
-      toast.success("Profile updated successfully");
-      localStorage.setItem("patientData", JSON.stringify(patientInfo));
-      router.refresh();
+    const response = await api.post("/patient/profile", {
+      ...profileData,
+      headers: { "Content-Type": "application/json" },
+    });
+    setPatientInfo(response.data); // Update state with backend response
+    toast.success("Profile updated successfully");
+    localStorage.setItem("patientData", JSON.stringify(response.data));
+    router.refresh();
     } catch (error: any) {
       console.error("Save Error:", {
         message: error.message,
@@ -171,42 +175,44 @@ const SettingsPage = () => {
   };
   
 
-  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image size should be less than 5MB");
-      return;
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.size <= 5 * 1024 * 1024) {
+      // Check if file size is <= 5MB
+      setImage(file);
+    } else {
+      toast.error("File size should be less than 5MB");
+      setImage(null);
     }
+  };
 
-    if (!file.type.match(/image\/(jpeg|jpg|png|gif|webp)/i)) {
-      toast.error("Only JPG, PNG, GIF, or WebP images are allowed");
-      return;
+  const handleUpload = async () => {
+    if (!image) return;
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append("file", image);
+    formData.append(
+      "upload_preset",
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ""
+    );
+
+    try {
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        formData
+      );
+      setImageUrl(response.data.secure_url);
+    } catch (error) {
+      console.error("Upload failed", error);
+      toast.error("Image upload failed. Please try again.");
+    } finally {
+      setUploading(false);
     }
-
-    setIsUploading(true);
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPatientInfo((prev) => ({
-        ...prev,
-        profilepic: reader.result as string,
-      }));
-      setIsUploading(false);
-      toast.success("Profile picture ready to save");
-    };
-
-    reader.onerror = () => {
-      toast.error("Failed to read the image");
-      setIsUploading(false);
-    };
-
-    reader.readAsDataURL(file);
   };
 
   const removeProfilePic = () => {
-    setPatientInfo((prev) => ({ ...prev, profilepic: "" }));
+    setPatientInfo((prev) => ({ ...prev, profilePic: "" }));
     toast.success("Profile picture removed");
   };
 
@@ -258,37 +264,7 @@ const SettingsPage = () => {
 
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center pb-8 border-b border-gray-200">
-              <div className="relative w-20 h-20 overflow-hidden rounded-full bg-blue-100 flex items-center justify-center">
-                {isUploading ? (
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <Loader2 className="w-6 h-6 animate-spin text-white" />
-                  </div>
-                ) : patientInfo.profilepic && patientInfo.profilepic !== "" ? (
-                  <img
-                    src={patientInfo.profilepic}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-blue-600 text-2xl font-semibold">
-                    {patientInfo.firstName || "F"}
-                    {patientInfo.lastName || "L"}
-                  </span>
-                )}
-                <label
-                  htmlFor="profile-pic"
-                  className="absolute bottom-0 right-0 bg-blue-600 text-white p-1 rounded-full cursor-pointer hover:bg-blue-700 transition-colors"
-                >
-                  <Upload className="w-4 h-4" />
-                  <input
-                    type="file"
-                    id="profile-pic"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleProfilePicChange}
-                  />
-                </label>
-              </div>
+              
               <div className="ml-6">
                 <p className="text-xl font-medium">
                   {patientInfo.firstName} {patientInfo.lastName}
@@ -297,6 +273,35 @@ const SettingsPage = () => {
               </div>
             </div>
 
+            <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Profile Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="mb-2"
+                />
+                <button
+                  onClick={handleUpload}
+                  disabled={!image || uploading}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+                >
+                  {uploading ? "Uploading..." : "Upload"}
+                </button>
+              </div>
+
+              {imageUrl && (
+                <div className="mt-4">
+                  <p className="mb-2">Uploaded Image:</p>
+                  <img
+                    src={imageUrl}
+                    alt="Profile"
+                    className="w-32 h-32 rounded-full object-cover border-2 border-gray-200"
+                  />
+                </div>
+              )}
+            </div>
+            
             <h2 className="text-lg font-semibold mt-6 mb-4">Personal Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -551,7 +556,6 @@ const SettingsPage = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

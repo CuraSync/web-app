@@ -100,13 +100,13 @@ const Sidebar = () => {
             <FaPrescriptionBottleAlt className="w-5 h-5" />
             <span>Pharmacy</span>
           </Link>
-          <Link
+          {/* <Link
             href="/dashboard/patient/message"
             className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
           >
             <FaEnvelope className="w-5 h-5" />
             <span>Messaging</span>
-          </Link>
+          </Link> */}
           <Link
             href="/dashboard/patient/notification"
             className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
