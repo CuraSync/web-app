@@ -82,13 +82,13 @@ const Sidebar = () => {
                 <FaListUl className="w-5 h-5" />
                 <span>Patient List</span>
               </Link>
-              {/* <Link
-                href="/dashboard/pharmacy/notification"
+              <Link
+                href="/dashboard/pharmacy/request"
                 className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
               >
                 <FaBell className="w-5 h-5" />
-                <span>Notification</span>
-              </Link> */}
+                <span>Requests</span>
+              </Link>
               <Link
                 href="/dashboard/pharmacy/settings"
                 className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"

@@ -2,38 +2,29 @@
 
 import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
-import Sidebar from "../sidebar/sidebar"; 
+import PharmacySidebar from "../sidebar/sidebar"; 
 
 interface Request {
   _id: string;
-
-  laboratoryId: string;
-  laboratoryName: string;
-
-  pharmacyId: string;
-  pharmacyName: string;
-
-  doctorId: string;
-  doctorName: string;
-
+  patientId: string;
+  firstName: string;
+  lastName: string;
   addedDate: string; 
   addedTime: string;
   status: string;
 }
 
-const PatientRequestPage = () => {
+const PharmacyRequestPage = () => {
   const [requests, setRequests] = useState<Request[]>([]);
   const [acceptedRequests, setAcceptedRequests] = useState<Request[]>([]);
 
   useEffect(() => {
-    fetchLabRequests();
-    fetchPharmacyRequest();
-    fetchDoctorRequest();
+    fetchRequests();
   }, []);
 
-  const fetchLabRequests = async () => {
+  const fetchRequests = async () => {
     try {
-      const response = await api.get("/patient/laboratory/request");
+      const response = await api.get("/pharmacy/patient/request");
       console.log(response.data);
       
       const pending = response.data.filter((req: Request) => 
@@ -49,29 +40,9 @@ const PatientRequestPage = () => {
     }
   };
 
-  const fetchPharmacyRequest = async () => {
-    try{
-      const response = await api.get("/patient/pharmacy/request");
-      console.log(response.data);
-    
-    }catch (error){
-      console.log(error);
-    }
-  };
-
-  const fetchDoctorRequest = async () => {
-    try{
-      const response = await api.get("/patient/doctor/request");
-      console.log(response.data);
-    
-    }catch (error){
-      console.log(error);
-    }
-  };
-
   const handleAcceptRequest = async (_id: string) => {
     try {
-      const response = await api.post("/laboratory/request", { requestId: _id });
+      const response = await api.post("/pharmacy/request/accept", { requestId:_id });
       console.log(response.data);
       setRequests(prev => prev.filter(req => req._id !== _id));
       setAcceptedRequests(prev => [
@@ -85,7 +56,7 @@ const PatientRequestPage = () => {
 
   return (
     <div className="flex h-screen">
-      <Sidebar />
+      <PharmacySidebar />
       <div className="flex flex-col w-full h-screen bg-gray-100 p-4">
         
 
@@ -104,9 +75,9 @@ const PatientRequestPage = () => {
               <tbody>
                 {requests.map((request) => (
                   <tr key={request._id} className="border hover:bg-gray-50">
-                    <td className="border p-3 text-gray-700">{request.laboratoryId}</td>
+                    <td className="border p-3 text-gray-700">{request.patientId}</td>
                     <td className="border p-3 text-gray-700">
-                      
+                      {request.firstName} {request.lastName}
                     </td>
                     <td className="border p-3 text-gray-700">{request.addedDate}</td>
                     <td className="border p-3 text-gray-700">{request.addedTime}</td>
@@ -144,9 +115,9 @@ const PatientRequestPage = () => {
               <tbody>
                 {acceptedRequests.map((request) => (
                   <tr key={request._id} className="border hover:bg-gray-50">
-                    <td className="border p-3 text-gray-700">{request.laboratoryId}</td>
+                    <td className="border p-3 text-gray-700">{request.patientId}</td>
                     <td className="border p-3 text-gray-700">
-                   
+                      {request.firstName} {request.lastName}
                     </td>
                     <td className="border p-3 text-gray-700">{request.addedDate}</td>
                     <td className="border p-3 text-gray-700">{request.addedTime}</td>
@@ -164,4 +135,4 @@ const PatientRequestPage = () => {
   );
 };
 
-export default PatientRequestPage;
+export default PharmacyRequestPage;

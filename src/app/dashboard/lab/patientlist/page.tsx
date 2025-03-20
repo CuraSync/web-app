@@ -31,7 +31,7 @@ const PatientList = () => {
     }, []);
 
     const handleToMessage = (patientId: string | number) => {
-        router.push(`/dashboard/laboratory/messages/${patientId}`);
+        router.push(`/dashboard/lab/patient/message?patientId=${patientId}`);
     };
 
     return (

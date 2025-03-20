@@ -62,6 +62,7 @@ const PharmacyLogin = () => {
       );
 
       localStorage.setItem("accessToken", response.data.accessToken);
+      localStorage.setItem("accessToken", response.data.refreshToken);
       localStorage.setItem("userRole", "pharmacy");
       localStorage.setItem("id", response.data.id);
 
