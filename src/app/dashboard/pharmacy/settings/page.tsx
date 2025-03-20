@@ -5,6 +5,7 @@ import PharmacySidebar from "../../pharmacy/sidebar/sidebar";
 import { toast } from "sonner";
 import { Plus, Trash2, Upload, X, Camera, Star } from "lucide-react";
 import api from "@/utils/api";
+import axios from "axios";
 
 const SettingsPage = () => {
   const router = useRouter();
@@ -21,6 +22,9 @@ const SettingsPage = () => {
   const [contactInformation, setContactInformation] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [rating, setRating] = useState(0);
+  const [image, setImage] = useState<File | null>(null);
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   
   interface Contact {
@@ -68,7 +72,6 @@ const SettingsPage = () => {
     }
   };
   
-
   useEffect(() => {
     if (contactInformation) {
       try {
@@ -120,41 +123,40 @@ const SettingsPage = () => {
   
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image size should be less than 5MB");
-      return;
+    if (file && file.size <= 5 * 1024 * 1024) {
+      setImage(file);
+    } else {
+      alert("File size should be less than 5MB");
+      setImage(null);
     }
-    
+  };
 
-    if (!file.type.match(/image\/(jpeg|jpg|png|gif|webp)/i)) {
-      toast.error("Only JPG, PNG, GIF, or WebP images are allowed");
-      return;
+  const handleUpload = async () => {
+    if (!image) return;
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append("file", image);
+    formData.append(
+      "upload_preset",
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ""
+    );
+    try {
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        formData
+      );
+      setImageUrl(response.data.secure_url);
+    } catch (error) {
+      console.error("Upload failed", error);
+      alert("Image upload failed. Please try again.");
+    } finally {
+      setUploading(false);
     }
-    
-    setIsUploading(true);
-    
-    const reader = new FileReader();
-    
-    reader.onload = () => {
-      setProfilePic(reader.result as string);
-      setIsUploading(false);
-      toast.success("Profile picture ready to save");
-    };
-    
-    reader.onerror = () => {
-      toast.error("Failed to read the image");
-      setIsUploading(false);
-    };
-    
-    reader.readAsDataURL(file);
+
   };
   
-  const removeProfilePic = () => {
-    setProfilePic("");
-    toast.success("Profile picture removed");
-  };
+  
   
   const handleSaveProfile = async () => {
     try {
@@ -202,53 +204,48 @@ const SettingsPage = () => {
       <PharmacySidebar />
       <div className="p-8 flex-1 flex justify-center items-center">
         <div className="w-full max-w-fit border rounded-lg shadow-md bg-white border-gray-200">
-          <div className="flex flex-col p-6 border-b border-gray-200">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-medium">Profile</h2>
-              <div className="text-gray-500 text-sm">
-                Updated: {updatedAt}<br></br>
-                Created:{createdAt}
-              </div>
+
+        <div className="p-8 flex-1 flex justify-center items-center">
+        <div>
+          <div className="flex flex-col items-center gap-4 p-4 border rounded-lg shadow-md w-80">
+            <div className="relative w-32 h-32">
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt="Profile Picture"
+                  className="w-32 h-32 rounded-full object-cover border"
+                />
+              ) : (
+                <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                  No Image
+                </div>
+              )}
             </div>
 
-            <div className="flex items-center justify-center pb-6">
-              <div className="relative w-32 h-32 overflow-hidden rounded-full bg-gray-100 flex items-center justify-center">
-                {isUploading ? (
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
-                  </div>
-                ) : profilePic ? (
-                  <>
-                    <img
-                      src={profilePic}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                    />
-                    <button 
-                      onClick={removeProfilePic}
-                      className="absolute top-1 right-6 bg-red-600 text-white p-1 rounded-full hover:bg-red-700"
-                      title="Remove profile picture"
-                    >
-                      <X size={20} />
-                    </button>
-                  </>
-                ) : (
-                  <Camera size={42} className="text-gray-400" />
-                )}
-                
-                <label htmlFor="profile-pic" className="absolute bottom-2 right-5 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 shadow-md">
-                  <Upload size={16} />
-                  <input
-                    type="file"
-                    id="profile-pic"
-                    className="hidden"
-                    accept="image/jpeg,image/png,image/gif,image/webp"
-                    onChange={handleProfilePicChange}
-                  />
-                </label>
-              </div>
-            </div>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              id="profilePicInput"
+              onChange={handleProfilePicChange}
+            />
+            <label
+              htmlFor="profilePicInput"
+      
+            >
+              <Camera className="inline-block mr-2" /> Choose Image
+            </label>
+
+            <button
+              onClick={handleUpload}
+            
+              disabled={!image || uploading}
+            >
+              {uploading ? "Uploading..." : <><Upload className="inline-block mr-2" /> Upload</>}
+            </button>
           </div>
+        </div>
+      </div>
 
           <div className="p-6">
             <label className="block text-gray-700 font-medium mb-2">Pharmacy Id</label>

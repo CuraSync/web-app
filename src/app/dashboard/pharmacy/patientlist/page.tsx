@@ -2,28 +2,37 @@
 import React, { useEffect, useState } from "react";
 import PharmacySidebar from "../sidebar/sidebar";
 import api from "@/utils/api";
+import { FaRegCommentDots } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 interface Patient {
-    patientId: string | number;
+    patientId: string;
     firstName: string;
     lastName: string;
 }
 
 const PatientList = () => {
+    const router = useRouter();
     const [patients, setPatients] = useState<Patient[]>([]);
+
+    useEffect(() => {
+        fetchList();
+    }, []);
 
     const fetchList = async () => {
         try {
             const response = await api.get("/pharmacy/patients");
             setPatients(response.data); 
+            console.log(response);
         } catch (error) {
-            console.error("Error fetching patient list:", error);
+           console.error("Error fetching patient list:", error);
         }
     };
 
-    useEffect(() => {
-        fetchList();
-    }, []);
+
+    const messagePage = (patientId: string) => {
+        router.push(`/dashboard/pharmacy/patient/message?patientId=${patientId}`);
+      };
 
     return (
         <div className="min-h-screen flex">
@@ -31,24 +40,44 @@ const PatientList = () => {
             <PharmacySidebar />
 
             {/* Main Content */}
-            <main className="flex-1 p-6 max-w-5xl mx-auto">
+            <main className="flex-1 p-6 max-w-4xl mx-auto">
                 <h1 className="text-2xl font-bold text-gray-800 mb-6">Patient List</h1>
 
                 {patients.length > 0 ? (
-                    <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        {patients.map((patient) => (
-                            <li 
-                                key={patient.patientId} 
-                                className="bg-white shadow-md rounded-lg p-4 border border-gray-200"
-                            >
-                                <h2 className="font-semibold text-lg text-gray-700">
-                                    Patient ID: {patient.patientId}
-                                </h2>
-                                <p className="text-gray-600">First Name: {patient.firstName}</p>
-                                <p className="text-gray-600">Last Name: {patient.lastName}</p>
-                            </li>
-                        ))}
-                    </ul>
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse border border-gray-200 shadow-md">
+                            <thead>
+                                <tr className="bg-gray-100">
+                                    <th className="border p-3 text-left">Patient ID</th>
+                                    <th className="border p-3 text-left">Patient Name</th>
+                                    <th className="border p-3 text-left">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {patients.map((patient) => (
+                                    <tr key={patient.patientId} className="border hover:bg-gray-50">
+                                        <td className="border p-3 text-gray-700">{patient.patientId}</td>
+                                        <td className="border p-3 text-gray-800 font-semibold">
+                                            {patient.firstName} {patient.lastName}
+                                        </td>
+                                        <td className="border p-3">
+                                            <div className="flex items-center">
+                                                <button
+                                                    onClick={() => messagePage(patient.patientId)}
+                                                    className="flex items-center text-blue-500 hover:text-blue-700 transition-colors"
+                                                >
+                                                    <FaRegCommentDots 
+                                                        className="text-xl mr-1" 
+                                                    />
+                                                    <span className="text-sm">Message</span>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 ) : (
                     <p className="text-gray-500 text-center mt-4">No patients found.</p>
                 )}
