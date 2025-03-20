@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
-import { io } from "socket.io-client";
+import io from "socket.io-client";
 import {getId} from "@/utils/jwt";
 import { useSearchParams } from "next/navigation";
 
