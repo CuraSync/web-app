@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useSearchParams } from "next/navigation";
+import router from "next/router";
 
 interface Note {
   doctorId: string;
@@ -10,16 +11,18 @@ interface Note {
   addedDate: string; // YYYY-MM-DD format
   addedTime: string; // HH:MM format
   sender: "doctor" | "laboratory";
+  reportId?: string; // Only for lab reports
 }
 
 const DoctorTimelinePage = () => {
+  const [timelineItems, setTimelineItems] = useState<[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const searchParams = useSearchParams();
   const selectedDoctor = searchParams.get("doctorId") || "";
 
   useEffect(() => {
     fetchNotes();
-  }, [selectedDoctor]); // Add selectedDoctor as a dependency
+  }, [selectedDoctor]);
 
   const fetchNotes = async () => {
     try {
@@ -37,6 +40,10 @@ const DoctorTimelinePage = () => {
         error.message
       );
     }
+  };
+
+  const handleVisualizationClick = (labId: string) => {
+    router.push(`/laboratory/visualization?labId=${labId}`);
   };
 
   const sortedNotes = [...notes].sort((a, b) => {
@@ -80,16 +87,18 @@ const DoctorTimelinePage = () => {
               )}
               <div className="flex items-center mb-4 relative">
                 {note.sender === "doctor" && (
-                  <div className="w-1/2 pr-4 flex justify-end">
-                    <div className="bg-pink-600 text-white max-w-xs lg:max-w-md px-4 py-2 rounded-bl-none rounded-lg">
-                      <div className="text-sm">{note.message}</div>
-                      <div className="text-xs mt-1 text-white text-right">
-                        {note.addedTime}
+                  <>
+                    <div className="w-1/2 pr-4 flex justify-end">
+                      <div className="bg-pink-600 text-white max-w-xs lg:max-w-md px-4 py-2 rounded-bl-none rounded-lg">
+                        <div className="text-sm">{note.message}</div>
+                        <div className="text-xs mt-1 text-white text-right">
+                          {note.addedTime}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                    <div className="w-1/2"></div>
+                  </>
                 )}
-                {note.sender === "doctor" && <div className="w-1/2"></div>}
 
                 {note.sender === "laboratory" && (
                   <>
@@ -108,6 +117,12 @@ const DoctorTimelinePage = () => {
             </React.Fragment>
           );
         })}
+
+        {timelineItems.length === 0 && (
+          <div className="flex justify-center items-center h-64">
+            <p className="text-gray-500">No timeline items found</p>
+          </div>
+        )}
       </div>
     </div>
   );
