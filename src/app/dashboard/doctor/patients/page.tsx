@@ -149,7 +149,7 @@ const PatientsPage = () => {
   };
 
   const handleTimelineClick = (patientId: string) => {
-    router.push(`/dashboard/doctor/patient-timeline/${patientId}`);
+    router.push(`/dashboard/doctor/patient/timeline?patientId=${patientId}`);
   };
 
   const getPriorityColor = (priority: number) => {
