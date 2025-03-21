@@ -22,6 +22,9 @@ const PharmacyPage = () => {
   const [addedPharmacies, setAddedPharmacies] = useState<Pharmacy[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
+  const [showPopup, setShowPopup] = useState(false);
+  const [pharmacyIdInput, setPharmacyIdInput] = useState('');
+
  
   const [error, setError] = useState<string | null>(null);
 
@@ -49,10 +52,17 @@ const PharmacyPage = () => {
     pharmacy.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAddPharmacy = (pharmacy: Pharmacy) => {
-    if (pharmacy && !addedPharmacies.some(p => p.pharmacyId === pharmacy.pharmacyId)) {
-      setAddedPharmacies([...addedPharmacies, pharmacy]);
-      setSearchQuery('');
+  const handleAddPharmacy = async () => {
+    if (!pharmacyIdInput) return;
+
+    try {
+      const response = await api.post("/patient/pharmacy/request", { pharmacyId: pharmacyIdInput });
+      console.log("Request sent successfully:", response.data);
+      setShowPopup(false);
+      setPharmacyIdInput('');
+    } catch (error) {
+      console.error("Error sending request:", error);
+      setError("Failed to send request. Please try again.");
     }
   };
 
@@ -60,109 +70,114 @@ const PharmacyPage = () => {
     setAddedPharmacies(addedPharmacies.filter(pharmacy => pharmacy.pharmacyId !== pharmacyId));
   };
 
-  const handleMessageClick = () => {
-    router.push("/dashboard/patient/pharmacy/message?pharmacyId=${pharmacyId}")
+  const handleMessageClick = (pharmacyId: string) => {
+    router.push(`/dashboard/patient/pharmacy/message?pharmacyId=${pharmacyId}`)
   };
-
-
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-    <Sidebar />
-    <div className="flex-1 p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Search Bar with Add Button */}
-        <div className="mb-8">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Search pharmacies by name or address..."
-                className="w-full pl-10 pr-4 py-3 bg-white rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Search className="w-5 h-5 text-gray-400 absolute left-3 top-3.5" />
-            </div>
+      <Sidebar />
+      <div className="flex-1 p-8">
+        <div className="max-w-4xl mx-auto">
+          {/* Add Pharmacy Button */}
+          <div className="mb-8">
             <button
-              onClick={() => filteredPharmacies.length > 0 && handleAddPharmacy(filteredPharmacies[0])}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-              disabled={filteredPharmacies.length === 0}
+              onClick={() => setShowPopup(true)}
+              className="px-4 py-3 bg-blue-500 text-white font-medium rounded-lg flex items-center gap-1 hover:bg-blue-600 transition-colors"
             >
               <Plus className="w-5 h-5" />
-              Add
+              Add Pharmacy
             </button>
+
+            {/* Available Pharmacies */}
+            {/* {searchQuery && (
+              <div className="bg-white rounded-lg shadow-sm mb-8">
+                <h2 className="text-xl font-semibold p-4 border-b">Search Results</h2>
+                {filteredPharmacies.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    No pharmacies found matching your search.
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {filteredPharmacies.map(pharmacy => (
+                      <div key={pharmacy.id || pharmacy.pharmacyId} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                        <div>
+                          <h3 className="font-medium">{pharmacy.pharmacyName}</h3>
+                          <p className="text-sm text-gray-500">{pharmacy.location}</p>
+                        </div>
+                      
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )} */}
+
+            {/* Selected Pharmacies */}
+            <div className="bg-white rounded-lg shadow-sm">
+              <h2 className="text-xl font-semibold p-4 border-b">Selected Pharmacies</h2>
+              {addedPharmacies.length === 0 ? (
+                <div className="p-4 text-center text-gray-500">
+                  No pharmacies selected yet.
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {addedPharmacies.map(pharmacy => (
+                    <div key={pharmacy.id || pharmacy.pharmacyId} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                      <div className="flex-1">
+                        <h3 className="font-medium">{pharmacy.pharmacyName}</h3>
+                        <p className="text-sm text-gray-500">{pharmacy.location}</p>
+                        <p className="text-sm text-gray-500">{pharmacy.licenceNumber}</p>
+                        <p className="text-sm text-gray-500">{pharmacy.phoneNumber}</p>
+                        <p className="text-sm text-gray-500">{pharmacy.description}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleMessageClick(pharmacy.pharmacyId)}
+                          className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
+                        >
+                          <MessageSquare className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
+                        </button>
+                        <button
+                          onClick={() => handleRemovePharmacy(pharmacy.pharmacyId)}
+                          className="p-2 rounded-full hover:bg-red-100 text-red-500 transition-colors"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-
-        {/* Available Pharmacies */}
-        {searchQuery && (
-          <div className="bg-white rounded-lg shadow-sm mb-8">
-            <h2 className="text-xl font-semibold p-4 border-b">Search Results</h2>
-            {filteredPharmacies.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                No pharmacies found matching your search.
+        {/* Popup Form */}
+        {showPopup && (
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+              <h2 className="text-lg font-semibold mb-4">Enter Pharmacy ID</h2>
+              <input
+                type="text"
+                placeholder="Pharmacy ID"
+                className="w-full p-2 border rounded-lg mb-4"
+                value={pharmacyIdInput}
+                onChange={(e) => setPharmacyIdInput(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={handleAddPharmacy}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  Add
+                </button>
               </div>
-            ) : (
-              <div className="divide-y">
-                {filteredPharmacies.map(pharmacy => (
-                  <div key={pharmacy.id || pharmacy.pharmacyId} className="p-4 flex items-center justify-between hover:bg-gray-50">
-                    <div>
-                      <h3 className="font-medium">{pharmacy.pharmacyName}</h3>
-                      <p className="text-sm text-gray-500">{pharmacy.location}</p>
-                    </div>
-                   
-                  </div>
-                ))}
-              </div>
-            )}
+            </div>
           </div>
         )}
-
-
-        {/* Selected Pharmacies */}
-        <div className="bg-white rounded-lg shadow-sm">
-          <h2 className="text-xl font-semibold p-4 border-b">Selected Pharmacies</h2>
-          {addedPharmacies.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">
-              No pharmacies selected yet.
-            </div>
-          ) : (
-            <div className="divide-y">
-              {addedPharmacies.map(pharmacy => (
-                <div key={pharmacy.id || pharmacy.pharmacyId} className="p-4 flex items-center justify-between hover:bg-gray-50">
-                  <div className="flex-1">
-                    <h3 className="font-medium">{pharmacy.pharmacyName}</h3>
-                    <p className="text-sm text-gray-500">{pharmacy.location}</p>
-                    <p className="text-sm text-gray-500">{pharmacy.licenceNumber}</p>
-                    <p className="text-sm text-gray-500">{pharmacy.phoneNumber}</p>
-                    <p className="text-sm text-gray-500">{pharmacy.description}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleMessageClick}
-                      className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
-                    >
-                      <MessageSquare className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
-                    </button>
-                    <button
-                      onClick={() => handleRemovePharmacy(pharmacy.pharmacyId)}
-                      className="p-2 rounded-full hover:bg-red-100 text-red-500 transition-colors"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     </div>
-  </div>
-
-
   );
 };
 

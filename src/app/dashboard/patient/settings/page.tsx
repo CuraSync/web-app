@@ -31,7 +31,7 @@ interface PatientInfo {
   guardianRelation: string;
   guardianName: string;
   height: string;
-  medicationAllergies: AllergyItem[];
+  //medicationAllergies: AllergyItem[];
   nic: string;
   patientId: string;
   phoneNumber: string;
@@ -59,7 +59,7 @@ const SettingsPage = () => {
     guardianRelation: "",
     guardianName: "",
     height: "",
-    medicationAllergies: [],
+    //medicationAllergies: [],
     nic: "",
     patientId: "",
     phoneNumber: "",
@@ -67,6 +67,7 @@ const SettingsPage = () => {
     updateAt: "",
     weight: "",
   });
+
   useEffect(() => {
     const initializeSettings = async () => {
       const userRole = localStorage.getItem("userRole");
@@ -86,7 +87,7 @@ const SettingsPage = () => {
           const parsedDate = new Date(date);
           return isNaN(parsedDate.getTime())
             ? ""
-            : parsedDate.toISOString().split("T")[0]; 
+            : parsedDate.toISOString().split("T")[0];
         };
 
         const normalizedData: PatientInfo = {
@@ -101,12 +102,12 @@ const SettingsPage = () => {
           guardianRelation: String(data.guardianRelation ?? ""),
           guardianName: String(data.guardianName ?? ""),
           height: String(data.height ?? ""),
-          medicationAllergies: Array.isArray(data.medicationAllergies)
-            ? data.medicationAllergies.map((allergy: any) => ({
-                name: String(allergy?.name ?? ""),
-                severity: String(allergy?.severity ?? "Low") as "Severe" | "Moderate" | "Low",
-              }))
-            : [],
+          // medicationAllergies: Array.isArray(data.medicationAllergies)
+          //   ? data.medicationAllergies.map((allergy: any) => ({
+          //       name: String(allergy?.name ?? ""),
+          //       severity: String(allergy?.severity ?? "Low") as "Severe" | "Moderate" | "Low",
+          //     }))
+          //   : [],
           nic: String(data.nic ?? ""),
           patientId: String(data.patientId ?? ""),
           phoneNumber: String(data.phoneNumber ?? ""),
@@ -118,6 +119,7 @@ const SettingsPage = () => {
         setPatientInfo(normalizedData);
         localStorage.setItem("patientData", JSON.stringify(normalizedData));
         console.log("Normalized Data:", JSON.stringify(normalizedData, null, 2));
+        setImageUrl(normalizedData.profilePic || null);
       } catch (error) {
         console.error("Fetch Error:", error);
         toast.error("Failed to load profile data");
@@ -142,26 +144,18 @@ const SettingsPage = () => {
         weight: patientInfo.weight ? Number(patientInfo.weight) : undefined,
         bmi: patientInfo.bmi ? parseFloat(patientInfo.bmi) : undefined,
         bloodType: patientInfo.bloodType || undefined,
-        medicationAllergies: patientInfo.medicationAllergies.length > 0 
-          ? patientInfo.medicationAllergies.map(allergy => ({
-              name: allergy.name || "",
-              severity: allergy.severity || "Low"
-            }))
-          : [], // Explicitly send empty array if no allergies
+        //medicationAllergies: patientInfo.medicationAllergies || undefined, 
         guardianName: patientInfo.guardianName || undefined,
         guardianContactNumber: patientInfo.guardianContactNumber || undefined,
-        profilePic: patientInfo.profilePic || undefined,
+        profilePic: imageUrl || undefined,
       };
 
       console.log("Sending to API:", JSON.stringify(profileData, null, 2));
-    const response = await api.post("/patient/profile", {
-      ...profileData,
-      headers: { "Content-Type": "application/json" },
-    });
-    setPatientInfo(response.data); // Update state with backend response
-    toast.success("Profile updated successfully");
-    localStorage.setItem("patientData", JSON.stringify(response.data));
-    router.refresh();
+      const response = await api.post("/patient/profile", profileData);
+      setPatientInfo(response.data as PatientInfo); // Update state with backend response
+      toast.success("Profile updated successfully");
+      localStorage.setItem("patientData", JSON.stringify(response.data));
+      router.refresh();
     } catch (error: any) {
       console.error("Save Error:", {
         message: error.message,
@@ -173,7 +167,7 @@ const SettingsPage = () => {
       setIsSaving(false);
     }
   };
-  
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -202,7 +196,9 @@ const SettingsPage = () => {
         `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
         formData
       );
-      setImageUrl(response.data.secure_url);
+      const data = response.data as { secure_url: string };
+      setImageUrl(data.secure_url);
+      toast.success("Profile picture uploaded successfully");
     } catch (error) {
       console.error("Upload failed", error);
       toast.error("Image upload failed. Please try again.");
@@ -212,6 +208,7 @@ const SettingsPage = () => {
   };
 
   const removeProfilePic = () => {
+    setImageUrl(null);
     setPatientInfo((prev) => ({ ...prev, profilePic: "" }));
     toast.success("Profile picture removed");
   };
@@ -237,12 +234,12 @@ const SettingsPage = () => {
     });
   };
 
-  
+
   useEffect(() => {
     const userRole = localStorage.getItem("userRole");
     if (userRole !== "patient") {
       router.push("/auth/login/patient");
-    } 
+    }
   }, [router]);
 
   if (isLoading) {
@@ -264,7 +261,7 @@ const SettingsPage = () => {
 
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center pb-8 border-b border-gray-200">
-              
+
               <div className="ml-6">
                 <p className="text-xl font-medium">
                   {patientInfo.firstName} {patientInfo.lastName}
@@ -274,288 +271,300 @@ const SettingsPage = () => {
             </div>
 
             <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Profile Image</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="mb-2"
-                />
-                <button
-                  onClick={handleUpload}
-                  disabled={!image || uploading}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-                >
-                  {uploading ? "Uploading..." : "Upload"}
-                </button>
-              </div>
-
+              <label className="block text-sm font-medium mb-2">Profile Image</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="mb-2"
+              />
+              <button
+                onClick={handleUpload}
+                disabled={!image || uploading}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+              >
+                {uploading ? "Uploading..." : "Upload"}
+              </button>
               {imageUrl && (
-                <div className="mt-4">
-                  <p className="mb-2">Uploaded Image:</p>
-                  <img
-                    src={imageUrl}
-                    alt="Profile"
-                    className="w-32 h-32 rounded-full object-cover border-2 border-gray-200"
-                  />
-                </div>
+                <button
+                  onClick={removeProfilePic}
+                  className="ml-2 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                >
+                  Remove
+                </button>
               )}
             </div>
-            
-            <h2 className="text-lg font-semibold mt-6 mb-4">Personal Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Patient ID
-                </label>
-                <input
-                  type="text"
-                  value={patientInfo.patientId}
-                  className="w-full px-3 py-2 border rounded-md bg-gray-100"
-                  disabled
+
+            {imageUrl ? (
+              <div className="mt-4">
+                <p className="mb-2">Uploaded Image:</p>
+                <img
+                  src={imageUrl}
+                  alt="Profile"
+                  className="w-32 h-32 rounded-full object-cover border-2 border-gray-200"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">NIC</label>
-                <input
-                  type="text"
-                  value={patientInfo.nic}
-                  className="w-full px-3 py-2 border rounded-md bg-gray-100 cursor-not-allowed"
-                  disabled
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={patientInfo.firstName}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={patientInfo.lastName}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="text"
-                  value={patientInfo.email}
-                  className="w-full px-3 py-2 border rounded-md bg-gray-100"
-                  disabled
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  value={patientInfo.phoneNumber}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date of Birth
-                </label>
-                <input
-                  type="date"
-                  name="dateOfBirth"
-                  value={patientInfo.dateOfBirth}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Address
-                </label>
-                <input
-                  type="text"
-                  name="address"
-                  value={patientInfo.address}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Height (cm)
-                </label>
-                <input
-                  type="number"
-                  name="height"
-                  value={patientInfo.height}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Weight (kg)
-                </label>
-                <input
-                  type="number"
-                  name="weight"
-                  value={patientInfo.weight}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  BMI (Calculated)
-                </label>
-                <input
-                  type="text"
-                  value={patientInfo.bmi}
-                  className="w-full px-3 py-2 border rounded-md bg-gray-100"
-                  disabled
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Blood Type
-                </label>
-                <input
-                  type="text"
-                  name="bloodType"
-                  value={patientInfo.bloodType}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Guardian Name
-                </label>
-                <input
-                  type="text"
-                  name="guardianName"
-                  value={patientInfo.guardianName}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Guardian Contact Number
-                </label>
-                <input
-                  type="tel"
-                  name="guardianContactNumber"
-                  value={patientInfo.guardianContactNumber}
-                  onChange={handleProfileChange}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Medication Allergies</label>
-                  {patientInfo.medicationAllergies.length > 0 ? (
-                    patientInfo.medicationAllergies.map((allergy, index) => (
-                      <div key={`allergy-${index}`} className="flex gap-2 mb-2">
-                        <input
-                          type="text"
-                          value={allergy.name}
-                          onChange={(e) => {
-                            const updatedAllergies = [...patientInfo.medicationAllergies];
-                            updatedAllergies[index] = { ...updatedAllergies[index], name: e.target.value };
-                            setPatientInfo((prev) => ({ ...prev, medicationAllergies: updatedAllergies }));
-                          }}
-                          placeholder="Allergy name"
-                          className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                        />
-                        <select
-                          value={allergy.severity}
-                          onChange={(e) => {
-                            const updatedAllergies = [...patientInfo.medicationAllergies];
-                            updatedAllergies[index] = {
-                              ...updatedAllergies[index],
-                              severity: e.target.value as "Severe" | "Moderate" | "Low",
-                            };
-                            setPatientInfo((prev) => ({ ...prev, medicationAllergies: updatedAllergies }));
-                          }}
-                          className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="Severe">Severe</option>
-                          <option value="Moderate">Moderate</option>
-                          <option value="Low">Low</option>
-                        </select>
-                  <button
-                    onClick={() =>
-                      setPatientInfo((prev) => ({
-                        ...prev,
-                        medicationAllergies: prev.medicationAllergies.filter(
-                          (_, i) => i !== index
-                        ),
-                      }))
-                    }
-                    className="px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))
             ) : (
-              <p className="text-gray-500 text-sm">No allergies added yet</p>
+              <div className="mt-4">
+                <p className="mb-2">No profile image uploaded.</p>
+              </div>
             )}
-            <button
-              onClick={() =>
-                setPatientInfo((prev) => ({
-                  ...prev,
-                  medicationAllergies: [
-                    ...prev.medicationAllergies,
-                    { name: "", severity: "Low" },
-                  ],
-                }))
-              }
-              className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-            >
-              Add Allergy
-            </button>
           </div>
+
+          <h2 className="text-lg font-semibold mt-6 mb-4">Personal Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Patient ID
+              </label>
+              <input
+                type="text"
+                value={patientInfo.patientId}
+                className="w-full px-3 py-2 border rounded-md bg-gray-100"
+                disabled
+              />
             </div>
-          </div>
-
-          <div className="mt-6 flex space-x-4">
-            <button
-              onClick={handleSaveProfile}
-              disabled={isSaving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
-                </>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">NIC</label>
+              <input
+                type="text"
+                value={patientInfo.nic}
+                className="w-full px-3 py-2 border rounded-md bg-gray-100 cursor-not-allowed"
+                disabled
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                First Name
+              </label>
+              <input
+                type="text"
+                name="firstName"
+                value={patientInfo.firstName}
+                onChange={handleProfileChange}
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Last Name
+              </label>
+              <input
+                type="text"
+                name="lastName"
+                value={patientInfo.lastName}
+                onChange={handleProfileChange}
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email Address
+              </label>
+              <input
+                type="text"
+                value={patientInfo.email}
+                className="w-full px-3 py-2 border rounded-md bg-gray-100"
+                disabled
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                name="phoneNumber"
+                value={patientInfo.phoneNumber}
+                onChange={handleProfileChange}
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Date of Birth
+              </label>
+              <input
+                type="date"
+                name="dateOfBirth"
+                value={patientInfo.dateOfBirth}
+                onChange={handleProfileChange}
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Address
+              </label>
+              <input
+                type="text"
+                name="address"
+                value={patientInfo.address}
+                onChange={handleProfileChange}
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Height (cm)
+              </label>
+              <input
+                type="number"
+                name="height"
+                value={patientInfo.height}
+                onChange={handleProfileChange}
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Weight (kg)
+              </label>
+              <input
+                type="number"
+                name="weight"
+                value={patientInfo.weight}
+                onChange={handleProfileChange}
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                BMI (Calculated)
+              </label>
+              <input
+                type="text"
+                value={patientInfo.bmi}
+                className="w-full px-3 py-2 border rounded-md bg-gray-100"
+                disabled
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Blood Type
+              </label>
+              <input
+                type="text"
+                name="bloodType"
+                value={patientInfo.bloodType}
+                onChange={handleProfileChange}
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Guardian Name
+              </label>
+              <input
+                type="text"
+                name="guardianName"
+                value={patientInfo.guardianName}
+                onChange={handleProfileChange}
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Guardian Contact Number
+              </label>
+              <input
+                type="tel"
+                name="guardianContactNumber"
+                value={patientInfo.guardianContactNumber}
+                onChange={handleProfileChange}
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            {/* <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Medication Allergies</label>
+              {patientInfo.medicationAllergies && patientInfo.medicationAllergies.length > 0 ? (
+                patientInfo.medicationAllergies.map((allergy, index) => (
+                  <div key={`allergy-${index}`} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={allergy.name}
+                      onChange={(e) => {
+                        const updatedAllergies = [...patientInfo.medicationAllergies];
+                        updatedAllergies[index] = { ...updatedAllergies[index], name: e.target.value };
+                        setPatientInfo((prev) => ({ ...prev, medicationAllergies: updatedAllergies }));
+                      }}
+                      placeholder="Allergy name"
+                      className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    />
+                    <select
+                      value={allergy.severity}
+                      onChange={(e) => {
+                        const updatedAllergies = [...patientInfo.medicationAllergies];
+                        updatedAllergies[index] = {
+                          ...updatedAllergies[index],
+                          severity: e.target.value as "Severe" | "Moderate" | "Low",
+                        };
+                        setPatientInfo((prev) => ({ ...prev, medicationAllergies: updatedAllergies }));
+                      }}
+                      className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Severe">Severe</option>
+                      <option value="Moderate">Moderate</option>
+                      <option value="Low">Low</option>
+                    </select>
+                    <button
+                      onClick={() =>
+                        setPatientInfo((prev) => ({
+                          ...prev,
+                          medicationAllergies: prev.medicationAllergies.filter(
+                            (_, i) => i !== index
+                          ),
+                        }))
+                      }
+                      className="px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))
               ) : (
-                <>
-                  <SettingsIcon className="w-4 h-4 mr-2" />
-                  Save Changes
-                </>
+                <p className="text-gray-500 text-sm">No allergies added yet</p>
               )}
-            </button>
-
+              <button
+                onClick={() =>
+                  setPatientInfo((prev) => ({
+                    ...prev,
+                    medicationAllergies: [
+                      ...(prev.medicationAllergies || []),
+                      { name: "", severity: "Low" },
+                    ],
+                  }))
+                }
+                className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              >
+                Add Allergy
+              </button>
+            </div> */}
           </div>
         </div>
+
+        <div className="mt-6 flex space-x-4">
+          <button
+            onClick={handleSaveProfile}
+            disabled={isSaving}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <SettingsIcon className="w-4 h-4 mr-2" />
+                Save Changes
+              </>
+            )}
+          </button>
+
+        </div>
       </div>
+    </div>
   );
 };
 

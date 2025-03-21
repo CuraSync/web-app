@@ -3,14 +3,16 @@
 import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
 import io from "socket.io-client";
+
 import { useSearchParams } from "next/navigation";
 
 interface Message {
-  laboratoryId: string;
-  message: string;
+  labId: string;
+  data: string;
   addedDate: string; // YYYY-MM-DD format
   addedTime: string; // HH:MM format
-  sender: "laboratory" | "patient"; // Updated sender types
+  sender: "laboratory" | "patient";
+  type:"message"| "labReport";
 }
 
 const MessagesPage = () => {
@@ -18,7 +20,7 @@ const MessagesPage = () => {
   const [newMessage, setNewMessage] = useState<string>("");
 
   const searchParams = useSearchParams();
-  const selectedLaboratory = searchParams.get("laboratoryId");
+  const selectedLaboratory = searchParams.get("labId");
 
   useEffect(() => {
     fetchMessages();
@@ -27,6 +29,7 @@ const MessagesPage = () => {
     const token = localStorage.getItem("accessToken");
     const additionalData = { id: selectedLaboratory };
 
+    // Connect to WebSocket server with token and additional data in the handshake
     const socket = io(serverUrl, {
       auth: {
         token,
@@ -50,8 +53,8 @@ const MessagesPage = () => {
 
   const fetchMessages = async () => {
     try {
-      const response = await api.post("/patient/laboratory/messages", {
-        laboratoryId: selectedLaboratory,
+      const response = await api.post("/patient/lab/messages", {
+       labId: selectedLaboratory,
       });
       setMessages(response.data);
       console.log(response.data);
@@ -60,13 +63,15 @@ const MessagesPage = () => {
     }
   };
 
-  const sortedMessages = [...messages].sort((a, b) => {
+  // Sort messages by date and time
+  const laboratoryMessages = [...messages].sort((a, b) => {
     return (
       a.addedDate.localeCompare(b.addedDate) ||
       a.addedTime.localeCompare(b.addedTime)
     );
   });
 
+  // Format date for display
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("en-US", {
@@ -76,18 +81,20 @@ const MessagesPage = () => {
     });
   };
 
+  // Send new message
   const handleSendMessage = async () => {
     if (newMessage.trim() === "") return;
 
     const now = new Date();
 
     try {
-      const response = await api.post("/patient/laboratory/sendMessage", {
-        laboratoryId: selectedLaboratory,
+      const response = await api.post("/patient/lab/sendMessage", {
+        labId: selectedLaboratory,
         message: newMessage,
         addedDate: now.toISOString().split("T")[0],
         addedTime: now.toTimeString().substring(0, 5),
         sender: "patient",
+        type: "message",
       });
       console.log(response.data);
     } catch (error) {
@@ -101,7 +108,7 @@ const MessagesPage = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-100 p-4">
       <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4">
-        {sortedMessages.map((msg, index) => {
+        {laboratoryMessages.map((msg, index) => {
           const showDate = msg.addedDate !== lastDate;
           lastDate = msg.addedDate;
 
@@ -126,7 +133,7 @@ const MessagesPage = () => {
                       : "bg-gray-200 text-gray-800 rounded-bl-none"
                   }`}
                 >
-                  <div className="text-sm">{msg.message}</div>
+                  <div className="text-sm">{msg.data.message ? msg.data.message : JSON.parse(msg.data)?.message}</div>
                   <div
                     className={`text-xs mt-1 text-right ${
                       msg.sender === "patient"

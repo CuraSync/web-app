@@ -8,10 +8,11 @@ import { useSearchParams } from "next/navigation";
 
 interface Message {
   pharmacyId: string;
-  message: string;
+  data: string;
   addedDate: string; // YYYY-MM-DD format
   addedTime: string; // HH:MM format
   sender: "pharmacy" | "patient";
+  type:"message"| "prescription";
 }
 
 const MessagesPage = () => {
@@ -19,7 +20,7 @@ const MessagesPage = () => {
   const [newMessage, setNewMessage] = useState<string>("");
 
   const searchParams = useSearchParams();
-  const selectedPharmacy = "PH41111";
+  const selectedPharmacy = searchParams.get("pharmacyId");
 
   useEffect(() => {
     fetchMessages();
@@ -93,6 +94,7 @@ const MessagesPage = () => {
         addedDate: now.toISOString().split("T")[0],
         addedTime: now.toTimeString().substring(0, 5),
         sender: "patient",
+        type: "message",
       });
       console.log(response.data);
     } catch (error) {
@@ -131,7 +133,7 @@ const MessagesPage = () => {
                       : "bg-gray-200 text-gray-800 rounded-bl-none"
                   }`}
                 >
-                  <div className="text-sm">{msg.message}</div>
+                  <div className="text-sm">{msg.data.message ? msg.data.message : JSON.parse(msg.data)?.message}</div>
                   <div
                     className={`text-xs mt-1 text-right ${
                       msg.sender === "patient"

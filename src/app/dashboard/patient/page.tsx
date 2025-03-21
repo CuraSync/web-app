@@ -7,8 +7,8 @@ import api from "@/utils/api";
 
 // Define the shape of the state object and API response
 interface PatientInfo {
-  firstname: string;
-  lastname: string;
+  firstName: string;
+  lastName: string;
   fullName: string;
   address: string;
   bloodType: string;
@@ -19,11 +19,11 @@ interface PatientInfo {
   guardianRelation: string;
   guardianName: string;
   height: string;
-  medicationAllergies: { severity: string; type: string; name: string }[];
+  //medicationAllergies: { severity: string; type: string; name: string }[];
   nic: string;
   patientId: string;
   phoneNumber: string;
-  profilepic: string;
+  profilePic: string;
   updateAt: string;
   weight: string;
 }
@@ -36,8 +36,8 @@ interface AllergyItem {
 const PatientDashboard = () => {
   const router = useRouter();
   const [patientInfo, setPatientInfo] = useState<PatientInfo>({
-    firstname: "",
-    lastname: "",
+    firstName: "",
+    lastName: "",
     fullName:"",
     address: "",
     bloodType: "",
@@ -48,11 +48,11 @@ const PatientDashboard = () => {
     guardianRelation: "",
     guardianName: "",
     height: "",
-    medicationAllergies: [],
+    //medicationAllergies: [],
     nic: "",
     patientId: "",
     phoneNumber: "",
-    profilepic: "",
+    profilePic: "",
     updateAt: "",
     weight: "",
   });
@@ -94,10 +94,10 @@ const PatientDashboard = () => {
           <div className="bg-white rounded-lg shadow-sm border p-6 flex justify-between items-start">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
-                {patientInfo.profilepic ? (
+                {patientInfo.profilePic ? (
                   <img
-                    src={patientInfo.profilepic}
-                    alt={patientInfo.firstname}
+                    src={patientInfo.profilePic}
+                    alt={patientInfo.firstName}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -108,7 +108,7 @@ const PatientDashboard = () => {
                <div>
                   <div>
                   <h2 className="text-xl font-bold">
-                      Name: {patientInfo.fullName || `${patientInfo.firstname} ${patientInfo.lastname}`}
+                      Name: {patientInfo.fullName || `${patientInfo.firstName} ${patientInfo.lastName}`}
                     </h2>
                     <p className="text-gray-600">DOB: {new Date(patientInfo.dateOfBirth).toLocaleDateString()}</p>
                     <p className="text-gray-600">Blood Type: {patientInfo.bloodType}</p>
@@ -145,10 +145,10 @@ const PatientDashboard = () => {
           </div>
 
           {/* Allergies */}
-          <div className="mt-6 bg-white rounded-lg shadow-sm border p-6">
+          {/* <div className="mt-6 bg-white rounded-lg shadow-sm border p-6">
             <h3 className="text-lg font-semibold">Allergies</h3>
             <div className="mt-4 space-y-3">
-              {patientInfo.medicationAllergies.length > 0 ? (
+              {patientInfo.medicationAllergies && patientInfo.medicationAllergies.length > 0 ? (
                 patientInfo.medicationAllergies.map((allergy, index) => (
                   <div key={index} className="flex items-center space-x-2">
                     <span
@@ -163,7 +163,7 @@ const PatientDashboard = () => {
                       {allergy.severity}
                     </span>
                     <span className="text-gray-600">
-                      {allergy.type}: {allergy.name}
+                      {allergy.name}
                     </span>
                   </div>
                 ))
@@ -171,7 +171,7 @@ const PatientDashboard = () => {
                 <p className="text-gray-600">No allergies recorded.</p>
               )}
             </div>
-          </div>
+          </div> */}
 
           {/* Medical Tracking Dashboard Access */}
           <div className="mt-6 bg-white rounded-lg shadow-sm border p-6">
