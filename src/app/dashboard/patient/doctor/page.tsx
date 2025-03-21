@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import PharmacySidebar from "../sidebar/sidebar";
 import api from "@/utils/api";
-import { FaRegCommentDots } from "react-icons/fa";
+import { FaRegClock, FaRegCommentDots } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "lucide-react";
 
@@ -35,6 +35,11 @@ const DoctorList = () => {
         router.push(`/dashboard/patient/doctor/message?doctorId=${doctorId}`);
       };
 
+     const timelinePage = (doctorId: string) => {
+        router.push(`/dashboard/patient/doctor/timeline?doctorId=${doctorId}`);
+      };
+
+
     return (
         <div className="min-h-screen flex">
             {/* Sidebar */}
@@ -52,30 +57,46 @@ const DoctorList = () => {
                                     <th className="border p-3 text-left">Doctor ID</th>
                                     <th className="border p-3 text-left">Doctor Name</th>
                                     <th className="border p-3 text-left">Actions</th>
+                                    <th className="border p-3 text-left">TimeLine</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {patients.map((doctor) => (
-                                    <tr key={doctor.doctorId} className="border hover:bg-gray-50">
-                                        <td className="border p-3 text-gray-700">{doctor.doctorId}</td>
-                                        <td className="border p-3 text-gray-800 font-semibold">
-                                            {doctor.firstName} {doctor.lastName}
-                                        </td>
-                                        <td className="border p-3">
-                                            <div className="flex items-center">
-                                                <button
-                                                    onClick={() => messagePage(doctor.doctorId)}
-                                                    className="flex items-center text-blue-500 hover:text-blue-700 transition-colors"
-                                                >
-                                                    <FaRegCommentDots 
-                                                        className="text-xl mr-1" 
-                                                    />
-                                                    <span className="text-sm">Message</span>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
+                              {patients.map((doctor) => (
+                                  <tr key={doctor.doctorId} className="border hover:bg-gray-50">
+                                      <td className="border p-3 text-gray-700">{doctor.doctorId}</td>
+                                      <td className="border p-3 text-gray-800 font-semibold">
+                                          {doctor.firstName} {doctor.lastName}
+                                      </td>
+                                      <td className="border p-3">
+                                          <div className="flex items-center">
+                                              <button
+                                                  onClick={() => messagePage(doctor.doctorId)}
+                                                  className="flex items-center text-blue-500 hover:text-blue-700 transition-colors"
+                                              >
+                                                  <FaRegCommentDots 
+                                                      className="text-xl mr-1" 
+                                                  />
+                                                  <span className="text-sm">Message</span>
+                                              </button>
+                                          </div>
+                                      </td>
+
+
+                                      <td className="border p-3">
+                                          <div className="flex items-center">
+                                              <button
+                                                  onClick={() => timelinePage(doctor.doctorId)}
+                                                  className="flex items-center text-blue-500 hover:text-blue-700 transition-colors"
+                                              >
+                                                  <FaRegClock
+                                                      className="text-xl mr-1" 
+                                                  />
+                                                  <span className="text-sm">TimeLine</span>
+                                              </button>
+                                          </div>
+                                      </td>
+                                  </tr>
+                              ))}
                             </tbody>
                         </table>
                     </div>

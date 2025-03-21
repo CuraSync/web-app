@@ -79,13 +79,13 @@ const Sidebar = () => {
             <FaUserMd className="w-5 h-5" />
             <span>Doctor</span>
           </Link>
-          <Link
+          {/* <Link
             href="/dashboard/patient/timeline"
             className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
           >
             <FaChartBar className="w-5 h-5" />
             <span>Timeline</span>
-          </Link>
+          </Link> */}
           <Link
             href="/dashboard/patient/laboratory"
             className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"

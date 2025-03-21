@@ -1,65 +1,102 @@
 "use client";
-import React, { useEffect, useState } from 'react';
-import { MessageSquare, Clock, Plus, Trash2, Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import Sidebar from '../sidebar/sidebar';
-import api from '@/utils/api';
+import React, { useEffect, useState } from "react";
+import { MessageSquare, Clock, Plus, Trash2, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Sidebar from "../sidebar/sidebar";
+import api from "@/utils/api";
 
-interface laboratory{
-  id:string;
-  labId:string;
-  labName:string;
-  email:string;
-  location:string;
-
+interface Laboratory {
+  id: string;
+  labId: string;
+  labName: string;
+  email: string;
+  location: string;
+  addedDate: string; // YYYY-MM-DD format
+  addedTime: string; // HH:MM format
 }
+
 const LaboratoryPage = () => {
   const router = useRouter();
-  const [addedLaboratories, setAddedLaboratories] = useState<laboratory[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [laboratories,setLaboratories] = useState<laboratory[]>([]);
+  const [addedLaboratories, setAddedLaboratories] = useState<Laboratory[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [laboratories, setLaboratories] = useState<Laboratory[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
-  const [labIdInput, setLabIdInput] = useState('');
+  const [labIdInput, setLabIdInput] = useState("");
 
   const ListFetchHomeData = async () => {
     try {
       const response = await api.get("/patient/laboratories");
-      setLaboratories(response.data as laboratory[]);
-      console.log(response);
+      setLaboratories(response.data as Laboratory[]);
+      console.log("Laboratories data:", response.data);
       setError(null);
     } catch (error) {
       console.error("Error fetching laboratories:", error);
       setError("Failed to load laboratories. Please try again.");
     }
   };
+
   useEffect(() => {
     ListFetchHomeData();
   }, []);
 
-  // Filter pharmacies based on search query
-  const filteredLaboratories = laboratories.filter(laboratory => 
+  const filteredLaboratories = laboratories.filter((laboratory) =>
     laboratory.labName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     laboratory.location?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleAddLaboratory = async () => {
-    if (!labIdInput) return;
+    if (!labIdInput) {
+      setError("Please enter a valid Lab ID.");
+      return;
+    }
+
+    // Check if labId already exists in addedLaboratories
+    if (addedLaboratories.some((lab) => lab.labId === labIdInput)) {
+      setError("This laboratory has already been added.");
+      return;
+    }
+
+    // Generate current date and time
+    const now = new Date();
+    const addedDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+    const addedTime = `${now.getHours().toString().padStart(2, "0")}:${now
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}`; // HH:MM
 
     try {
-      const response = await api.post("/patient/laboratory/request", { labId: labIdInput });
+      const payload = {
+        labId: labIdInput,
+        addedDate: addedDate,
+        addedTime: addedTime,
+      };
+      console.log("Sending request with payload:", payload);
+      const response = await api.post("/laboratory/request", payload);
       console.log("Request sent successfully:", response.data);
+
+      // Add the new laboratory to the list
+      setAddedLaboratories([...addedLaboratories, response.data]);
       setShowPopup(false);
-      setLabIdInput('');
-    } catch (error) {
-      console.error("Error sending request:", error);
-      setError("Failed to send request. Please try again.");
+      setLabIdInput("");
+      setError(null);
+    } catch (error: any) {
+      console.error(
+        "Error sending request:",
+        error.response?.status,
+        error.response?.data,
+        error.message
+      );
+      if (error.response?.status === 409) {
+        setError("This laboratory request already exists.");
+      } else {
+        setError(error.response?.data?.message || "Failed to send request. Please try again.");
+      }
     }
   };
 
-
   const handleRemoveLaboratory = (labId: string) => {
-    setAddedLaboratories(addedLaboratories.filter(lab => lab.labId !== labId));
+    setAddedLaboratories(addedLaboratories.filter((lab) => lab.labId !== labId));
   };
 
   const handleMessageClick = (labId: string) => {
@@ -68,85 +105,66 @@ const LaboratoryPage = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-    <Sidebar />
-    <div className="flex-1 p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Add Laboratory Button */}
-        <div className="mb-8">
-          <button
-            onClick={() => setShowPopup(true)}
-            className="px-4 py-3 bg-blue-500 text-white font-medium rounded-lg flex items-center gap-1 hover:bg-blue-600 transition-colors"
-          >
-            <Plus className="w-5 h-5" />
-            Add Laboratory
-          </button>
-        </div>
+      <Sidebar />
+      <div className="flex-1 p-8">
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8">
+            <button
+              onClick={() => setShowPopup(true)}
+              className="px-4 py-3 bg-blue-500 text-white font-medium rounded-lg flex items-center gap-1 hover:bg-blue-600 transition-colors"
+            >
+              <Plus className="w-5 h-5" />
+              Add Laboratory
+            </button>
+          </div>
 
-
-             {/* Available Laboratories */}
-        {/* {searchQuery && (
-          <div className="bg-white rounded-lg shadow-sm mb-8">
-            <h2 className="text-xl font-semibold p-4 border-b">Search Results</h2>
-            {filteredLaboratories.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm">
+            <h2 className="text-xl font-semibold p-4 border-b">Selected Laboratories</h2>
+            {addedLaboratories.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
-                No Laboratories found matching your search.
+                No laboratories selected yet.
               </div>
             ) : (
               <div className="divide-y">
-                {filteredLaboratories.map(laboratory => (
-                  <div key={laboratory.id || laboratory.labId} className="p-4 flex items-center justify-between hover:bg-gray-50">
-                    <div>
+                {addedLaboratories.map((laboratory) => (
+                  <div
+                    key={laboratory.labId}
+                    className="p-4 flex items-center justify-between hover:bg-gray-50"
+                  >
+                    <div className="flex-1">
                       <h3 className="font-medium">{laboratory.labName}</h3>
                       <p className="text-sm text-gray-500">{laboratory.location}</p>
+                      <p className="text-xs text-gray-400">
+                        Added: {laboratory.addedDate} at {laboratory.addedTime}
+                      </p>
                     </div>
-                   
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleMessageClick(laboratory.labId)}
+                        className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
+                      >
+                        <MessageSquare className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
+                      </button>
+                      <button
+                        onClick={() => handleRemoveLaboratory(laboratory.labId)}
+                        className="p-2 rounded-full hover:bg-red-100 text-red-500 transition-colors"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
-        )} */}
-
-
-          {/* Selected Laboratories */}
-        <div className="bg-white rounded-lg shadow-sm">
-          <h2 className="text-xl font-semibold p-4 border-b">Selected Laboratories</h2>
-          {addedLaboratories.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">
-              No laboratories selected yet.
-            </div>
-          ) : (
-            <div className="divide-y">
-              {addedLaboratories.map(laboratory => (
-                <div key={laboratory.labId} className="p-4 flex items-center justify-between hover:bg-gray-50">
-                  <div className="flex-1">
-                    <h3 className="font-medium">{laboratory.labName}</h3>
-                    <p className="text-sm text-gray-500">{laboratory.location}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => handleMessageClick(laboratory.labId)}
-                      className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
-                    >
-                      <MessageSquare className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
-                    </button>
-                    <button
-                      onClick={() => handleRemoveLaboratory(laboratory.labId)}
-                      className="p-2 rounded-full hover:bg-red-100 text-red-500 transition-colors"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
-    </div>
 
-
-    {/* Popup Form */}
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
@@ -174,14 +192,9 @@ const LaboratoryPage = () => {
             </div>
           </div>
         </div>
-        )}
-  </div>
+      )}
+    </div>
   );
-}
+};
+
 export default LaboratoryPage;
-
-
-
-
-
-

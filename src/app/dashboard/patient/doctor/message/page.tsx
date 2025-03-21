@@ -18,7 +18,8 @@ const MessagesPage = () => {
   const [newMessage, setNewMessage] = useState<string>("");
 
   const searchParams = useSearchParams();
-  const selectedDoctor = "D21111";
+  const selectedDoctor = searchParams.get("doctorId");
+
 
   useEffect(() => {
     fetchMessages();
