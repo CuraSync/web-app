@@ -81,16 +81,11 @@ const DoctorsPage = () => {
   };
 
   const filteredDoctors = doctors.filter(doctor => {
-    const matchesSearch = 
-      `${doctor.firstName} ${doctor.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doctor.specialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doctor.hospital.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesSpecialization = selectedSpecialization === "All" || 
-      doctor.specialization === selectedSpecialization;
-
-    console.log(`Doctor ${doctor.doctorId} - Search match: ${matchesSearch}, Spec match: ${matchesSpecialization}`);
-    return matchesSearch && matchesSpecialization;
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      `${doctor.firstName} ${doctor.lastName}`.toLowerCase().includes(searchLower) ||
+      doctor.doctorId.toLowerCase().includes(searchLower)
+    );
   });
 
   const handleMessageClick = (doctorId: string) => {
@@ -98,11 +93,6 @@ const DoctorsPage = () => {
     console.log("Selected doctor:", doctors.find(d => d.doctorId === doctorId));
     router.push(`/dashboard/doctor/doctor/message?doctorId=${doctorId}`);
   };
-
-  const specializations = [
-    "All",
-  ...new Set(doctors.map(d => d.specialization).filter(Boolean))
-  ] as string[];
 
   if (isLoading) {
     return (
@@ -140,23 +130,13 @@ const DoctorsPage = () => {
           <div className="relative flex-grow max-w-2xl">
             <input
               type="text"
-              placeholder="Search doctors by name, specialization, or hospital..."
+              placeholder="Search doctors by name or ID..."
               className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
           </div>
-
-          <select
-            className="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            value={selectedSpecialization}
-            onChange={(e) => setSelectedSpecialization(e.target.value)}
-          >
-            {specializations.map((spec) => (
-              <option key={spec} value={spec}>{spec}</option>
-            ))}
-          </select>
         </div>
 
         <div className="bg-white rounded-lg shadow overflow-x-auto">
@@ -167,16 +147,7 @@ const DoctorsPage = () => {
                   Doctor
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Specialization
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Hospital
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Experience
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  Message Status
                 </th>
               </tr>
             </thead>
@@ -215,9 +186,6 @@ const DoctorsPage = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">{doctor.specialization}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{doctor.hospital}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{typeof doctor.yearsOfExperience === "string" ? "Unknown": doctor.yearsOfExperience + " years"} </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button 
                         onClick={() => handleMessageClick(doctor.doctorId)}
