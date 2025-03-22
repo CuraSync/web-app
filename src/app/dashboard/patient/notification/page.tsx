@@ -1,339 +1,302 @@
 "use client";
-import React, { useState } from 'react';
-import { Bell, Calendar, MessageSquare, Package, Check, X, Clock, AlertTriangle, UserPlus } from 'lucide-react';
-import Sidebar from '../sidebar/sidebar';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
 
-interface Notification {
-  id: number;
-  title: string;
-  message: string;
-  time: string;
-  type: string;
-  isRead: boolean;
-  priority?: string;
-}
+import React, { useState, useEffect } from "react";
+import api from "@/utils/api";
+import Sidebar from "../sidebar/sidebar";
+import { toast } from "sonner";
 
-interface DoctorRequest {
-  id: number;
-  doctorName: string;
-  specialty: string;
-  hospital: string;
-  timestamp: string;
+interface Request {
+  _id: string;
+  addedDate: string;
+  addedTime: string;
   status: string;
+  labId?: string;
+  labName?: string;
+  pharmacyId?: string;
+  pharmacyName?: string;
+  doctorId?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
-const NotificationPage = () => {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'doctor' | 'lab' | 'pharmacy'>('doctor');
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      title: "Lab Results Ready",
-      message: "Your blood test results are now available",
-      time: "Just now",
-      type: "lab",
-      isRead: false,
-      priority: "high"
-    },
-    {
-      id: 2,
-      title: "Prescription Ready",
-      message: "Your prescription is ready for pickup at MedPlus Pharmacy",
-      time: "30 minutes ago",
-      type: "pharmacy",
-      isRead: false,
-      priority: "medium"
-    },
-    {
-      id: 3,
-      title: "Appointment Reminder",
-      message: "Upcoming appointment with Dr. James Martin tomorrow at 2 PM",
-      time: "2 hours ago",
-      type: "doctor",
-      isRead: false
-    }
-  ]);
+const PatientRequestPage = () => {
+  const [labRequests, setLabRequests] = useState<Request[]>([]);
+  const [pharmacyRequests, setPharmacyRequests] = useState<Request[]>([]);
+  const [doctorRequests, setDoctorRequests] = useState<Request[]>([]);
+  const [acceptedLabRequests, setAcceptedLabRequests] = useState<Request[]>([]);
+  const [acceptedPharmacyRequests, setAcceptedPharmacyRequests] = useState<Request[]>([]);
+  const [acceptedDoctorRequests, setAcceptedDoctorRequests] = useState<Request[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("lab");
 
-  // Doctor connection requests
-  const [doctorRequests, setDoctorRequests] = useState<DoctorRequest[]>([
-    {
-      id: 1,
-      doctorName: "Dr. James Martin",
-      specialty: "General Surgeon",
-      hospital: "Central Hospital",
-      timestamp: "Feb 15, 11:30 AM",
-      status: "pending"
-    },
-    {
-      id: 2,
-      doctorName: "Dr. Emily Parker",
-      specialty: "Cardiologist",
-      hospital: "Heart Institute",
-      timestamp: "Feb 14, 03:15 PM",
-      status: "pending"
-    }
-  ]);
+  useEffect(() => {
+    fetchRequests();
+  }, []);
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'doctor':
-        return <UserPlus className="w-6 h-6 text-blue-500" />;
-      case 'lab':
-        return <AlertTriangle className="w-6 h-6 text-purple-500" />;
-      case 'pharmacy':
-        return <Package className="w-6 h-6 text-green-500" />;
-      default:
-        return <Bell className="w-6 h-6 text-gray-500" />;
+  const fetchRequests = async () => {
+    try {
+      const [labRes, pharmacyRes, doctorRes] = await Promise.all([
+        api.get("/patient/laboratory/request"),
+        api.get("/patient/pharmacy/request"),
+        api.get("/patient/doctor/request"),
+      ]);
+
+
+      const pendingLab = labRes.data.filter((req: Request) => req.status === "false");
+      const acceptedLab = labRes.data.filter((req: Request) => req.status === "true");
+
+      const pendingPharmacy = pharmacyRes.data.filter((req: Request) => req.status === "false");
+      const acceptedPharmacy = pharmacyRes.data.filter((req: Request) => req.status === "true");
+
+      const pendingDoctor = doctorRes.data.filter((req: Request) => req.status === "false");
+      const acceptedDoctor = doctorRes.data.filter((req: Request) => req.status === "true");
+
+      setLabRequests(pendingLab);
+      setPharmacyRequests(pendingPharmacy);
+      setDoctorRequests(pendingDoctor);
+
+      setAcceptedLabRequests(acceptedLab);
+      setAcceptedPharmacyRequests(acceptedPharmacy);
+      setAcceptedDoctorRequests(acceptedDoctor);
+    } catch (error) {
+      console.error("Error fetching requests:", error);
+      toast.error("Error fetching requests. Please try again.");
     }
   };
 
-  const getNotificationColor = (type: string, priority?: string) => {
-    if (priority === 'high') return 'border-red-500 bg-red-50';
-    if (priority === 'medium') return 'border-yellow-500 bg-yellow-50';
-    
-    switch (type) {
-      case 'doctor':
-        return 'border-blue-500 bg-blue-50';
-      case 'lab':
-        return 'border-purple-500 bg-purple-50';
-      case 'pharmacy':
-        return 'border-green-500 bg-green-50';
-      default:
-        return 'border-gray-500 bg-gray-50';
+  const handleAcceptRequest = async (_id: string, type: string) => {
+    try {
+      const response = await api.post("/patient/request/accept", { requestId: _id });
+      console.log(`Accepted ${type} Request Response:`, response.data);
+
+      const moveRequest = (
+        requests: Request[],
+        setRequests: React.Dispatch<React.SetStateAction<Request[]>>,
+        setAcceptedRequests: React.Dispatch<React.SetStateAction<Request[]>>
+      ) => {
+        const acceptedRequest = requests.find((req) => req._id === _id);
+        if (!acceptedRequest) return;
+
+        setRequests((prev) => prev.filter((req) => req._id !== _id));
+        setAcceptedRequests((prev) => [
+          ...prev,
+          {
+            ...acceptedRequest,
+            status: "true",
+            addedDate: new Date().toISOString().split("T")[0], // Current Date
+            addedTime: new Date().toLocaleTimeString(), // Current Time
+          } as Request,
+        ]);
+      };
+
+      if (type === "lab") moveRequest(labRequests, setLabRequests, setAcceptedLabRequests);
+      if (type === "pharmacy") moveRequest(pharmacyRequests, setPharmacyRequests, setAcceptedPharmacyRequests);
+      if (type === "doctor") moveRequest(doctorRequests, setDoctorRequests, setAcceptedDoctorRequests);
+    } catch (error) {
+      console.error("Error accepting request:", error);
+      toast.error("Error accepting requests. Please try again.");
     }
   };
 
-  const handleAcceptDoctor = (requestId: number) => {
-    // Update the request status
-    const updatedRequests = doctorRequests.map(request => 
-      request.id === requestId 
-        ? { ...request, status: 'accepted' } 
-        : request
-    );
-    setDoctorRequests(updatedRequests);
-    
-    // Find the doctor
-    const doctor = doctorRequests.find(req => req.id === requestId);
-    
-    if (!doctor) return;
-    
-    // Add a notification about the acceptance
-    setNotifications([
-      {
-        id: Date.now(),
-        title: "Doctor Connection Accepted",
-        message: `You've accepted ${doctor.doctorName}'s connection request`,
-        time: "Just now",
-        type: "doctor",
-        isRead: false
-      },
-      ...notifications
-    ]);
-    
-    toast.success(`You've accepted ${doctor.doctorName}'s connection request`);
-  };
 
-  const handleRejectDoctor = (requestId: number) => {
-    // Update the request status
-    const updatedRequests = doctorRequests.map(request => 
-      request.id === requestId 
-        ? { ...request, status: 'rejected' } 
-        : request
-    );
-    setDoctorRequests(updatedRequests);
-    
-    // Find the doctor
-    const doctor = doctorRequests.find(req => req.id === requestId);
-    
-    if (!doctor) return;
-    
-    toast.info(`You've declined ${doctor.doctorName}'s connection request`);
-  };
+  const renderLabTable = (requests: Request[], isAccepted: boolean) => (
+    <div className="bg-white rounded-lg shadow-md p-4 mt-4">
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">
+        {isAccepted ? "Accepted Laboratory Requests" : "Laboratory Requests"}
+      </h2>
+      {requests.length > 0 ? (
+        <table className="w-full border-collapse border border-gray-200 shadow-md">
+          <thead>
+            <tr className="bg-gray-100">
+            <th className="border p-3 text-left">Lab ID</th>
+            <th className="border p-3 text-left">Lab Name</th>
+              <th className="border p-3 text-left">Added Date</th>
+              <th className="border p-3 text-left">Added Time</th>
+            
+              {!isAccepted && <th className="border p-3 text-left">Actions</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {requests.map((request) => (
+              <tr key={request._id} className="border hover:bg-gray-50">
+                   <td className="border p-3 text-gray-700">{request.labId}</td>
+                   <td className="border p-3 text-gray-700">{request.labName}</td>
+                <td className="border p-3 text-gray-700">{request.addedDate}</td>
+                <td className="border p-3 text-gray-700">{request.addedTime}</td>
+             
+                {!isAccepted && (
+                  <td className="border p-3">
+                    <button
+                      onClick={() => handleAcceptRequest(request._id, "lab")}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                    >
+                      Accept
+                    </button>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p className="text-gray-500 text-center mt-4">
+          No {isAccepted ? "accepted laboratory" : "laboratory"} requests.
+        </p>
+      )}
+    </div>
+  );
 
-  const markAllAsRead = () => {
-    const updatedNotifications = notifications.map(notification => ({
-      ...notification,
-      isRead: true
-    }));
-    setNotifications(updatedNotifications);
-    toast.success("All notifications marked as read");
-  };
+ 
+  const renderPharmacyTable = (requests: Request[], isAccepted: boolean) => (
+    <div className="bg-white rounded-lg shadow-md p-4 mt-4">
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">
+        {isAccepted ? "Accepted Pharmacy Requests" : "Pharmacy Requests"}
+      </h2>
+      {requests.length > 0 ? (
+        <table className="w-full border-collapse border border-gray-200 shadow-md">
+          <thead>
+            <tr className="bg-gray-100">
+            <th className="border p-3 text-left">Pharmacy ID</th>
+            <th className="border p-3 text-left">Pharmacy Name</th>
+              <th className="border p-3 text-left">Added Date</th>
+              <th className="border p-3 text-left">Added Time</th>
+            
+              {!isAccepted && <th className="border p-3 text-left">Actions</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {requests.map((request) => (
+              <tr key={request._id} className="border hover:bg-gray-50">
+                 <td className="border p-3 text-gray-700">{request.pharmacyId}</td>
+                 <td className="border p-3 text-gray-700">{request.pharmacyName}</td>
+                <td className="border p-3 text-gray-700">{request.addedDate}</td>
+                <td className="border p-3 text-gray-700">{request.addedTime}</td>
+               
+                {!isAccepted && (
+                  <td className="border p-3">
+                    <button
+                      onClick={() => handleAcceptRequest(request._id, "pharmacy")}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                    >
+                      Accept
+                    </button>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p className="text-gray-500 text-center mt-4">
+          No {isAccepted ? "accepted pharmacy" : "pharmacy"} requests.
+        </p>
+      )}
+    </div>
+  );
 
-  const clearAll = () => {
-    setNotifications([]);
-    toast.success("All notifications cleared");
-  };
+
+  const renderDoctorTable = (requests: Request[], isAccepted: boolean) => (
+    <div className="bg-white rounded-lg shadow-md p-4 mt-4">
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">
+        {isAccepted ? "Accepted Doctor Requests" : "Doctor Requests"}
+      </h2>
+      {requests.length > 0 ? (
+        <table className="w-full border-collapse border border-gray-200 shadow-md">
+          <thead>
+            <tr className="bg-gray-100">
+            <th className="border p-3 text-left">Doctor ID</th>
+            <th className="border p-3 text-left">Doctor Name</th>
+              <th className="border p-3 text-left">Added Date</th>
+              <th className="border p-3 text-left">Added Time</th>
+              
+              {!isAccepted && <th className="border p-3 text-left">Actions</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {requests.map((request) => (
+              <tr key={request._id} className="border hover:bg-gray-50">
+                    <td className="border p-3 text-gray-700">{request.doctorId}</td>
+                <td className="border p-3 text-gray-700">
+                  {request.firstName} {request.lastName}
+                </td>
+                <td className="border p-3 text-gray-700">{request.addedDate}</td>
+                <td className="border p-3 text-gray-700">{request.addedTime}</td>
+            
+                {!isAccepted && (
+                  <td className="border p-3">
+                    <button
+                      onClick={() => handleAcceptRequest(request._id, "doctor")}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                    >
+                      Accept
+                    </button>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p className="text-gray-500 text-center mt-4">
+          No {isAccepted ? "accepted doctor" : "doctor"} requests.
+        </p>
+      )}
+    </div>
+  );
 
   return (
-    <div className="min-h-screen flex bg-white">
+    <div className="flex h-screen">
       <Sidebar />
-      <div className="p-8 flex-1">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-            <div className="flex items-center space-x-4">
-              <button 
-                onClick={markAllAsRead}
-                className="text-sm text-blue-600 hover:text-blue-800"
-              >
-                Mark all as read
-              </button>
-              <button 
-                onClick={clearAll}
-                className="text-sm text-gray-600 hover:text-gray-800"
-              >
-                Clear all
-              </button>
-            </div>
-          </div>
-
-          {/* Notification Type Tabs */}
-          <div className="flex space-x-4 mb-6">
-            <button
-              onClick={() => setActiveTab('doctor')}
-              className={`px-4 py-2 rounded-lg flex items-center ${
-                activeTab === 'doctor' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <UserPlus className="w-4 h-4 mr-2" />
-              Doctor Requests
-            </button>
-            <button
-              onClick={() => setActiveTab('lab')}
-              className={`px-4 py-2 rounded-lg flex items-center ${
-                activeTab === 'lab' 
-                  ? 'bg-purple-500 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <AlertTriangle className="w-4 h-4 mr-2" />
-              Lab Notifications
-            </button>
-            <button
-              onClick={() => setActiveTab('pharmacy')}
-              className={`px-4 py-2 rounded-lg flex items-center ${
-                activeTab === 'pharmacy' 
-                  ? 'bg-green-500 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <Package className="w-4 h-4 mr-2" />
-              Pharmacy Notifications
-            </button>
-          </div>
-
-          {/* Doctor Requests */}
-          {activeTab === 'doctor' && doctorRequests.length > 0 && (
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-gray-700 mb-4">Doctor Connection Requests</h2>
-              <div className="space-y-4">
-                {doctorRequests.map((request) => (
-                  <div 
-                    key={request.id} 
-                    className={`p-4 rounded-lg border-l-4 border-blue-500 bg-blue-50 ${
-                      request.status === 'accepted' ? 'opacity-70' : ''
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                          <UserPlus className="w-6 h-6 text-blue-500" />
-                        </div>
-                        <div className="ml-4">
-                          <p className="text-sm font-medium text-gray-900">{request.doctorName} wants to connect with you</p>
-                          <p className="mt-1 text-sm text-gray-600">{request.specialty} at {request.hospital}</p>
-                          <div className="flex items-center mt-1">
-                            <Clock className="w-4 h-4 text-gray-400 mr-1" />
-                            <p className="text-xs text-gray-500">{request.timestamp}</p>
-                          </div>
-                          
-                          {request.status === 'accepted' && (
-                            <span className="mt-2 inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                              Accepted
-                            </span>
-                          )}
-                          
-                          {request.status === 'rejected' && (
-                            <span className="mt-2 inline-block px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
-                              Declined
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {request.status === 'pending' && (
-                        <div className="flex space-x-2">
-                          <button 
-                            onClick={() => handleAcceptDoctor(request.id)}
-                            className="p-2 bg-green-100 rounded-full text-green-600 hover:bg-green-200"
-                          >
-                            <Check className="w-5 h-5" />
-                          </button>
-                          <button 
-                            onClick={() => handleRejectDoctor(request.id)}
-                            className="p-2 bg-red-100 rounded-full text-red-600 hover:bg-red-200"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Filtered Notifications */}
-          <div className="space-y-4">
-            {notifications
-              .filter(notification => notification.type === activeTab)
-              .sort((a, b) => {
-                // Sort by time (most recent first)
-                if (a.time.includes('now')) return -1;
-                if (b.time.includes('now')) return 1;
-                if (a.time.includes('minutes')) return -1;
-                if (b.time.includes('minutes')) return 1;
-                return 0;
-              })
-              .map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-4 rounded-lg border-l-4 ${getNotificationColor(notification.type, notification.priority)} ${
-                    !notification.isRead ? 'bg-yellow-50' : ''
-                  }`}
-                >
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    <div className="ml-4 flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-900">{notification.title}</p>
-                        <span className="text-xs text-gray-500">{notification.time}</span>
-                      </div>
-                      <p className="mt-1 text-sm text-gray-600">{notification.message}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-            {notifications.filter(notification => notification.type === activeTab).length === 0 && (
-              <div className="text-center text-gray-500 py-8">
-                <Bell className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-lg">No notifications</p>
-                <p className="text-sm">You're all caught up!</p>
-              </div>
-            )}
-          </div>
+      <div className="flex flex-col w-full h-screen bg-gray-100 p-4 overflow-y-auto">
+        <div className="flex space-x-4 mb-4">
+          <button
+            className={`px-4 py-2 rounded-lg ${
+              activeTab === "lab" ? "bg-blue-700" : "bg-blue-600"
+            } text-white hover:bg-blue-700 transition-colors`}
+            onClick={() => setActiveTab("lab")}
+          >
+            Laboratory Requests
+          </button>
+          <button
+            className={`px-4 py-2 rounded-lg ${
+              activeTab === "pharmacy" ? "bg-blue-700" : "bg-blue-600"
+            } text-white hover:bg-blue-700 transition-colors`}
+            onClick={() => setActiveTab("pharmacy")}
+          >
+            Pharmacy Requests
+          </button>
+          <button
+            className={`px-4 py-2 rounded-lg ${
+              activeTab === "doctor" ? "bg-blue-700" : "bg-blue-600"
+            } text-white hover:bg-blue-700 transition-colors`}
+            onClick={() => setActiveTab("doctor")}
+          >
+            Doctor Requests
+          </button>
         </div>
+
+        {activeTab === "lab" && (
+          <>
+          
+            {renderLabTable(acceptedLabRequests, true)}
+          </>
+        )}
+
+        {activeTab === "pharmacy" && (
+          <>
+   
+            {renderPharmacyTable(acceptedPharmacyRequests, true)}
+          </>
+        )}
+
+        {activeTab === "doctor" && (
+          <>
+            {renderDoctorTable(doctorRequests, false)}
+            {renderDoctorTable(acceptedDoctorRequests, true)}
+          </>
+        )}
       </div>
     </div>
   );
 };
 
-export default NotificationPage;
+export default PatientRequestPage;

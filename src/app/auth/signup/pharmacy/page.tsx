@@ -15,7 +15,7 @@ const PharmacySignUpPage = () => {
     password: '',
     confirmPassword: '',
     phone: '',
-    location: '',
+    location: ''
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -28,20 +28,23 @@ const PharmacySignUpPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (typeof window === "undefined") return;
     
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match");
       return;
     }
+    console.log("Sending request to API with data:", JSON.stringify(formData, null, 2));
 
-    // Validate email format
+    setIsLoading(true);
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast.error("Please enter a valid email address");
       return;
     }
 
-    // Validate required fields
     const requiredFields = ['pharmacyName', 'email', 'licenceNumber', 'password', 'phone', 'location'];
     const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
     if (missingFields.length > 0) {
@@ -155,7 +158,6 @@ const PharmacySignUpPage = () => {
             />
           </div>
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700">Location *</label>
           <textarea
@@ -167,7 +169,6 @@ const PharmacySignUpPage = () => {
             required
           />
         </div>
-
         <div>
           <button
             type="submit"

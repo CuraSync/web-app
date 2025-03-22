@@ -1,129 +1,177 @@
 "use client";
-import React, { useState } from 'react';
-import { MessageSquare, Plus, Trash2, Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import Sidebar from '../sidebar/sidebar';
+import React, { useEffect, useState } from "react";
+import { MessageSquare, Plus, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Sidebar from "../sidebar/sidebar";
+import api from "@/utils/api";
+import Swal from "sweetalert2"; // Import SweetAlert2
+
+interface Pharmacy {
+  id: string;
+  pharmacyId: string;
+  pharmacyName: string;
+  email: string;
+  location: string;
+  addedDate: string;  // YYYY-MM-DD format
+  addedTime: string;  // HH:MM format
+}
 
 const PharmacyPage = () => {
   const router = useRouter();
-  const [addedPharmacies, setAddedPharmacies] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const pharmacies = [
-    {
-      id: 1,
-      name: "MedPlus Pharmacy",
-      address: "123 Healthcare Ave, Medical District",
-      patientName: "Sarah Johnson",
-      hasMessage: true
-    },
-    {
-      id: 2,
-      name: "HealthCare Pharmacy",
-      address: "456 Wellness Blvd, Central Square",
-      patientName: "Sarah Johnson",
-      hasMessage: true
-    },
-    {
-      id: 3,
-      name: "CityMed Drugstore",
-      address: "789 Medicine Lane, Uptown",
-      patientName: "Sarah Johnson",
-      hasMessage: false
-    },
-    {
-      id: 4,
-      name: "QuickRx Pharmacy",
-      address: "101 Health Street, Downtown",
-      patientName: "Sarah Johnson",
-      hasMessage: true
-    },
-    {
-      id: 5,
-      name: "Wellness Pharmacy",
-      address: "202 Care Road, Westside",
-      patientName: "Sarah Johnson",
-      hasMessage: false
-    }
-  ];
+  const [addedPharmacies, setAddedPharmacies] = useState<Pharmacy[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [pharmacyIdInput, setPharmacyIdInput] = useState("");
 
-  // Filter pharmacies based on search query
-  const filteredPharmacies = pharmacies.filter(pharmacy => 
-    pharmacy.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    pharmacy.address.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Filter added pharmacies based on search query
-  const filteredAddedPharmacies = addedPharmacies.filter(pharmacy => 
-    pharmacy.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    pharmacy.address.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleAddPharmacy = (pharmacy: any) => {
-    if (!addedPharmacies.some(p => p.id === pharmacy.id)) {
-      setAddedPharmacies([...addedPharmacies, pharmacy]);
+  const fetchPharmacies = async () => {
+    try {
+      const response = await api.get("/patient/pharmacies");
+      setPharmacies(response.data as Pharmacy[]);
+      console.log("Pharmacies data:", response.data);
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching pharmacies:", error);
+      setError("Failed to load pharmacies. Please try again.");
     }
   };
 
-  const handleRemovePharmacy = (pharmacyId: number) => {
-    setAddedPharmacies(addedPharmacies.filter(pharmacy => pharmacy.id !== pharmacyId));
+  const fetchAddedPharmacies = async () => {
+    try {
+      const response = await api.get("/patient/pharmacies");
+      setAddedPharmacies(response.data as Pharmacy[]);
+      console.log("Added pharmacies:", response.data);
+    } catch (error) {
+      console.error("Error fetching added pharmacies:", error);
+      setError("Failed to load added pharmacies.");
+    }
   };
 
-  const handleMessageClick = () => {
-    router.push('/dashboard/patient/message');
+  useEffect(() => {
+    fetchPharmacies();
+    fetchAddedPharmacies();
+  }, []);
+
+  const filteredPharmacies = pharmacies.filter((pharmacy) =>
+    pharmacy.pharmacyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    pharmacy.location?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleAddPharmacy = async () => {
+    if (!pharmacyIdInput) {
+      setError("Please enter a valid Pharmacy ID.");
+      return;
+    }
+
+    if (addedPharmacies.some((pharmacy) => pharmacy.pharmacyId === pharmacyIdInput)) {
+      setError("This pharmacy has already been added.");
+      return;
+    }
+
+    const now = new Date();
+    const addedDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+    const addedTime = `${now.getHours().toString().padStart(2, "0")}:${now
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}`; // HH:MM
+
+    try {
+      const payload = {
+        pharmacyId: pharmacyIdInput,
+        addedDate: addedDate,
+        addedTime: addedTime,
+      };
+      console.log("Sending request with payload:", payload);
+      const response = await api.post("/pharmacy/request", payload);
+      console.log("Request sent successfully:", response.data);
+
+      const newPharmacy: Pharmacy = {
+        id: response.data.id || "unknown",
+        pharmacyId: response.data.pharmacyId || pharmacyIdInput,
+        pharmacyName: response.data.pharmacyName || "Unknown Pharmacy",
+        email: response.data.email || "N/A",
+        location: response.data.location || "Unknown Location",
+        addedDate: response.data.addedDate || addedDate,
+        addedTime: response.data.addedTime || addedTime,
+      };
+
+
+      // Display SweetAlert2 success message
+      Swal.fire({
+        title: "Request successfully sent.",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+
+      setShowPopup(false);
+      setPharmacyIdInput("");
+      setError(null);
+    } catch (error: any) {
+      console.error(
+        "Error sending request:",
+        error.response?.status,
+        error.response?.data,
+        error.message
+      );
+      if (error.response?.status === 409) {
+        setError("This pharmacy request already exists.");
+      } else {
+        setError(error.response?.data?.message || "Failed to send request. Please try again.");
+      }
+    }
+  };
+
+  const handleMessageClick = (pharmacyId: string) => {
+    router.push(`/dashboard/patient/pharmacy/message?pharmacyId=${pharmacyId}`);
   };
 
   return (
-    <div className="bg-white min-h-screen flex font-sans">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search pharmacies by name or address..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+      <div className="flex-1 p-8">
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+            {error}
           </div>
-        </div>
+        )}
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8">
+            <button
+              onClick={() => setShowPopup(true)}
+              className="px-4 py-3 bg-blue-500 text-white font-medium rounded-lg flex items-center gap-1 hover:bg-blue-600 transition-colors"
+            >
+              <Plus className="w-5 h-5" />
+              Add Pharmacy
+            </button>
+          </div>
 
-        {/* All Pharmacies Section */}
-        <div className="mb-10">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">All Pharmacies</h2>
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="grid grid-cols-4 gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 font-medium text-gray-700">
-              <div>Pharmacy Name</div>
-              <div>Address</div>
-              <div>Owner's Name</div>
-              <div className="text-center">Actions</div>
-            </div>
-
-            {filteredPharmacies.length === 0 ? (
-              <div className="p-6 text-center text-gray-500">
-                No pharmacies found matching your search.
+          <div className="bg-white rounded-lg shadow-sm">
+            <h2 className="text-xl font-semibold p-4 border-b">Selected Pharmacies</h2>
+            {addedPharmacies.length === 0 ? (
+              <div className="p-4 text-center text-gray-500">
+                No pharmacies selected yet.
               </div>
             ) : (
-              <div className="divide-y divide-gray-200">
-                {filteredPharmacies.map((pharmacy) => (
-                  <div 
-                    key={pharmacy.id}
-                    className="grid grid-cols-4 gap-4 p-4 hover:bg-gray-50 transition-all duration-300"
+              <div className="divide-y">
+                {addedPharmacies.map((pharmacy) => (
+                  <div
+                    key={pharmacy.pharmacyId}
+                    className="p-4 flex items-center justify-between hover:bg-gray-50"
                   >
-                    <div className="font-medium text-gray-900">{pharmacy.name}</div>
-                    <div className="text-gray-600">{pharmacy.address}</div>
-                    <div className="text-gray-600">{pharmacy.patientName}</div>
-                    <div className="flex justify-center space-x-2">
-                      
-                      <button 
-                        onClick={() => handleAddPharmacy(pharmacy)}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-300 transform hover:scale-105 flex items-center space-x-1"
+                    <div className="flex-1">
+                      <h3 className="font-medium">{pharmacy.pharmacyName}</h3>
+                      <p className="text-sm text-gray-500">{pharmacy.location}</p>
+                      <p className="text-xs text-gray-400">
+                        Added: {pharmacy.addedDate} at {pharmacy.addedTime}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleMessageClick(pharmacy.pharmacyId)}
+                        className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
                       >
-                        <Plus className="w-4 h-4" />
-                        <span>Add</span>
+                        <MessageSquare className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
                       </button>
                     </div>
                   </div>
@@ -132,55 +180,36 @@ const PharmacyPage = () => {
             )}
           </div>
         </div>
-
-        {/* My Pharmacies Section */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">My Pharmacies</h2>
-          {addedPharmacies.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-              <p className="text-gray-500">You haven't added any pharmacies yet.</p>
-            </div>
-          ) : filteredAddedPharmacies.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-              <p className="text-gray-500">No added pharmacies match your search.</p>
-            </div>
-          ) : (
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="grid grid-cols-3 gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 font-medium text-gray-700">
-                <div>Pharmacy Name</div>
-                <div>Address</div>
-                <div className="text-center">Actions</div>
-              </div>
-
-              <div className="divide-y divide-gray-200">
-                {filteredAddedPharmacies.map((pharmacy) => (
-                  <div 
-                    key={pharmacy.id}
-                    className="grid grid-cols-3 gap-4 p-4 hover:bg-gray-50 transition-all duration-300"
-                  >
-                    <div className="font-medium text-gray-900">{pharmacy.name}</div>
-                    <div className="text-gray-600">{pharmacy.address}</div>
-                    <div className="flex justify-center space-x-2">
-                      <button 
-                        onClick={handleMessageClick}
-                        className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
-                      >
-                        <MessageSquare className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
-                      </button>
-                      <button 
-                        onClick={() => handleRemovePharmacy(pharmacy.id)}
-                        className="p-2 rounded-full hover:bg-red-100 transition-colors group"
-                      >
-                        <Trash2 className="w-5 h-5 text-red-500 group-hover:text-red-600" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
       </div>
+
+      {showPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-lg font-semibold mb-4">Enter Pharmacy ID</h2>
+            <input
+              type="text"
+              placeholder="Pharmacy ID"
+              className="w-full p-2 border rounded-lg mb-4"
+              value={pharmacyIdInput}
+              onChange={(e) => setPharmacyIdInput(e.target.value)}
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowPopup(false)}
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddPharmacy}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

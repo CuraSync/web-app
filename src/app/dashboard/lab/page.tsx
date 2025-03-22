@@ -1,112 +1,125 @@
 "use client"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import LabSidebar from "./sidebar/sidebar";
+import api from "@/utils/api";
+import { toast } from "sonner";
 
-import { useState } from "react"
-import { PenSquare } from "lucide-react"
-import Sidebar from "../../dashboard/lab/sidebar/sidebar"
+export const LabDashboard = () => {
+  const router = useRouter();
+  const [labName, setLabName] = useState("");
+  const [licenceNumber, setLicenceNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [location, setLocation] = useState("");
+  const [contactNo, setContactNo] = useState("");
+  const [description, setDescription] = useState("");
+  const [profilePic, setProfilePic] = useState("");
+  const [contactInformation, setContactInformation] = useState("");
+  const [rating, setRating] = useState("");
 
-export default function LabDashboard() {
-  const [activeTab, setActiveTab] = useState("dashboard")
+  const fetchHomeData = async () => {
+    try {
+      const response = await api.get("/laboratory/home");
+      setLabName(response.data.labName);
+      setLicenceNumber(response.data.licenceNumber);
+      setEmail(response.data.email);
+      setLocation(response.data.location);
+      setContactNo(response.data.phoneNumber);
+      setDescription(response.data.description);
+      setProfilePic(response.data.profilePic);
+      setContactInformation(response.data.contactInformation);
+      setRating(response.data.rating);
+    } catch (error) {
+      toast.error("Failed to update profile");
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    fetchHomeData();
+  }, []);
 
   return (
-    <div className="flex flex-col md:flex-row h-full">
-      {/* Sidebar */}
-      <Sidebar />
+    <div className="min-h-screen flex flex-col md:flex-row bg-white">
+  <div className="flex-shrink-0 md:w-1/4 lg:w-1/5">
+    <LabSidebar />
+  </div>
+  <main className="flex-1 flex flex-col overflow-hidden p-6">
+    <div className="border-b p-4 flex justify-between items-center">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6">Laboratory Dashboard</h1>
+    </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Navigation */}
-        <div className="border-b p-4">
-          <div className="inline-block px-4 py-1 bg-purple-100 text-purple-800 rounded-md text-sm font-medium">Laboratory</div>
+    <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="flex items-center space-x-4">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center">
+          {profilePic ? (
+            <img
+              src={profilePic}
+              alt={labName}
+              className="w-full h-full rounded-full object-cover"
+            />
+          ) : (
+            <span className="text-green-600 text-xl sm:text-2xl font-semibold">
+              {labName?.charAt(0)?.toUpperCase() || "P"}
+            </span>
+          )}
         </div>
-
-        {/* Content */}
-        <div className="flex-1 p-6">
-          <div className="max-w-5xl mx-auto">
-            {/* Lab Info */}
-            <div className="flex items-start gap-4 mb-6">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-purple-800 font-medium text-2xl">
-                CL
-              </div>
-              <div className="flex-1">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h1 className="text-xl font-medium">City Lab</h1>
-                    <p className="text-sm text-gray-600">License: LAB12345678</p>
-                    <p className="text-sm text-gray-600">Accreditation: ISO 9001</p>
-                    <p className="text-sm text-gray-600">Specialization: Clinical Lab</p>
-                  </div>
-                  <button className="text-gray-400" title="Edit">
-                    <PenSquare size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Reusable Section Component Example */}
-            <Section title="Contact Information">
-              <p><span className="font-medium">Address:</span> 123 Medical Center, Health City</p>
-              <p><span className="font-medium">Phone:</span> +1 (555) 987-6543</p>
-              <p><span className="font-medium">Email:</span> info@citylab.com</p>
-              <p><span className="font-medium">Website:</span> www.citylab.com</p>
-            </Section>
-
-            <Section title="Operating Hours">
-              <p><span className="font-medium">Weekdays:</span> 9:00 AM - 6:00 PM</p>
-              <p><span className="font-medium">Saturday:</span> 10:00 AM - 5:00 PM</p>
-              <p><span className="font-medium">Sunday:</span> Closed</p>
-            </Section>
-
-            {/* Services Offered */}
-            <Section title="Services Offered">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                {[
-                  { name: "Blood Tests", desc: "Routine blood analysis and testing" },
-                  { name: "X-rays", desc: "Imaging services for bone and tissue analysis" },
-                  { name: "CT Scans", desc: "Detailed cross-sectional imaging" },
-                ].map((service, index) => (
-                  <div key={index} className="p-3 bg-gray-50 rounded-md">
-                    <h3 className="font-medium">{service.name}</h3>
-                    <p className="text-sm text-gray-600">{service.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </Section>
-
-            <div className="text-right text-xs text-gray-500 mb-4">Last updated: 25 Jan 2025</div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {[
-                { title: "Total Tests", value: "2,547", trend: "+8% this month", color: "text-green-500" },
-                { title: "Active Patients", value: "1,203", trend: "+3% this month", color: "text-green-500" },
-                { title: "Pending Results", value: "42", trend: "-5% from yesterday", color: "text-red-500" },
-                { title: "Revenue (Monthly)", value: "$78,350", trend: "+10% this month", color: "text-green-500" },
-              ].map((stat, index) => (
-                <div key={index} className="border rounded-lg p-4">
-                  <h3 className="text-xs text-gray-500 mb-1">{stat.title}</h3>
-                  <p className="text-xl font-bold">{stat.value}</p>
-                  <p className={`text-xs ${stat.color}`}>{stat.trend}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div>
+          <h2 className="text-lg sm:text-xl font-bold">{labName}</h2>
+          <p className="text-gray-600">License: {licenceNumber}</p>
+          <p className="text-gray-600">Rating: {rating}</p>
         </div>
       </div>
     </div>
-  )
-}
 
-// Reusable Section Component
-function Section({ title, children }: { title: string, children: React.ReactNode }) {
-  return (
-    <div className="mb-6 border rounded-lg p-4">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="font-medium">{title}</h2>
-        <button className="text-gray-400" title="Edit">
-          <PenSquare size={16} />
-        </button>
+    <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h3 className="text-lg sm:text-xl font-semibold mb-4">Contact Information</h3>
+        <div className="space-y-2">
+          <p className="text-gray-600">
+            <span className="font-medium">Location:</span> {location}
+          </p>
+          <p className="text-gray-600">
+            <span className="font-medium">Phone:</span> {contactNo}
+          </p>
+          <p className="text-gray-600">
+            <span className="font-medium">Email:</span> {email}
+          </p>
+        </div>
       </div>
-      <div className="text-sm space-y-1">{children}</div>
+
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h3 className="text-lg sm:text-xl font-semibold mb-4">About Us</h3>
+        <p className="text-gray-600">{description || "No description available."}</p>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h3 className="text-lg sm:text-xl font-semibold mb-4">Additional Contact Information</h3>
+        {contactInformation.length !== 0 ? (
+          JSON.parse(contactInformation).map(
+            (contact: { type: string; value: string }, index: number) => (
+              <p key={index}>
+                <span className="font-medium capitalize">{contact.type}:</span>{" "}
+                <a
+                  href={contact.value}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline"
+                >
+                  {contact.value}
+                </a>
+              </p>
+            )
+          )
+        ) : (
+          <p>No additional contact information available.</p>
+        )}
+      </div>
     </div>
-  )
-}
+  </main>
+</div>
+  );
+};
+
+export default LabDashboard;

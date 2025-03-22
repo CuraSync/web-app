@@ -1,152 +1,176 @@
 "use client";
-import React, { useState } from 'react';
-import { MessageSquare, Clock, Plus, Trash2, Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import Sidebar from '../sidebar/sidebar';
+import React, { useEffect, useState } from "react";
+import { MessageSquare, Clock, Plus, Trash2, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Sidebar from "../sidebar/sidebar";
+import api from "@/utils/api";
+import Swal from "sweetalert2"; // Import SweetAlert2
+
+interface Laboratory {
+  id: string;
+  labId: string;
+  labName: string;
+  email: string;
+  location: string;
+  addedDate: string; // YYYY-MM-DD format
+  addedTime: string; // HH:MM format
+}
 
 const LaboratoryPage = () => {
   const router = useRouter();
-  const [addedLaboratories, setAddedLaboratories] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const laboratories = [
-    {
-      id: '1',
-      name: 'Lab A',
-      specialty: 'Pathology',
-      address: '123 Medical Center, Downtown',
-      imageUrl: '/api/placeholder/40/40',
-      availableTime: '09:00 AM',
-      hasMessage: true
-    },
-    {
-      id: '2',
-      name: 'Lab B',
-      specialty: 'Microbiology',
-      address: '456 Health Street, Uptown',
-      imageUrl: '/api/placeholder/40/40',
-      availableTime: '10:30 AM',
-      hasMessage: true
-    },
-    {
-      id: '3',
-      name: 'Lab C',
-      specialty: 'Radiology',
-      address: '789 Wellness Avenue, Midtown',
-      imageUrl: '/api/placeholder/40/40',
-      availableTime: '11:45 AM',
-      hasMessage: false
-    },
-    {
-      id: '4',
-      name: 'Lab D',
-      specialty: 'Biochemistry',
-      address: '101 Care Boulevard, Westside',
-      imageUrl: '/api/placeholder/40/40',
-      availableTime: '02:15 PM',
-      hasMessage: true
-    },
-    {
-      id: '5',
-      name: 'Lab E',
-      specialty: 'Hematology',
-      address: '202 Treatment Road, Eastside',
-      imageUrl: '/api/placeholder/40/40',
-      availableTime: '03:30 PM',
-      hasMessage: false
-    }
-  ];
+  const [addedLaboratories, setAddedLaboratories] = useState<Laboratory[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [laboratories, setLaboratories] = useState<Laboratory[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [labIdInput, setLabIdInput] = useState("");
 
-  // Filter laboratories based on search query
-  const filteredLaboratories = laboratories.filter(lab => 
-    lab.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lab.specialty.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lab.address.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Filter added laboratories based on search query
-  const filteredAddedLaboratories = addedLaboratories.filter(lab => 
-    lab.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lab.specialty.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lab.address.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleAddLaboratory = (laboratory: any) => {
-    if (!addedLaboratories.some(lab => lab.id === laboratory.id)) {
-      setAddedLaboratories([...addedLaboratories, laboratory]);
+  const ListFetchHomeData = async () => {
+    try {
+      const response = await api.get("/patient/laboratories");
+      setLaboratories(response.data as Laboratory[]);
+      console.log("Laboratories data:", response.data);
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching laboratories:", error);
+      setError("Failed to load laboratories. Please try again.");
     }
   };
 
-  const handleRemoveLaboratory = (laboratoryId: string) => {
-    setAddedLaboratories(addedLaboratories.filter(laboratory => laboratory.id !== laboratoryId));
+  const fetchAddedLaboratories = async () => {
+    try {
+      const response = await api.get("/patient/laboratories"); // Adjust endpoint as needed
+      setAddedLaboratories(response.data as Laboratory[]);
+      console.log("Added laboratories:", response.data);
+    } catch (error) {
+      console.error("Error fetching added laboratories:", error);
+      setError("Failed to load added laboratories.");
+    }
   };
 
-  const handleMessageClick = () => {
-    router.push('/dashboard/patient/message');
+  useEffect(() => {
+    ListFetchHomeData();
+    fetchAddedLaboratories();
+  }, []);
+
+  const filteredLaboratories = laboratories.filter((laboratory) =>
+    laboratory.labName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    laboratory.location?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleAddLaboratory = async () => {
+    if (!labIdInput) {
+      setError("Please enter a valid Lab ID.");
+      return;
+    }
+
+    if (addedLaboratories.some((lab) => lab.labId === labIdInput)) {
+      setError("This laboratory has already been added.");
+      return;
+    }
+
+    const now = new Date();
+    const addedDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+    const addedTime = `${now.getHours().toString().padStart(2, "0")}:${now
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}`; // HH:MM
+
+    try {
+      const payload = {
+        labId: labIdInput,
+        addedDate: addedDate,
+        addedTime: addedTime,
+      };
+      console.log("Sending request with payload:", payload);
+      const response = await api.post("/laboratory/request", payload);
+      console.log("Request sent successfully:", response.data);
+
+      const newLab: Laboratory = {
+        id: response.data.id || "unknown",
+        labId: response.data.labId || labIdInput,
+        labName: response.data.labName || "Unknown Lab",
+        email: response.data.email || "N/A",
+        location: response.data.location || "Unknown Location",
+        addedDate: response.data.addedDate || addedDate,
+        addedTime: response.data.addedTime || addedTime,
+      };
+
+      // Display SweetAlert2 success message
+      Swal.fire({
+        title: "Request successfully sent.",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+         
+      setShowPopup(false);
+      setLabIdInput("");
+      setError(null);
+    } catch (error: any) {
+      console.error(
+        "Error sending request:",
+        error.response?.status,
+        error.response?.data,
+        error.message
+      );
+      if (error.response?.status === 409) {
+        setError("This laboratory request already exists.");
+      } else {
+        setError(error.response?.data?.message || "Failed to send request. Please try again.");
+      }
+    }
   };
-  
+
+  const handleMessageClick = (labId: string) => {
+    router.push(`/dashboard/patient/laboratory/message?labId=${labId}`); // Fixed syntax
+  };
+
   return (
-    <div className="bg-white min-h-screen flex font-sans">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search laboratories by name, specialty, or address..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+      <div className="flex-1 p-8">
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+            {error}
           </div>
-        </div>
+        )}
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8">
+            <button
+              onClick={() => setShowPopup(true)}
+              className="px-4 py-3 bg-blue-500 text-white font-medium rounded-lg flex items-center gap-1 hover:bg-blue-600 transition-colors"
+            >
+              <Plus className="w-5 h-5" />
+              Add Laboratory
+            </button>
+          </div>
 
-        {/* All Laboratories Section */}
-        <div className="mb-10">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">All Laboratories</h2>
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="grid grid-cols-5 gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 font-medium text-gray-700">
-              <div>Laboratory Name</div>
-              <div>Name & Specialty</div>
-              <div>Available Time</div>
-              
-              <div className="text-center">Actions</div>
-            </div>
-
-            {filteredLaboratories.length === 0 ? (
-              <div className="p-6 text-center text-gray-500">
-                No laboratories found matching your search.
+          <div className="bg-white rounded-lg shadow-sm">
+            <h2 className="text-xl font-semibold p-4 border-b">Selected Laboratories</h2>
+            {addedLaboratories.length === 0 ? (
+              <div className="p-4 text-center text-gray-500">
+                No laboratories selected yet.
               </div>
             ) : (
-              <div className="divide-y divide-gray-200">
-                {filteredLaboratories.map((laboratory) => (
-                  <div 
-                    key={laboratory.id}
-                    className="grid grid-cols-5 gap-4 p-4 hover:bg-gray-50 transition-all duration-300"
+              <div className="divide-y">
+                {addedLaboratories.map((laboratory) => (
+                  <div
+                    key={laboratory.labId}
+                    className="p-4 flex items-center justify-between hover:bg-gray-50"
                   >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center text-white font-bold">
-                        {laboratory.name.charAt(0)}
-                      </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium">{laboratory.labName}</h3>
+                      <p className="text-sm text-gray-500">{laboratory.location}</p>
+                      <p className="text-xs text-gray-400">
+                        Added: {laboratory.addedDate} at {laboratory.addedTime}
+                      </p>
                     </div>
-                    <div>
-                      <div className="font-medium text-gray-900">{laboratory.name}</div>
-                      <div className="text-sm text-gray-500">{laboratory.specialty}</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Clock className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-600">{laboratory.availableTime}</span>
-                    </div>
-                    
-                    <div className="flex justify-center">
-                      <button 
-                        onClick={() => handleAddLaboratory(laboratory)}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-300 transform hover:scale-105 flex items-center space-x-1"
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleMessageClick(laboratory.labId)}
+                        className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
                       >
-                        <Plus className="w-4 h-4" />
-                        <span>Add</span>
+                        <MessageSquare className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
                       </button>
                     </div>
                   </div>
@@ -155,58 +179,36 @@ const LaboratoryPage = () => {
             )}
           </div>
         </div>
-
-        {/* My Laboratories Section */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">My Laboratories</h2>
-          {addedLaboratories.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-              <p className="text-gray-500">You haven't added any laboratories yet.</p>
-            </div>
-          ) : filteredAddedLaboratories.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-              <p className="text-gray-500">No added laboratories match your search.</p>
-            </div>
-          ) : (
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              <div className="grid grid-cols-3 gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 font-medium text-gray-700">
-                <div>Laboratory Name</div>
-                <div>Address</div>
-                <div className="text-center">Actions</div>
-              </div>
-
-              <div className="divide-y divide-gray-200">
-                {filteredAddedLaboratories.map((laboratory) => (
-                  <div 
-                    key={laboratory.id}
-                    className="grid grid-cols-3 gap-4 p-4 hover:bg-gray-50 transition-all duration-300"
-                  >
-                    <div>
-                      <div className="font-medium text-gray-900">{laboratory.name}</div>
-                      <div className="text-sm text-gray-500">{laboratory.specialty}</div>
-                    </div>
-                    <div className="text-gray-600">{laboratory.address}</div>
-                    <div className="flex justify-center space-x-2">
-                      <button 
-                        onClick={handleMessageClick}
-                        className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
-                      >
-                        <MessageSquare className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
-                      </button>
-                      <button 
-                        onClick={() => handleRemoveLaboratory(laboratory.id)}
-                        className="p-2 rounded-full hover:bg-red-100 transition-colors group"
-                      >
-                        <Trash2 className="w-5 h-5 text-red-500 group-hover:text-red-600" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
       </div>
+
+      {showPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-lg font-semibold mb-4">Enter Laboratory ID</h2>
+            <input
+              type="text"
+              placeholder="Lab ID"
+              className="w-full p-2 border rounded-lg mb-4"
+              value={labIdInput}
+              onChange={(e) => setLabIdInput(e.target.value)}
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowPopup(false)}
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddLaboratory}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

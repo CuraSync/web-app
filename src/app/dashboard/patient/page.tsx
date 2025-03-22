@@ -1,194 +1,179 @@
 "use client";
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { User } from 'lucide-react';
-import Sidebar from './sidebar/sidebar';
-
-const PatientDashboard = () => {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Initialize state with data from localStorage
-  const [patientInfo, setPatientInfo] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
-      return {
-        name: savedData.fullName || "Sarah Johnson",
-        dob: savedData.dateOfBirth || "15 May 1985",
-        bloodType: savedData.bloodType || "A+",
-        nic: savedData.nic || "", // Add NIC to patient info
-      };
-    }
-    return {
-      name: "Sarah Johnson",
-      dob: "15 May 1985",
-      bloodType: "A+",
-      nic: "",
-    };
-  });
-
-  const [emergencyContact, setEmergencyContact] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
-      return {
-        name: savedData.emergencyContactName || "Michael Johnson",
-        relation: savedData.emergencyContactRelation || "Spouse",
-        phone: savedData.emergencyContactPhone || "+1 (555) 876-5432",
-      };
-    }
-    return {
-      name: "Michael Johnson",
-      relation: "Spouse",
-      phone: "+1 (555) 876-5432",
-    };
-  });
-
-  const [allergies, setAllergies] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
-      
-      if (savedData.allergies && Array.isArray(savedData.allergies)) {
-        return savedData.allergies;
-      }
-      
-      const allergyText = typeof savedData.allergies === 'string' 
-        ? savedData.allergies 
-        : "Penicillin, Peanuts, Pollen";
-        
-      return allergyText.split(',').map((item: string, index: number) => ({
-        severity: index === 0 ? "Severe" : index === 1 ? "Moderate" : "Mild", 
-        type: item.trim().toLowerCase().includes("penicillin") 
-          ? "Drug" 
-          : item.trim().toLowerCase().includes("peanuts") 
-            ? "Food" 
-            : "Environmental",
-        name: item.trim(),
-      }));
-    }
-    return [];
-  });
-
-  const [vitalStats, setVitalStats] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
-      return {
-        height: savedData.height ? `${savedData.height} cm` : "170 cm",
-        weight: savedData.weight ? `${savedData.weight} kg` : "70 kg",
-        bmi: savedData.bmi || "24.2",
-      };
-    }
-    return {
-      height: "170 cm",
-      weight: "70 kg",
-      bmi: "24.2",
-    };
-  });
-
-  const [lastUpdated, setLastUpdated] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const savedData = JSON.parse(localStorage.getItem('patientData') || '{}');
-      return savedData.lastUpdated || "25 Jan 2025";
-    }
-    return "25 Jan 2025";
-  });
-
-  useEffect(() => {
-    const userRole = localStorage.getItem('userRole');
-    if (userRole !== 'patient') {
-      router.push('/auth/login/patient');
-    } else {
-      setIsLoading(false);
-    }
-  }, [router]);
-
-  if (isLoading) {
-    return <div className="min-h-screen bg-gray-50 p-8">Loading...</div>;
+  import { useEffect, useState } from "react";
+  import { useRouter } from "next/navigation";
+  import Sidebar from "./sidebar/sidebar";
+  import { FaUser } from "react-icons/fa";
+  import api from "@/utils/api";
+  
+  // Define the shape of the state object and API response
+  interface PatientInfo {
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    address: string;
+    bloodType: string;
+    bmi: string;
+    dateOfBirth: string;
+    email: string;
+    guardianContactNumber: string;
+    guardianName: string;
+    height: string;
+    nic: string;
+    patientId: string;
+    phoneNumber: string;
+    profilePic: string;
+    updateAt: string;
+    weight: string;
   }
-
-  return (
-    <div className="bg-white min-h-screen flex font-sans">
-      {/* Left Sidebar */}
-      <Sidebar />
-
-      {/* Main Content */}
-      <main className="flex-1">
-        <header className="border-b p-4 flex items-center justify-between">
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-4"></div>
-            <button className="px-4 py-1 border border-blue-600 text-blue-600 rounded-md">
-              Patient
-            </button>
-          </div>
-        </header>
-
-        <div className="p-6">
+  
+  const PatientDashboard = () => {
+    const router = useRouter();
+    const [patientInfo, setPatientInfo] = useState<PatientInfo>({
+      firstName: "",
+      lastName: "",
+      fullName: "",
+      address: "",
+      bloodType: "",
+      bmi: "",
+      dateOfBirth: "",
+      email: "",
+      guardianContactNumber: "",
+      guardianName: "",
+      height: "",
+      nic: "",
+      patientId: "",
+      phoneNumber: "",
+      profilePic: "",
+      updateAt: "",
+      weight: "",
+    });
+  
+    // fetchHomeData with proper typing for the API response
+    const fetchHomeData = async () => {
+      try {
+        const response = await api.get("/patient/profile");
+        const data = response.data as PatientInfo;
+        // Ensure all properties are initialized even if API returns null or undefined
+        setPatientInfo({
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+          fullName: data.fullName || `${data.firstName || ""} ${data.lastName || ""}`,
+          address: data.address || "",
+          bloodType: data.bloodType || "",
+          bmi: data.bmi || "",
+          dateOfBirth: data.dateOfBirth || "",
+          email: data.email || "",
+          guardianContactNumber: data.guardianContactNumber || "",
+          guardianName: data.guardianName || "",
+          height: data.height || "",
+          nic: data.nic || "",
+          patientId: data.patientId || "",
+          phoneNumber: data.phoneNumber || "",
+          profilePic: data.profilePic || "",
+          updateAt: data.updateAt || "",
+          weight: data.weight || "",
+        });
+      } catch (error) {
+        console.error("Request failed:", error);
+      }
+    };
+  
+    useEffect(() => {
+      const userRole = localStorage.getItem("userRole");
+      if (userRole !== "patient") {
+        router.push("/auth/login/patient");
+      } else {
+        fetchHomeData();
+      }
+    }, [router]);
+  
+    return (
+      <div className="bg-white min-h-screen flex font-sans">
+        {/* Left Sidebar */}
+        <Sidebar />
+  
+        {/* Main Content */}
+        <main className="flex-1">
+          <header className="border-b p-4 flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-4"></div>
+              <h1 className="text-2xl font-bold mb-6">Patient Dashboard</h1>
+            </div>
+          </header>
+  
           {/* Patient Info Card */}
           <div className="bg-white rounded-lg shadow-sm border p-6 flex justify-between items-start">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600 text-xl font-semibold">
-                  {patientInfo.name.split(' ').map((n: string) => n[0]).join('')}
-                </span>
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+                {patientInfo.profilePic ? (
+                  <img
+                    src={patientInfo.profilePic}
+                    alt={patientInfo.firstName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <FaUser className="text-blue-600 text-2xl" />
+                )}
               </div>
               <div>
-                <h2 className="text-xl font-bold">{patientInfo.name}</h2>
-                <p className="text-gray-600">DOB: {patientInfo.dob}</p>
-                <p className="text-gray-600">Blood Type: {patientInfo.bloodType}</p>
-                <p className="text-gray-600">NIC: {patientInfo.nic}</p>
+                <div>
+                  <div>
+                    <h2 className="text-xl font-bold">
+                      Name: {patientInfo.fullName || `${patientInfo.firstName} ${patientInfo.lastName}`}
+                    </h2>
+                    <p className="text-gray-600">DOB: {new Date(patientInfo.dateOfBirth).toLocaleDateString()}</p>
+                    <p className="text-gray-600">Blood Type: {patientInfo.bloodType}</p>
+                    <p className="text-gray-600">NIC: {patientInfo.nic}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-
+  
           <div className="mt-6 grid grid-cols-3 gap-6">
             {/* Vital Statistics */}
             <div className="col-span-2 bg-white rounded-lg shadow-sm border p-6">
               <h3 className="text-lg font-semibold mb-4">Vital Statistics</h3>
               <div className="space-y-2">
-                <p className="text-gray-600">Height: {vitalStats.height}</p>
-                <p className="text-gray-600">Weight: {vitalStats.weight}</p>
-                <p className="text-gray-600">BMI: {vitalStats.bmi}</p>
-                <p className="text-gray-400 text-sm mt-4">Last updated: {lastUpdated}</p>
+                <p className="text-gray-600">Height: {patientInfo.height}</p>
+                <p className="text-gray-600">Weight: {patientInfo.weight}</p>
+                <p className="text-gray-600">BMI: {patientInfo.bmi}</p>
+                <p className="text-gray-400 text-sm mt-4">
+                  Last updated: {patientInfo.updateAt}
+                </p>
               </div>
             </div>
-
+  
             {/* Emergency Contact */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h3 className="text-lg font-semibold">Emergency Contact</h3>
               <div className="mt-4 space-y-2">
-                <p className="text-gray-600">Name: {emergencyContact.name}</p>
-                <p className="text-gray-600">Relation: {emergencyContact.relation}</p>
-                <p className="text-gray-600">Phone: {emergencyContact.phone}</p>
+                <p className="text-gray-600">Name: {patientInfo.guardianName}</p>
+                <p className="text-gray-600">Phone: {patientInfo.guardianContactNumber}</p>
               </div>
             </div>
           </div>
-
-          {/* Allergies */}
-          <div className="mt-6 bg-white rounded-lg shadow-sm border p-6">
-            <h3 className="text-lg font-semibold">Allergies</h3>
-            <div className="mt-4 space-y-3">
-              {allergies.map((allergy: { severity: string; type: string; name: string }, index: number) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <span className={`px-2 py-1 ${allergy.severity === 'Severe' ? 'bg-red-500' : allergy.severity === 'Moderate' ? 'bg-yellow-500' : 'bg-gray-500'} text-white text-sm rounded`}>
-                    {allergy.severity}
-                  </span>
-                  <span className="text-gray-600">{allergy.type}: {allergy.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
+  
           {/* Medical Tracking Dashboard Access */}
           <div className="mt-6 bg-white rounded-lg shadow-sm border p-6">
-            <p className="text-center text-lg font-medium">Do you want to access your medical tracking Dashboard</p>
+            <p className="text-center text-lg font-medium">
+              Do you want to access your medical tracking Dashboard?
+            </p>
             <div className="mt-4 flex justify-center space-x-4">
-              <button className="px-6 py-2 bg-red-500 text-white rounded-md">Yes</button>
-              <button className="px-6 py-2 bg-green-500 text-white rounded-md">No</button>
+              <button className="px-6 py-2 bg-red-500 text-white rounded-md">
+                Yes
+              </button>
+              <button className="px-6 py-2 bg-green-500 text-white rounded-md">
+                No
+              </button>
             </div>
           </div>
-        </div>
-      </main>
-    </div>
-  );
-};
+  
+        </main>
+      </div>
+    );
+  };
+  
+  export default PatientDashboard;
 
-export default PatientDashboard;
+  
