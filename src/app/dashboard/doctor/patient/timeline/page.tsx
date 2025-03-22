@@ -3,36 +3,65 @@ import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { useSearchParams } from "next/navigation";
 import { Send } from "lucide-react";
+import io from "socket.io-client";
 
 interface TimelineNote {
   doctorId: string;
-  message: string;
+  data: string | object;
   addedDate: string;
   addedTime: string;
   sender: "doctor" | "laboratory";
-  type: "doctor_note" | "general_note" | "prescription";
+  type: "donlynote" | "note" | "prescription";
 }
 
 const DoctorTimelinePage = () => {
   const [notes, setNotes] = useState<TimelineNote[]>([]);
   const [newNote, setNewNote] = useState<string>("");
-  const [noteType, setNoteType] = useState<"doctor_note" | "general_note" | "prescription">("doctor_note");
+  const [noteType, setNoteType] = useState<"donlynote" | "note" | "prescription">("note");
 
   const searchParams = useSearchParams();
   const selectedPatient = searchParams.get("patientId");
 
   useEffect(() => {
     fetchNotes();
+    const serverUrl = "wss://curasync-backend.onrender.com/timeline";
+    const token = localStorage.getItem("accessToken");
+    const additionalData = { id: selectedPatient };
+
+    const socket = io(serverUrl, {
+      auth: {
+        token,
+        additionalData,
+      },
+    });
+
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket");
+    });
+
+    socket.on("receive-message", (message: TimelineNote) => {
+      console.log("Received message:", message);
+      setNotes((prevMessages) => [...prevMessages, message]);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const fetchNotes = async () => {
     try {
-      const response = await api.post("/doctor/patient/timeline/notes", {
+      const response = await api.post("/doctor/timeline/notes", {
         patientId: selectedPatient,
       });
+      console.log("Fetched notes:", response.data);
       setNotes(response.data);
     } catch (error) {
+      if (error.response?.status === 404) {
+        return;
+      }
       console.error("Failed to fetch notes:", error);
+
     }
   };
 
@@ -41,9 +70,9 @@ const DoctorTimelinePage = () => {
 
     const now = new Date();
     try {
-      const response = await api.post("/doctor/patient/timeline/add", {
+      const response = await api.post("/doctor/timeline/sendNote", {
         patientId: selectedPatient,
-        message: newNote,
+        note: newNote,
         type: noteType,
         addedDate: now.toISOString().split("T")[0],
         addedTime: now.toLocaleTimeString("en-US", {
@@ -62,9 +91,9 @@ const DoctorTimelinePage = () => {
 
   const getNoteColor = (type: string) => {
     switch (type) {
-      case "doctor_note":
+      case "donote":
         return "bg-pink-100";
-      case "general_note":
+      case "gnote":
         return "bg-blue-100";
       case "prescription":
         return "bg-green-100";
@@ -96,14 +125,14 @@ const DoctorTimelinePage = () => {
               <div key={index} className="flex items-center justify-center">
                 {/* Left side - Doctor notes */}
                 <div className={`w-5/12 ${isDoctor ? "pr-8" : ""}`}>
-                  {isDoctor && (
+                  
                     <div className={`p-4 rounded-lg ${getNoteColor(note.type)}`}>
-                      <p className="text-gray-800">{note.message}</p>
+                      <p className="text-gray-800">{note.data.note}</p>
                       <div className="mt-2 text-sm text-gray-500">
                         {note.addedTime} · {formatDate(note.addedDate)}
                       </div>
                     </div>
-                  )}
+                 
                 </div>
 
                 {/* Timeline Dot */}
@@ -113,7 +142,7 @@ const DoctorTimelinePage = () => {
                 <div className={`w-5/12 ${!isDoctor ? "pl-8" : ""}`}>
                   {!isDoctor && (
                     <div className={`p-4 rounded-lg ${getNoteColor(note.type)}`}>
-                      <p className="text-gray-800">{note.message}</p>
+                      <p className="text-gray-800">{typeof note.data != "object"?JSON.parse(note.data).note:note.data.note}</p>
                       <div className="mt-2 text-sm text-gray-500">
                         {note.addedTime} · {formatDate(note.addedDate)}
                       </div>
@@ -130,11 +159,11 @@ const DoctorTimelinePage = () => {
       <div className="bg-white rounded-lg shadow-md p-4 flex flex-col gap-4">
         <select
           value={noteType}
-          onChange={(e) => setNoteType(e.target.value as "doctor_note" | "general_note" | "prescription")}
+          onChange={(e) => setNoteType(e.target.value as "donlynote" | "note" | "prescription")}
           className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
         >
-          <option value="doctor_note">Doctor Note (Private)</option>
-          <option value="general_note">General Note</option>
+          <option value="donlynote">Doctor Note (Private)</option>
+          <option value="note">General Note</option>
           <option value="prescription">Prescription</option>
         </select>
         

@@ -33,6 +33,7 @@ const DoctorSidebar = () => {
   ];
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const fetchDoctorProfile = async () => {
       try {
         const response = await api.get('/doctor/profile');
