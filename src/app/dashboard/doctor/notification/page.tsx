@@ -26,6 +26,7 @@ const DoctorRequestPage = () => {
   const [activeTab, setActiveTab] = useState<string>("patient");
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     fetchRequests();
   }, []);
 
@@ -267,6 +268,7 @@ const DoctorRequestPage = () => {
 
         {activeTab === "patient" && (
           <>
+            {renderPatientTable(patientRequests, false)}
             {renderPatientTable(acceptedPatientRequests, true)}
           </>
         )}

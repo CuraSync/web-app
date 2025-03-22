@@ -23,6 +23,7 @@ const DoctorTimelinePage = () => {
   const selectedPatient = searchParams.get("patientId");
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     fetchNotes();
     const serverUrl = "wss://curasync-backend.onrender.com/timeline";
     const token = localStorage.getItem("accessToken");
