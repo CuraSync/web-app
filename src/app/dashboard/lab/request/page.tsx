@@ -18,15 +18,14 @@ interface Request {
 const LabRequestPage = () => {
   const [requests, setRequests] = useState<Request[]>([]);
   const [acceptedRequests, setAcceptedRequests] = useState<Request[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);  // Track loading state
+  const [loading, setLoading] = useState<boolean>(false);  
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
     fetchRequests();
   }, []);
 
   const fetchRequests = async () => {
-    setLoading(true);  // Start loading
+    setLoading(true);  
     try {
       const response = await api.get("/laboratory/patient/request");
       console.log("Fetched Requests:", response.data);
@@ -80,7 +79,7 @@ const LabRequestPage = () => {
         <LabSidebar />
       </div>
       <div className="flex-1 p-6 overflow-y-auto">
-        {/* Loading State */}
+  
         {loading ? (
           <div className="flex justify-center items-center h-full">
             <span className="text-lg text-gray-500">Loading requests...</span>
@@ -88,7 +87,6 @@ const LabRequestPage = () => {
           </div>
         ) : (
           <>
-            {/* Pending Requests Section */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-6">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">Pending Requests</h2>
               {requests.length > 0 ? (

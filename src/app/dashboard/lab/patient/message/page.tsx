@@ -124,15 +124,19 @@ const MessagesPage = () => {
       type = "report";
     }
     const now = new Date();
-
+    const sriLankaDate = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
 
     try {   
       const response = await api.post("/laboratory/patient/sendMessage", {
         patientId: selectedPatient,
         message: newMessage,
         reportId: uploadedReportId,
-        addedDate: now.toISOString().split("T")[0],
-        addedTime: now.toTimeString().substring(0, 5),
+        addedDate: sriLankaDate.toISOString().split("T")[0],
+        addedTime: now.toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit"
+        }),
         sender: "laboratory",
         type,
       });
@@ -219,12 +223,11 @@ const MessagesPage = () => {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">
-      {/* Sidebar */}
+      
       <div className="w-64 flex-shrink-0 bg-gray-800 text-white">
         <LabSidebar />
       </div>
   
-      {/* Main Content Area */}
       <div className="flex flex-col flex-grow bg-gray-50 p-6">
         <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-lg p-6 mb-6 space-y-4">
           {patientMessages.map((msg, index) => {
@@ -326,23 +329,25 @@ const MessagesPage = () => {
   
       {/* Report Modal */}
       {isOpen && currentReportId && reportFile && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-8 rounded-lg shadow-xl w-96 text-center space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-800">Report Details</h2>
-            <img src={reportUrl} alt="" className="w-full h-auto rounded-lg shadow-md" />
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                setCurrentReportId(null);
-                setReportUrl(null);
-              }}
-              className="mt-4 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-300"
-            >
-              Close
-            </button>
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-70">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96 space-y-6 transform transition-all duration-300 scale-100 hover:scale-105">
+              <h2 className="text-3xl font-medium text-gray-900">Report Details</h2>
+              <img src={reportUrl} alt="Report" className="w-full h-auto rounded-lg shadow-md border border-gray-300" />
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  setCurrentReportId(null);
+                  setReportUrl(null);
+                }}
+                className="mt-6 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-300"
+              >
+                Close
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+)}
+
+
     </div>
   );
 };

@@ -56,13 +56,19 @@ const MessagesPage = () => {
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
     const now = new Date();
+    const sriLankaDate = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+
 
     try {
       await api.post("/pharmacy/patient/sendMessage", {
         patientId: selectedPatient,
         message: newMessage,
-        addedDate: now.toISOString().split("T")[0],
-        addedTime: now.toTimeString().substring(0, 5),
+        addedDate: sriLankaDate.toISOString().split("T")[0],
+        addedTime: now.toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit"
+        }),
         sender: "pharmacy",
         type: "message"
       });

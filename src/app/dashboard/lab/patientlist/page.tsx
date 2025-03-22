@@ -4,7 +4,7 @@ import LabSidebar from "../sidebar/sidebar";
 import api from "@/utils/api";
 import { FaRegCommentDots } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";  // Add toast import for error handling
+import { toast } from "sonner";  
 
 interface Patient {
   patientId: string | number;
@@ -16,24 +16,23 @@ interface Patient {
 const PatientList = () => {
   const router = useRouter();
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);  // Track loading state
+  const [loading, setLoading] = useState<boolean>(false);  
 
   const fetchList = async () => {
-    setLoading(true);  // Set loading to true when fetching starts
+    setLoading(true);  
     try {
       const response = await api.get("/laboratory/patients");
       setPatients(response.data);
       console.log(response);
     } catch (error) {
-      toast.error("Error fetching patient list. Please try again.");  // Show error toast
+      toast.error("Error fetching patient list. Please try again.");  
       console.error("Error fetching patient list:", error);
     } finally {
-      setLoading(false);  // Set loading to false after the fetch is complete
+      setLoading(false); 
     }
   };
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
     fetchList();
   }, []);
 
