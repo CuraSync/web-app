@@ -72,7 +72,9 @@ const LabRequestPage = () => {
 
   return (
     <div className="flex h-screen">
-      <LabSidebar />
+      <div className="w-64 flex-shrink-0">
+          <LabSidebar />
+        </div>
       <div className="flex flex-col w-full h-screen bg-gray-100 p-4">
         {/* Pending Requests Section */}
         <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4">

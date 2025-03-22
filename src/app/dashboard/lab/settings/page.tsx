@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import LaboratorySidebar from "../../lab/sidebar/sidebar";
+import LabSidebar from "../sidebar/sidebar";
 import { toast } from "sonner";
 import { Plus, Trash2, Upload, X, Camera, Star } from "lucide-react";
 import api from "@/utils/api";
@@ -198,7 +198,9 @@ const SettingsPage = () => {
   
   return (
     <div className="min-h-screen flex flex-col lg:flex-row font-sans bg-white text-gray-900">
-      <LaboratorySidebar />
+      <div className="w-64 flex-shrink-0">
+          <LabSidebar />
+        </div>
       <div className="p-8 flex-1 flex justify-center items-center">
              <div className="w-full max-w-fit border rounded-lg shadow-md bg-white border-gray-200">
              <div className="text-gray-500 text-sm">

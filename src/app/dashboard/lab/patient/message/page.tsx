@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
 import { io } from "socket.io-client";
+import LabSidebar from '../../sidebar/sidebar';
 
 import { useSearchParams } from "next/navigation";
 
@@ -178,7 +179,9 @@ const MessagesPage = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      <div className="flex  bg-white shadow-md"></div>
+      <div className="w-64 flex-shrink-0">
+      <LabSidebar />
+    </div>
 
       <div className="flex flex-col flex-grow bg-gray-100 p-4">
         <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4">

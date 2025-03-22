@@ -68,17 +68,29 @@ const MessagesPage = () => {
 
   return (
     <div className="flex h-screen">
-      <PharmacySidebar className="w-64 flex-shrink-0" />
+      <div className="w-64 flex-shrink-0">
+        <PharmacySidebar />
+      </div>
       <div className="flex flex-col flex-1 p-4 bg-gray-100">
         <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4">
-          {messages.map((msg, index) => (
-            <div key={index} className={`flex mb-4 ${msg.sender === "pharmacy" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-xs px-4 py-2 rounded-lg ${msg.sender === "pharmacy" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"}`}>
-                <div className="text-sm">{msg.data}</div>
-                <div className="text-xs mt-1 text-right text-gray-500">{msg.addedTime}</div>
+          {messages.map((msg, index) => {
+            let parsedData;
+            try {
+              parsedData = typeof msg.data === "string" ? JSON.parse(msg.data) : msg.data;
+            } catch (error) {
+              console.error("Error parsing msg.data:", error);
+              parsedData = {};
+            }
+
+            return (
+              <div key={index} className={`flex mb-4 ${msg.sender === "pharmacy" ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-xs px-4 py-2 rounded-lg ${msg.sender === "pharmacy" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"}`}>
+                  <div className="text-sm">{parsedData?.message || "No message"}</div>
+                  <div className="text-xs mt-1 text-right text-gray-500">{msg.addedTime}</div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div className="bg-white rounded-lg shadow-md p-4 flex">
           <input

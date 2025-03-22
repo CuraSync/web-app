@@ -1,130 +1,107 @@
 "use client";
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation'; 
+import { useRouter } from 'next/navigation'; 
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { FaChartBar, FaCog, FaEnvelope, FaBell, FaBars, FaUser, FaListUl } from "react-icons/fa";
+import { FaChartBar, FaCog, FaBell, FaBars, FaUser, FaListUl } from "react-icons/fa";
 import { LogOut, X } from "lucide-react";
 import api from "@/utils/api";
+
+const SidebarItem = ({ href, icon: Icon, label }) => (
+  <Link
+    href={href}
+    className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 transition-colors py-2 px-4 rounded-lg hover:bg-gray-100"
+  >
+    <Icon className="w-5 h-5" />
+    <span className="font-medium">{label}</span>
+  </Link>
+);
 
 const Sidebar = () => {
   const router = useRouter();
   const [pharmacyName, setPharmacyName] = useState("");
   const [profilePic, setProfilePic] = useState("");
-  const [isOpen, setIsOpen] = useState(false); 
-  
+  const [isOpen, setIsOpen] = useState(false);
+
   const handleLogout = useCallback(() => {
     localStorage.removeItem('userRole');
     router.push('/auth/login/pharmacy');
-    setTimeout(() => {
-      toast.success("Logged out successfully");
-    }, 0);
+    toast.success("Logged out successfully");
   }, [router]);
-  
-  const fetchHomeData = async () => {
-    try {
-      const response = await api.get("/pharmacy/home");
-      setPharmacyName(response.data.pharmacyName);
-      setProfilePic(response.data.profilePic);
-      }catch (error) {
-      console.error("Error fetching pharmacy data:", error);
-    }
-  };
 
   useEffect(() => {
+    const fetchHomeData = async () => {
+      try {
+        const response = await api.get("/pharmacy/home");
+        setPharmacyName(response.data.pharmacyName);
+        setProfilePic(response.data.profilePic);
+      } catch (error) {
+        console.error("Error fetching pharmacy data:", error);
+      }
+    };
     fetchHomeData();
   }, []);
 
   return (
     <>
-          <div className="absolute top-0 left-0 w-full   p-4 flex justify-end items-center z-30">
-            <button
-              className="md:hidden p-3 text-gray-600 focus:outline-none"
-              onClick={() => setIsOpen(!isOpen)}
-            >
-              <FaBars className="w-6 h-6" />
-            </button>
-          </div>
-  
-          {isOpen && (
-            <div
-              className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-              onClick={() => setIsOpen(false)}
-            />
-          )}
-    
-          <aside
-            className={`fixed md:relative top-0 left-0 w-64 bg-white h-full md:h-auto border-r p-6 flex flex-col transform ${
-              isOpen ? "translate-x-0" : "-translate-x-full"
-            } md:translate-x-0 transition-transform duration-300 z-50`}
-          >
+      {/* Mobile Menu Toggle Button */}
+      <div className="absolute top-4 left-4 md:hidden z-30">
+        <button className="p-3 text-gray-700" onClick={() => setIsOpen(!isOpen)}>
+          <FaBars className="w-6 h-6" />
+        </button>
+      </div>
 
-            <button
-              className="absolute top-4 right-4 md:hidden text-gray-600"
-              onClick={() => setIsOpen(false)}
-            >
-              <X className="w-6 h-6" />
-            </button>
-    
-            <nav className="mt-12 space-y-6 flex-grow">
-              <Link
-                href="/dashboard/pharmacy"
-                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
-              >
-                <FaChartBar className="w-5 h-5" />
-                <span>{pharmacyName}</span>
-              </Link>
+      {/* Overlay */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={() => setIsOpen(false)} />
+      )}
 
-              <Link
-                href="/dashboard/pharmacy/patientlist"
-                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
-              >
-                <FaListUl className="w-5 h-5" />
-                <span>Patient List</span>
-              </Link>
-              <Link
-                href="/dashboard/pharmacy/request"
-                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
-              >
-                <FaBell className="w-5 h-5" />
-                <span>Requests</span>
-              </Link>
-              <Link
-                href="/dashboard/pharmacy/settings"
-                className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
-              >
-                <FaCog className="w-5 h-5" />
-                <span>Profile</span>
-              </Link>
-            </nav>
-    
-            <div className="mt-auto p-6 border-t border-gray-200">
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-800 font-semibold">
-                {profilePic ? (
-                    <img 
-                      src={profilePic} 
-                      alt="Profile" 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <FaUser className="text-purple-800 w-5 h-5" />
-                  )}
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">{pharmacyName}</p>
-                </div>
-              </div>
-              <button
-                className="mt-4 w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-                onClick={handleLogout}
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Sign Out</span>
-              </button>
+      {/* Sidebar */}
+      <aside
+        className={`fixed top-0 left-0 w-64 bg-white h-full border-r p-6 flex flex-col transition-transform duration-300 z-50 shadow-lg 
+        ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+      >
+        {/* Close Button */}
+        <button className="absolute top-4 right-4 md:hidden text-gray-600" onClick={() => setIsOpen(false)}>
+          <X className="w-6 h-6" />
+        </button>
+
+        {/* Logo */}
+        <div className="flex items-center space-x-3">
+          <img src="/assets/logo/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+          <span className="text-xl font-bold text-gray-900">CuraSync</span>
+        </div>
+
+        {/* Navigation Items */}
+        <nav className="mt-8 space-y-3">
+          <SidebarItem href="/dashboard/pharmacy" icon={FaChartBar} label={pharmacyName || "Dashboard"} />
+          <SidebarItem href="/dashboard/pharmacy/patientlist" icon={FaListUl} label="Patient List" />
+          <SidebarItem href="/dashboard/pharmacy/request" icon={FaBell} label="Requests" />
+          <SidebarItem href="/dashboard/pharmacy/settings" icon={FaCog} label="Profile" />
+        </nav>
+
+        {/* Profile & Logout */}
+        <div className="mt-auto pt-6 border-t border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center overflow-hidden">
+              {profilePic ? (
+                <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <FaUser className="text-purple-800 w-5 h-5" />
+              )}
             </div>
-          </aside>
-        </>
+            <p className="text-sm font-medium text-gray-900">{pharmacyName || "Pharmacy"}</p>
+          </div>
+          <button
+            className="mt-4 w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+            onClick={handleLogout}
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 };
 

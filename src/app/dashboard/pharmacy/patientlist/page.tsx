@@ -36,10 +36,9 @@ const PatientList = () => {
 
     return (
         <div className="min-h-screen flex">
-            {/* Sidebar */}
-            <PharmacySidebar />
-
-            {/* Main Content */}
+           <div className="w-64 flex-shrink-0">
+                <PharmacySidebar />
+            </div>
             <main className="flex-1 p-6 max-w-4xl mx-auto">
                 <h1 className="text-2xl font-bold text-gray-800 mb-6">Patient List</h1>
 

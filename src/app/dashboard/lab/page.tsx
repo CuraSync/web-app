@@ -40,7 +40,9 @@ export const LabDashboard = () => {
 
     return (
       <div className="min-h-screen flex bg-white">
-        <LabSidebar />
+        <div className="w-64 flex-shrink-0">
+          <LabSidebar />
+        </div>
         <main className="flex-1 flex flex-col overflow-hidden">
           <div className="p-6">
             <div className="border-b p-4 flex justify-between items-center">
