@@ -72,8 +72,8 @@ const PharmacyRequestPage = () => {
   };
 
   return (
-    <div className="flex h-screen">
-    <div className="w-64 flex-shrink-0">
+    <div className=" min-h-screen flex flex-col md:flex-row bg-white">
+      <div className="flex-shrink-0 md:w-1/4 lg:w-1/5s">
       <PharmacySidebar />
     </div>
       <div className="flex flex-col w-full h-screen bg-gray-100 p-4">

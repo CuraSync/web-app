@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { toast } from "sonner"; 
+import { toast } from "sonner";
 import api from "@/utils/api";
 import LabSidebar from "../sidebar/sidebar";
 
@@ -75,82 +75,87 @@ const LabRequestPage = () => {
   };
 
   return (
-    <div className="flex h-screen">
-      <div className="w-64 flex-shrink-0">
+    <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
+      <div className="flex-shrink-0 md:w-1/4 lg:w-1/5">
         <LabSidebar />
       </div>
-      <div className="flex flex-col w-full h-screen bg-gray-100 p-4">
+      <div className="flex-1 p-6 overflow-y-auto">
         {/* Loading State */}
         {loading ? (
           <div className="flex justify-center items-center h-full">
             <span className="text-lg text-gray-500">Loading requests...</span>
+            <div className="w-5 h-5 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
           <>
             {/* Pending Requests Section */}
-            <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Pending Requests</h2>
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Pending Requests</h2>
               {requests.length > 0 ? (
-                <table className="w-full border-collapse border border-gray-200 shadow-md">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="border p-3 text-left">Patient ID</th>
-                      <th className="border p-3 text-left">Patient Name</th>
-                      <th className="border p-3 text-left">Added Date</th>
-                      <th className="border p-3 text-left">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {requests.map((request) => (
-                      <tr key={request._id} className="border hover:bg-gray-50">
-                        <td className="border p-3 text-gray-700">{request.patientId}</td>
-                        <td className="border p-3 text-gray-700">
-                          {request.firstName} {request.lastName}
-                        </td>
-                        <td className="border p-3 text-gray-700">{request.addedDate}</td>
-                        <td className="border p-3">
-                          <button
-                            onClick={() => handleAcceptRequest(request._id)}
-                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-                          >
-                            Accept
-                          </button>
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border-collapse border border-gray-200 shadow-md">
+                    <thead>
+                      <tr className="bg-blue-50 text-gray-700">
+                        <th className="border p-4 text-left font-medium">Patient ID</th>
+                        <th className="border p-4 text-left font-medium">Patient Name</th>
+                        <th className="border p-4 text-left font-medium">Added Date</th>
+                        <th className="border p-4 text-left font-medium">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {requests.map((request) => (
+                        <tr key={request._id} className="border hover:bg-blue-50 transition-colors">
+                          <td className="border p-4 text-gray-700">{request.patientId}</td>
+                          <td className="border p-4 text-gray-700">
+                            {request.firstName} {request.lastName}
+                          </td>
+                          <td className="border p-4 text-gray-700">{request.addedDate}</td>
+                          <td className="border p-4">
+                            <button
+                              onClick={() => handleAcceptRequest(request._id)}
+                              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                            >
+                              Accept
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
                 <p className="text-gray-500 text-center mt-4">No pending requests.</p>
               )}
             </div>
 
             {/* Accepted Requests Section */}
-            <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Accepted Requests</h2>
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Accepted Requests</h2>
               {acceptedRequests.length > 0 ? (
-                <table className="w-full border-collapse border border-gray-200 shadow-md">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="border p-3 text-left">Patient ID</th>
-                      <th className="border p-3 text-left">Patient Name</th>
-                      <th className="border p-3 text-left">Accepted Date</th>
-                      <th className="border p-3 text-left">Accepted Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {acceptedRequests.map((request) => (
-                      <tr key={request._id} className="border hover:bg-gray-50">
-                        <td className="border p-3 text-gray-700">{request.patientId}</td>
-                        <td className="border p-3 text-gray-700">
-                          {request.firstName} {request.lastName}
-                        </td>
-                        <td className="border p-3 text-gray-700">{request.addedDate}</td>
-                        <td className="border p-3 text-gray-700">{request.addedTime}</td>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border-collapse border border-gray-200 shadow-md">
+                    <thead>
+                      <tr className="bg-blue-50 text-gray-700">
+                        <th className="border p-4 text-left font-medium">Patient ID</th>
+                        <th className="border p-4 text-left font-medium">Patient Name</th>
+                        <th className="border p-4 text-left font-medium">Accepted Date</th>
+                        <th className="border p-4 text-left font-medium">Accepted Time</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {acceptedRequests.map((request) => (
+                        <tr key={request._id} className="border">
+                          <td className="border p-4 text-gray-700">{request.patientId}</td>
+                          <td className="border p-4 text-gray-700">
+                            {request.firstName} {request.lastName}
+                          </td>
+                          <td className="border p-4 text-gray-700">{request.addedDate}</td>
+                          <td className="border p-4 text-gray-700">{request.addedTime}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
                 <p className="text-gray-500 text-center mt-4">No accepted requests.</p>
               )}

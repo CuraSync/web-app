@@ -49,6 +49,7 @@ const MessagesPage = () => {
 
     socket.on("receive-message", (message) => {
       setMessages((prevMessages) => [...prevMessages, message]);
+      fetchReportData(messages);
       console.log("Received message:", message);
     });
 
@@ -61,11 +62,12 @@ const MessagesPage = () => {
     for (const msg of message) {
       if (msg.type === "report") {
         try {
-          const reportId = JSON.parse(msg.data)?.reportId;
+          const reportId = typeof msg.data === "object" ? msg.data.reportId : JSON.parse(msg.data)?.reportId;
           if (reportId && !reportData[reportId]) {
             const info = await getReportInfo(reportId);
             if (info) {
               setReportData((prev) => ({ ...prev, [reportId]: info.data }));
+              console.log("Report data fetched and added:", info.data);
             }
           }
         } catch (error) {
@@ -108,19 +110,23 @@ const MessagesPage = () => {
     });
   };
 
-  // Send new message
   const handleSendMessage = async () => {
     let type = "message";
     let uploadedReportId = null;
 
     if (report) {
       uploadedReportId = await uploadReport();
+      console.log("Report upload result:", uploadedReportId); 
+      if (!uploadedReportId) {
+        toast.error("Failed to upload the report.");
+        return;
+      }
       type = "report";
     }
-
     const now = new Date();
 
-    try {
+
+    try {   
       const response = await api.post("/laboratory/patient/sendMessage", {
         patientId: selectedPatient,
         message: newMessage,
@@ -132,9 +138,13 @@ const MessagesPage = () => {
       });
       toast.success("Message sent successfully");
       console.log(response.data);
+
+      fetchMessages();
+
     } catch (error) {
       toast.error("Failed to send the message. Please try again later.");
       console.error("Request failed:", error);
+      
     }
     setNewMessage("");
     setReport(null);
@@ -163,6 +173,7 @@ const MessagesPage = () => {
 
     try {
       const response = await api.post("/labreport/upload", formData);
+      console.log("Report uploaded successfully:", response.data);
       return response.data.id;
     } catch (error) {
       toast.error("Failed to upload report. Please try again later.");
@@ -208,48 +219,43 @@ const MessagesPage = () => {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">
-      <div className="w-64 flex-shrink-0">
+      {/* Sidebar */}
+      <div className="w-64 flex-shrink-0 bg-gray-800 text-white">
         <LabSidebar />
       </div>
-      <div className="flex flex-col flex-grow bg-gray-100 p-4">
-        <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4">
+  
+      {/* Main Content Area */}
+      <div className="flex flex-col flex-grow bg-gray-50 p-6">
+        <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-lg p-6 mb-6 space-y-4">
           {patientMessages.map((msg, index) => {
             const showDate = msg.addedDate !== lastDate;
             lastDate = msg.addedDate;
             return (
               <React.Fragment key={index}>
                 {showDate && (
-                  <div className="flex justify-center my-4">
-                    <span className="bg-gray-200 text-gray-600 text-sm px-3 py-1 rounded-full">
+                  <div className="flex justify-center my-6">
+                    <span className="bg-blue-100 text-blue-700 text-sm px-4 py-2 rounded-full shadow-md">
                       {formatDate(msg.addedDate)}
                     </span>
                   </div>
                 )}
                 {msg.type === "message" && (
                   <div
-                    className={`flex mb-4 ${
-                      msg.sender === "laboratory"
-                        ? "justify-end"
-                        : "justify-start"
+                    className={`flex mb-6 ${
+                      msg.sender === "laboratory" ? "justify-end" : "justify-start"
                     }`}
                   >
                     <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                      className={`max-w-xs lg:max-w-md px-6 py-3 rounded-lg ${
                         msg.sender === "laboratory"
                           ? "bg-blue-600 text-white rounded-br-none"
                           : "bg-gray-200 text-gray-800 rounded-bl-none"
-                      }`}
+                      } shadow-md`}
                     >
-                      <div className="text-sm">
-                        {msg.data.message
-                          ? msg.data.message
-                          : JSON.parse(msg.data)?.message}
-                      </div>
+                      <div className="text-sm">{msg.data.message || JSON.parse(msg.data)?.message}</div>
                       <div
-                        className={`text-xs mt-1 text-right ${
-                          msg.sender === "laboratory"
-                            ? "text-blue-100"
-                            : "text-gray-500"
+                        className={`text-xs mt-2 text-right ${
+                          msg.sender === "laboratory" ? "text-blue-100" : "text-gray-500"
                         }`}
                       >
                         {msg.addedTime}
@@ -257,37 +263,49 @@ const MessagesPage = () => {
                     </div>
                   </div>
                 )}
-                {msg.type === "report" &&
-                  reportData[JSON.parse(msg.data)?.reportId] && (
-                    <div className="flex items-center justify-between bg-blue-50 p-4 rounded-lg shadow-md max-w-md ml-auto mb-4 hover:shadow-lg transition-shadow duration-300 ease-in-out">
-                      <div className="flex items-center gap-3">
-                        <span className="text-blue-600 text-2xl">📄</span>
+  
+                {msg.type === "report" && (() => {
+                  const reportId = typeof msg.data === "object"
+                    ? msg.data.reportId
+                    : JSON.parse(String(msg.data))?.reportId;
+  
+                  return reportData[reportId] && (
+                    <div className="flex flex-col bg-blue-50 p-6 rounded-lg shadow-lg max-w-md ml-auto mb-6 hover:shadow-xl transition-shadow duration-300 ease-in-out">
+                      {/* Report Section */}
+                      <div className="flex items-center gap-4 mb-6">
+                        <span className="text-blue-600 text-3xl">📄</span>
                         <p
                           className="font-semibold text-blue-800 text-lg truncate w-3/4 cursor-pointer hover:text-blue-600 transition-all duration-300"
-                          onClick={() =>
-                            handleReportClick(JSON.parse(msg.data)?.reportId)
-                          }
+                          onClick={() => handleReportClick(reportId)}
                         >
-                          {
-                            reportData[JSON.parse(msg.data)?.reportId]
-                              .file_name
-                          }
+                          {reportData[reportId].file_name}
+                        </p>
+                      </div>
+  
+                      {/* Divider between Report and Message */}
+                      <div className="border-t border-gray-300 my-6"></div>
+  
+                      {/* Message Section */}
+                      <div className="text-sm text-gray-600 font-bold ml-2 mt-2 max-w-[220px] overflow-hidden text-ellipsis">
+                        <p>
+                          {typeof msg.data === "object" ? msg.data.message : JSON.parse(String(msg.data))?.message}
                         </p>
                       </div>
                     </div>
-                  )}
+                  );
+                })()}
               </React.Fragment>
             );
           })}
         </div>
-
+  
         {/* Message Input Box */}
-        <div className="bg-white rounded-lg shadow-md p-4 flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
+        <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
           <input
             type="file"
             accept="image/*"
             onChange={handleFileChange}
-            className="mb-2"
+            className="mb-4 sm:mb-0 bg-gray-100 p-2 rounded-lg text-sm cursor-pointer"
           />
           <input
             type="text"
@@ -295,33 +313,30 @@ const MessagesPage = () => {
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
             onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-            className="flex-grow border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-grow border border-gray-300 rounded-l-lg px-6 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
           />
           <button
             onClick={handleSendMessage}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg w-full sm:w-auto"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg w-full sm:w-auto transition-all duration-300 ease-in-out"
           >
             Send
           </button>
         </div>
       </div>
-
-   
+  
+      {/* Report Modal */}
       {isOpen && currentReportId && reportFile && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
-            <h2 className="text-xl font-semibold">Report Details</h2>
-            <p className="mt-2 text-gray-600">
-              
-            </p>
-              <img src={reportUrl} alt="" />
+          <div className="bg-white p-8 rounded-lg shadow-xl w-96 text-center space-y-4">
+            <h2 className="text-2xl font-semibold text-gray-800">Report Details</h2>
+            <img src={reportUrl} alt="" className="w-full h-auto rounded-lg shadow-md" />
             <button
               onClick={() => {
                 setIsOpen(false);
-                setCurrentReportId(null); 
+                setCurrentReportId(null);
                 setReportUrl(null);
-              }} 
-              className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg"
+              }}
+              className="mt-4 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-300"
             >
               Close
             </button>

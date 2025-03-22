@@ -38,8 +38,8 @@ const PatientList = () => {
       };
 
     return (
-        <div className="min-h-screen flex">
-           <div className="w-64 flex-shrink-0">
+        <div className=" min-h-screen flex flex-col md:flex-row bg-white">
+      <div className="flex-shrink-0 md:w-1/4 lg:w-1/5s">
                 <PharmacySidebar />
             </div>
             <main className="flex-1 p-6 max-w-4xl mx-auto">

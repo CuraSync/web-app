@@ -194,10 +194,12 @@ const SettingsPage = () => {
    setContacts(contacts.filter((_, index) => index !== indexToRemove));
  };
   return (
-   <div className="min-h-screen flex flex-col lg:flex-row font-sans bg-white text-gray-900">
+    <div className=" min-h-screen flex flex-col md:flex-row bg-white">
+      <div className="flex-shrink-0 md:w-1/4 lg:w-1/5s">
      <PharmacySidebar />
+     </div>
      <div className="p-8 flex-1 flex justify-center items-center">
-       <div className="w-full max-w-fit border rounded-lg shadow-md bg-white border-gray-200">
+       <div className="w-full max-w-fit  rounded-lg shadow-md bg-white border-gray-200">
        <div className="text-gray-500 text-sm">
                 Updated: {updatedAt}<br></br>
                 Created:{createdAt}
