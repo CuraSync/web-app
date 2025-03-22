@@ -16,7 +16,7 @@
     dateOfBirth: string;
     email: string;
     guardianContactNumber: string;
-    guardianRelation: string;
+    guardianEmail: string;
     guardianName: string;
     height: string;
     nic: string;
@@ -25,11 +25,6 @@
     profilePic: string;
     updateAt: string;
     weight: string;
-  }
-  
-  interface AllergyItem {
-    name: string;
-    severity: "Severe" | "Moderate" | "Low";
   }
   
   const PatientDashboard = () => {
@@ -44,7 +39,7 @@
       dateOfBirth: "",
       email: "",
       guardianContactNumber: "",
-      guardianRelation: "",
+      guardianEmail: "",
       guardianName: "",
       height: "",
       nic: "",
@@ -71,7 +66,7 @@
           dateOfBirth: data.dateOfBirth || "",
           email: data.email || "",
           guardianContactNumber: data.guardianContactNumber || "",
-          guardianRelation: data.guardianRelation || "",
+          guardianEmail: data.guardianEmail || "",
           guardianName: data.guardianName || "",
           height: data.height || "",
           nic: data.nic || "",
@@ -158,7 +153,7 @@
               <div className="mt-4 space-y-2">
                 <p className="text-gray-600">Name: {patientInfo.guardianName}</p>
                 <p className="text-gray-600">Phone: {patientInfo.guardianContactNumber}</p>
-                <p className="text-gray-600">Relation: {patientInfo.guardianRelation}</p>
+                <p className="text-gray-600">Email: {patientInfo.guardianEmail}</p>
               </div>
             </div>
           </div>

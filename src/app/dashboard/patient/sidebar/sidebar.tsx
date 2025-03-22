@@ -61,7 +61,7 @@ const Sidebar = () => {
         } md:translate-x-0 transition-transform duration-300 z-50`}
       >
              {/* Close Button (Mobile) */}
-          <button
+             <button
           className="absolute top-4 right-4 md:hidden text-gray-600"
           onClick={() => setIsOpen(false)}
         >
@@ -126,7 +126,7 @@ const Sidebar = () => {
 
           <Link
             href="/dashboard/patient/settings"
-            className="flex items-center space-x-3 text-black-300 hover:text-blue-600"
+            className="flex items-center space-x-3 text-black-600 hover:text-blue-600"
           >
             <FaAddressCard className="w-5 h-5" />
             <span><b>Profile</b></span>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
 import io from "socket.io-client";
-
+import Sidebar from "../../sidebar/sidebar";
 import { useSearchParams } from "next/navigation";
 
 interface Message {
