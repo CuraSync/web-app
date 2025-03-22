@@ -112,7 +112,7 @@ const Sidebar = () => {
             className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
           >
             <FaBell className="w-5 h-5" />
-            <span>Notification</span>
+            <span>Request</span>
           </Link>
           <Link
             href="/dashboard/patient/settings"

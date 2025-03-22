@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
-import PharmacySidebar from "../sidebar/sidebar"; 
+import PharmacySidebar from "../sidebar/sidebar";
 
 interface Request {
   _id: string;
   patientId: string;
   firstName: string;
   lastName: string;
-  addedDate: string; 
+  addedDate: string;
   addedTime: string;
   status: string;
 }
@@ -25,32 +25,44 @@ const PharmacyRequestPage = () => {
   const fetchRequests = async () => {
     try {
       const response = await api.get("/pharmacy/patient/request");
-      console.log(response.data);
-      
-      const pending = response.data.filter((req: Request) => 
-        req.status === "pending" || req.status === "false"
+      console.log("Fetched Requests:", response.data);
+
+      const pending = response.data.filter(
+        (req: Request) => req.status === "pending" || req.status === "false"
       );
-      const accepted = response.data.filter((req: Request) => req.status === "accepted");
+      const accepted = response.data.filter(
+        (req: Request) => req.status === "accepted" || req.status === "true"
+      );
 
       setRequests(pending);
       setAcceptedRequests(accepted);
-      
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching requests:", error);
     }
   };
 
   const handleAcceptRequest = async (_id: string) => {
     try {
-      const response = await api.post("/pharmacy/request/accept", { requestId:_id });
-      console.log(response.data);
-      setRequests(prev => prev.filter(req => req._id !== _id));
-      setAcceptedRequests(prev => [
+      const response = await api.post("/pharmacy/request/accept", { requestId: _id });
+      console.log("Accepted Request Response:", response.data);
+
+      // Find the accepted request and update its status
+      const acceptedRequest = requests.find((req) => req._id === _id);
+      if (!acceptedRequest) return;
+
+      setRequests((prev) => prev.filter((req) => req._id !== _id));
+
+      setAcceptedRequests((prev) => [
         ...prev,
-        { ...requests.find(req => req._id === _id), status: "accepted" } as Request
+        {
+          ...acceptedRequest,
+          status: "accepted",
+          addedDate: new Date().toISOString().split("T")[0], // Current Date
+          addedTime: new Date().toLocaleTimeString(), // Current Time
+        } as Request,
       ]);
     } catch (error) {
-      console.error(error);
+      console.error("Error accepting request:", error);
     }
   };
 
@@ -58,8 +70,7 @@ const PharmacyRequestPage = () => {
     <div className="flex h-screen">
       <PharmacySidebar />
       <div className="flex flex-col w-full h-screen bg-gray-100 p-4">
-        
-
+        {/* Pending Requests Section */}
         <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Pending Requests</h2>
           {requests.length > 0 ? (
@@ -69,6 +80,7 @@ const PharmacyRequestPage = () => {
                   <th className="border p-3 text-left">Patient ID</th>
                   <th className="border p-3 text-left">Patient Name</th>
                   <th className="border p-3 text-left">Added Date</th>
+                  <th className="border p-3 text-left">Added Time</th>
                   <th className="border p-3 text-left">Actions</th>
                 </tr>
               </thead>
@@ -98,7 +110,7 @@ const PharmacyRequestPage = () => {
           )}
         </div>
 
-
+        {/* Accepted Requests Section */}
         <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Accepted Requests</h2>
           {acceptedRequests.length > 0 ? (
@@ -109,7 +121,6 @@ const PharmacyRequestPage = () => {
                   <th className="border p-3 text-left">Patient Name</th>
                   <th className="border p-3 text-left">Accepted Date</th>
                   <th className="border p-3 text-left">Accepted Time</th>
-
                 </tr>
               </thead>
               <tbody>
@@ -129,7 +140,6 @@ const PharmacyRequestPage = () => {
             <p className="text-gray-500 text-center mt-4">No accepted requests.</p>
           )}
         </div>
-
       </div>
     </div>
   );
