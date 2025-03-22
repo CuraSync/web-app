@@ -59,6 +59,9 @@ const MessagesPage = () => {
       setMessages(response.data);
       console.log(response.data);
     } catch (error) {
+      if (error.response?.status === 404) {
+        return;
+      }
       console.error("Request failed:", error);
     }
   };

@@ -7,6 +7,7 @@ import {
   Settings as SettingsIcon,
   Upload,
   Loader2,
+  Camera,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../sidebar/sidebar";
@@ -44,6 +45,7 @@ const SettingsPage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+    const [profilePic, setProfilePic] = useState("");
   const [uploading, setUploading] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [image, setImage] = useState<File | null>(null);
@@ -169,13 +171,12 @@ const SettingsPage = () => {
   };
 
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file && file.size <= 5 * 1024 * 1024) {
-      // Check if file size is <= 5MB
       setImage(file);
     } else {
-      toast.error("File size should be less than 5MB");
+      alert("File size should be less than 5MB");
       setImage(null);
     }
   };
@@ -190,21 +191,19 @@ const SettingsPage = () => {
       "upload_preset",
       process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ""
     );
-
     try {
       const response = await axios.post(
         `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
         formData
       );
-      const data = response.data as { secure_url: string };
-      setImageUrl(data.secure_url);
-      toast.success("Profile picture uploaded successfully");
+      setImageUrl(response.data.secure_url);
     } catch (error) {
       console.error("Upload failed", error);
-      toast.error("Image upload failed. Please try again.");
+      alert("Image upload failed. Please try again.");
     } finally {
       setUploading(false);
     }
+
   };
 
   const removeProfilePic = () => {
@@ -259,57 +258,47 @@ const SettingsPage = () => {
             <h1 className="text-2xl font-bold">Settings</h1>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center pb-8 border-b border-gray-200">
-
-              <div className="ml-6">
-                <p className="text-xl font-medium">
-                  {patientInfo.firstName} {patientInfo.lastName}
-                </p>
-                <p className="text-base text-blue-500">{patientInfo.email}</p>
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Profile Image</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="mb-2"
-              />
-              <button
-                onClick={handleUpload}
-                disabled={!image || uploading}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-              >
-                {uploading ? "Uploading..." : "Upload"}
-              </button>
-              {imageUrl && (
-                <button
-                  onClick={removeProfilePic}
-                  className="ml-2 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                >
-                  Remove
-                </button>
+          <div className="p-8 flex-1 flex justify-center items-center">
+        <div>
+          <div className="flex flex-col items-center gap-4 p-4 border rounded-lg shadow-md w-80">
+            <div className="relative w-32 h-32">
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt="Profile Picture"
+                  className="w-32 h-32 rounded-full object-cover border"
+                />
+              ) : (
+                <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                  No Image
+                </div>
               )}
             </div>
 
-            {imageUrl ? (
-              <div className="mt-4">
-                <p className="mb-2">Uploaded Image:</p>
-                <img
-                  src={imageUrl}
-                  alt="Profile"
-                  className="w-32 h-32 rounded-full object-cover border-2 border-gray-200"
-                />
-              </div>
-            ) : (
-              <div className="mt-4">
-                <p className="mb-2">No profile image uploaded.</p>
-              </div>
-            )}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              id="profilePicInput"
+              onChange={handleProfilePicChange}
+            />
+            <label
+              htmlFor="profilePicInput"
+      
+            >
+              <Camera className="inline-block mr-2" /> Choose Image
+            </label>
+
+            <button
+              onClick={handleUpload}
+            
+              disabled={!image || uploading}
+            >
+              {uploading ? "Uploading..." : <><Upload className="inline-block mr-2" /> Upload</>}
+            </button>
           </div>
+        </div>
+      </div>
 
           <h2 className="text-lg font-semibold mt-6 mb-4">Personal Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -565,6 +554,7 @@ const SettingsPage = () => {
         </div>
       </div>
     </div>
+    
   );
 };
 

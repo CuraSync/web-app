@@ -1,17 +1,18 @@
 "use client";
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { FaChartBar, FaCog, FaEnvelope, FaBell, FaBars, FaUserMd, FaFlask, FaPrescriptionBottleAlt, FaUser } from "react-icons/fa";
+import { FaChartBar, FaCog, FaEnvelope, FaBell, FaBars, FaUser } from "react-icons/fa";
 import { LogOut, X } from "lucide-react";
 import api from "@/utils/api";
 
 const Sidebar = () => {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const [profilePic, setProfilePic] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  
+  const [patientFullName, setPatientFullName] = useState("Patient Name");
+
   const handleLogout = useCallback(() => {
     localStorage.removeItem('userRole');
     router.push('/auth/login/patient');
@@ -22,9 +23,9 @@ const Sidebar = () => {
 
   const fetchHomeData = async () => {
     try {
-      const response = await api.get("/patient/home");
-      const data = response.data as { firstname: string; lastname: string };
-      setName(data.firstname + " " + data.lastname);
+      const response = await api.get("/patient/profile");
+      setPatientFullName(response.data.fullName || "Patient Name");
+      setProfilePic(response.data.profilePic);
     } catch (error) {
       console.error("Error fetching patient data:", error);
     }
@@ -36,14 +37,14 @@ const Sidebar = () => {
 
   return (
     <>
-      
+      <div className="absolute top-0 left-0 w-full p-4 flex justify-end items-center z-30">
         <button
           className="md:hidden p-3 text-gray-600 focus:outline-none"
           onClick={() => setIsOpen(!isOpen)}
         >
           <FaBars className="w-6 h-6" />
         </button>
-
+      </div>
 
       {isOpen && (
         <div
@@ -72,64 +73,63 @@ const Sidebar = () => {
             <FaChartBar className="w-5 h-5" />
             <span>Dashboard</span>
           </Link>
+
           <Link
             href="/dashboard/patient/doctor"
             className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
           >
-            <FaUserMd className="w-5 h-5" />
+            <FaEnvelope className="w-5 h-5" />
             <span>Doctor</span>
           </Link>
-          {/* <Link
-            href="/dashboard/patient/timeline"
-            className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
-          >
-            <FaChartBar className="w-5 h-5" />
-            <span>Timeline</span>
-          </Link> */}
+
           <Link
             href="/dashboard/patient/laboratory"
             className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
           >
-            <FaFlask className="w-5 h-5" />
+            <FaBell className="w-5 h-5" />
             <span>Laboratory</span>
           </Link>
+
           <Link
             href="/dashboard/patient/pharmacy"
             className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
           >
-            <FaPrescriptionBottleAlt className="w-5 h-5" />
+            <FaCog className="w-5 h-5" />
             <span>Pharmacy</span>
           </Link>
-          {/* <Link
-            href="/dashboard/patient/message"
-            className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
-          >
-            <FaEnvelope className="w-5 h-5" />
-            <span>Messaging</span>
-          </Link> */}
+
           <Link
             href="/dashboard/patient/notification"
             className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
           >
             <FaBell className="w-5 h-5" />
-            <span>Request</span>
+            <span>Notifications</span>
           </Link>
+
           <Link
             href="/dashboard/patient/settings"
             className="flex items-center space-x-3 text-gray-600 hover:text-blue-600"
           >
             <FaCog className="w-5 h-5" />
-            <span>Profile</span>
+            <span>Settings</span>
           </Link>
         </nav>
 
         <div className="mt-auto p-6 border-t border-gray-200">
           <div className="flex items-center">
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-800 font-semibold">
-              {name ? name.charAt(0).toUpperCase() : <FaUser className="w-5 h-5" />}
+              {profilePic ? (
+                <img
+                  src={profilePic}
+                  alt="Profile"
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                <FaUser className="text-purple-800 w-5 h-5" />
+              )}
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">{name || "Loading..."}</p>
+              <p className="text-sm font-medium text-gray-900">{patientFullName}</p>
             </div>
           </div>
           <button
