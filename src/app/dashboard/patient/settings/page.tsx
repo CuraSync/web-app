@@ -125,19 +125,20 @@ const SettingsPage = () => {
     setIsSaving(true);
     try {
       const profileData = {
-        firstName: patientInfo.firstName || "",
-        lastName: patientInfo.lastName ||  "",
-        address: patientInfo.address ||  "",
-        phoneNumber: patientInfo.phoneNumber ||  "",
-        dateOfBirth: patientInfo.dateOfBirth ||  "",
-        height: patientInfo.height ? Number(patientInfo.height) :  "",
-        weight: patientInfo.weight ? Number(patientInfo.weight) :  "",
-        bmi: patientInfo.bmi ? parseFloat(patientInfo.bmi) :  "",
-        bloodType: patientInfo.bloodType ||  "",
-        guardianName: patientInfo.guardianName ||  "",
-        guardianRelation: patientInfo.guardianRelation ||  "",
-        guardianContactNumber: patientInfo.guardianContactNumber ||  "",
-        profilePic: imageUrl ||  "",
+        firstName: patientInfo.firstName ,
+        lastName: patientInfo.lastName ,
+        fullName:patientInfo.firstName + " " + patientInfo.lastName,
+        address: patientInfo.address ,
+        phoneNumber: patientInfo.phoneNumber ,
+        dateOfBirth: patientInfo.dateOfBirth ,
+        height:  Number(patientInfo.height) ,
+        weight:  Number(patientInfo.weight) ,
+        bmi: parseFloat(patientInfo.bmi) ,
+        bloodType: patientInfo.bloodType ,
+        guardianName: patientInfo.guardianName,
+        guardianRelation: patientInfo.guardianRelation,
+        guardianContactNumber: patientInfo.guardianContactNumber,
+        profilePic: imageUrl,
       };
 
       console.log("Sending to API:", JSON.stringify(profileData, null, 2));
@@ -493,5 +494,4 @@ const SettingsPage = () => {
     
   );
 };
-
 export default SettingsPage;

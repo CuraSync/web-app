@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
 import io from "socket.io-client";
 import { useSearchParams } from "next/navigation";
+import Sidebar from "../../sidebar/sidebar";
 
 interface Message {
   doctorId: string;
@@ -100,7 +101,11 @@ const MessagesPage = () => {
   let lastDate = "";
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 p-4">
+    <div className=" min-h-screen flex flex-col md:flex-row bg-white">
+      <div className="flex-shrink-0 md:w-1/4 lg:w-1/5s">
+        <Sidebar />
+      </div>
+      <div className="flex flex-col h-screen bg-gray-100 p-4">
       <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4">
         {doctorMessages.map((msg, index) => {
           const showDate = msg.addedDate !== lastDate;
@@ -160,11 +165,9 @@ const MessagesPage = () => {
           Send
         </button>
       </div>
+      </div>
     </div>
   );
 };
 
 export default MessagesPage;
-
-
-
