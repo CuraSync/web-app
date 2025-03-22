@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, Search, User } from "lucide-react";
+import { MessageCircle, Search } from "lucide-react";
 import DoctorSidebar from "@/components/doctor/Sidebar";
 import api from "@/utils/api";
 import { toast } from "sonner";
@@ -22,6 +22,9 @@ const DoctorsPage = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpecialization, setSelectedSpecialization] = useState("All");
+  const [showAddDoctorModal, setShowAddDoctorModal] = useState(false);
+  const [newDoctorId, setNewDoctorId] = useState("");
+  const [isSendingRequest, setIsSendingRequest] = useState(false);
 
   useEffect(() => {
     fetchDoctors();
@@ -31,8 +34,6 @@ const DoctorsPage = () => {
     try {
       setIsLoading(true);
       const response = await api.get("/doctor/doctors");
-      console.log("Raw API response:", response.data); 
-
       const mappedDoctors = response.data.map((doctor: any) => ({
         firstName: doctor.firstName,
         lastName: doctor.lastName,
@@ -40,17 +41,36 @@ const DoctorsPage = () => {
         specialization: doctor.specialization || "Unknown",
         hospital: doctor.hospital || "Unknown",
         profilePic: doctor.profilePic,
-        yearsOfExperience: doctor.yearsOfExperience || 0,
+        yearsOfExperience: doctor.yearsOfExperience || "Unknown",
       }));
-
-      console.log("Mapped doctors:", mappedDoctors); 
-
       setDoctors(mappedDoctors);
     } catch (error) {
       console.error("Failed to fetch doctors:", error);
       toast.error("Failed to load doctors");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAddDoctor = async () => {
+    if (!newDoctorId.trim()) {
+      toast.error("Please enter a valid Doctor ID");
+      return;
+    }
+
+    const now= new Date();
+    try {
+      setIsSendingRequest(true);
+      await api.post("/doctor/request", { secondDoctorId: newDoctorId,addedDate: now.toISOString().split("T")[0],
+        addedTime: now.toTimeString().substring(0, 5), });
+      toast.success("Request sent successfully");
+      setShowAddDoctorModal(false);
+      setNewDoctorId("");
+    } catch (error) {
+      console.error("Failed to send request:", error);
+      toast.error("Failed to send request. Please check the Doctor ID.");
+    } finally {
+      setIsSendingRequest(false);
     }
   };
 
@@ -63,25 +83,16 @@ const DoctorsPage = () => {
     const matchesSpecialization = selectedSpecialization === "All" || 
       doctor.specialization === selectedSpecialization;
 
-    const isMatch = matchesSearch && matchesSpecialization;
-    console.log(`Filtering ${doctor.firstName} ${doctor.lastName}:`, isMatch); 
-
-    return isMatch;
+    return matchesSearch && matchesSpecialization;
   });
 
   const handleMessageClick = (doctorId: string) => {
-    console.log("Sending message to doctorId:", doctorId); 
     router.push(`/dashboard/doctor/doctor/message?doctorId=${doctorId}`);
-  };
-
-  const handleProfileClick = (doctorId: string) => {
-    console.log("Viewing profile for doctorId:", doctorId); 
-    router.push(`/dashboard/doctor/profile/${doctorId}`);
   };
 
   const specializations = [
     "All",
-    ...new Set(doctors.map(d => d.specialization).filter(Boolean))
+  ...new Set(doctors.map(d => d.specialization).filter(Boolean))
   ] as string[];
 
   if (isLoading) {
@@ -108,6 +119,12 @@ const DoctorsPage = () => {
       <div className="flex-1 p-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Colleagues</h1>
+          <button
+            onClick={() => setShowAddDoctorModal(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Add New Doctor
+          </button>
         </div>
 
         <div className="flex flex-wrap gap-4 mb-6">
@@ -123,7 +140,7 @@ const DoctorsPage = () => {
           </div>
 
           <select
-            className="border rounded-lg px-4 py-2"
+            className="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             value={selectedSpecialization}
             onChange={(e) => setSelectedSpecialization(e.target.value)}
           >
@@ -191,10 +208,13 @@ const DoctorsPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">{doctor.specialization}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{doctor.hospital}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{doctor.yearsOfExperience} years</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{typeof doctor.yearsOfExperience === "string" ? "Unknown": doctor.yearsOfExperience + " years"} </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <button onClick={() => handleMessageClick(doctor.doctorId)}>
-                        <MessageCircle />
+                      <button 
+                        onClick={() => handleMessageClick(doctor.doctorId)}
+                        className="p-2 hover:bg-gray-100 rounded-full"
+                      >
+                        <MessageCircle className="w-5 h-5 text-blue-600" />
                       </button>
                     </td>
                   </tr>
@@ -203,6 +223,36 @@ const DoctorsPage = () => {
             </tbody>
           </table>
         </div>
+
+        {showAddDoctorModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold mb-4">Send Connection Request</h3>
+              <input
+                type="text"
+                placeholder="Enter Doctor ID"
+                className="w-full px-4 py-2 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={newDoctorId}
+                onChange={(e) => setNewDoctorId(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowAddDoctorModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddDoctor}
+                  disabled={isSendingRequest}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isSendingRequest ? "Sending..." : "Send Request"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
