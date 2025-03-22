@@ -24,7 +24,7 @@ const PharmacyPage = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [pharmacyIdInput, setPharmacyIdInput] = useState("");
 
-  const fetchPharmaciesData = async () => {
+  const fetchPharmacies = async () => {
     try {
       const response = await api.get("/patient/pharmacies");
       setPharmacies(response.data as Pharmacy[]);
@@ -36,8 +36,20 @@ const PharmacyPage = () => {
     }
   };
 
+  const fetchAddedPharmacies = async () => {
+    try {
+      const response = await api.get("/patient/pharmacies");
+      setAddedPharmacies(response.data as Pharmacy[]);
+      console.log("Added pharmacies:", response.data);
+    } catch (error) {
+      console.error("Error fetching added pharmacies:", error);
+      setError("Failed to load added pharmacies.");
+    }
+  };
+
   useEffect(() => {
-    fetchPharmaciesData();
+    fetchPharmacies();
+    fetchAddedPharmacies();
   }, []);
 
   const filteredPharmacies = pharmacies.filter((pharmacy) =>
@@ -51,13 +63,11 @@ const PharmacyPage = () => {
       return;
     }
 
-    // Check if pharmacyId already exists in addedPharmacies
     if (addedPharmacies.some((pharmacy) => pharmacy.pharmacyId === pharmacyIdInput)) {
       setError("This pharmacy has already been added.");
       return;
     }
 
-    // Generate current date and time
     const now = new Date();
     const addedDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
     const addedTime = `${now.getHours().toString().padStart(2, "0")}:${now
@@ -75,8 +85,18 @@ const PharmacyPage = () => {
       const response = await api.post("/pharmacy/request", payload);
       console.log("Request sent successfully:", response.data);
 
-      // Add the new pharmacy to the list
-      setAddedPharmacies([...addedPharmacies, response.data]);
+      const newPharmacy: Pharmacy = {
+        id: response.data.id || "unknown",
+        pharmacyId: response.data.pharmacyId || pharmacyIdInput,
+        pharmacyName: response.data.pharmacyName || "Unknown Pharmacy",
+        email: response.data.email || "N/A",
+        location: response.data.location || "Unknown Location",
+        addedDate: response.data.addedDate || addedDate,
+        addedTime: response.data.addedTime || addedTime,
+      };
+
+      setAddedPharmacies([...addedPharmacies, newPharmacy]);
+      console.log("Updated addedPharmacies:", [...addedPharmacies, newPharmacy]);
       setShowPopup(false);
       setPharmacyIdInput("");
       setError(null);
@@ -95,8 +115,16 @@ const PharmacyPage = () => {
     }
   };
 
-  const handleRemovePharmacy = (pharmacyId: string) => {
-    setAddedPharmacies(addedPharmacies.filter((pharmacy) => pharmacy.pharmacyId !== pharmacyId));
+  const handleRemovePharmacy = async (pharmacyId: string) => {
+    try {
+      // Optional: Add API call to remove from backend
+      // await api.delete(`/patient/pharmacies/${pharmacyId}`);
+      
+      setAddedPharmacies(addedPharmacies.filter((pharmacy) => pharmacy.pharmacyId !== pharmacyId));
+    } catch (error) {
+      console.error("Error removing pharmacy:", error);
+      setError("Failed to remove pharmacy. Please try again.");
+    }
   };
 
   const handleMessageClick = (pharmacyId: string) => {

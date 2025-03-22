@@ -4,7 +4,7 @@ import PharmacySidebar from "../sidebar/sidebar";
 import api from "@/utils/api";
 import { FaRegClock, FaRegCommentDots } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import { Sidebar } from "lucide-react";
+import Sidebar from "../sidebar/sidebar";
 
 interface Patient {
     doctorId: string;
@@ -15,6 +15,7 @@ interface Patient {
 const DoctorList = () => {
     const router = useRouter();
     const [patients, setPatients] = useState<Patient[]>([]);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         fetchList();
@@ -41,9 +42,14 @@ const DoctorList = () => {
 
 
     return (
-        <div className="min-h-screen flex">
-            {/* Sidebar */}
-            <Sidebar />
+        <div className="flex min-h-screen bg-gray-50">
+        <Sidebar />
+        <div className="flex-1 p-8">
+          {error && (
+            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
 
             {/* Main Content */}
             <main className="flex-1 p-6 max-w-4xl mx-auto">
@@ -105,6 +111,7 @@ const DoctorList = () => {
                 )}
             </main>
         </div>
+    </div>
     );
 };
 

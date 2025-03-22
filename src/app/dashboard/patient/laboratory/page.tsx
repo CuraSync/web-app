@@ -36,8 +36,20 @@ const LaboratoryPage = () => {
     }
   };
 
+  const fetchAddedLaboratories = async () => {
+    try {
+      const response = await api.get("/patient/laboratories"); // Adjust endpoint as needed
+      setAddedLaboratories(response.data as Laboratory[]);
+      console.log("Added laboratories:", response.data);
+    } catch (error) {
+      console.error("Error fetching added laboratories:", error);
+      setError("Failed to load added laboratories.");
+    }
+  };
+
   useEffect(() => {
     ListFetchHomeData();
+    fetchAddedLaboratories();
   }, []);
 
   const filteredLaboratories = laboratories.filter((laboratory) =>
@@ -51,13 +63,11 @@ const LaboratoryPage = () => {
       return;
     }
 
-    // Check if labId already exists in addedLaboratories
     if (addedLaboratories.some((lab) => lab.labId === labIdInput)) {
       setError("This laboratory has already been added.");
       return;
     }
 
-    // Generate current date and time
     const now = new Date();
     const addedDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
     const addedTime = `${now.getHours().toString().padStart(2, "0")}:${now
@@ -75,8 +85,18 @@ const LaboratoryPage = () => {
       const response = await api.post("/laboratory/request", payload);
       console.log("Request sent successfully:", response.data);
 
-      // Add the new laboratory to the list
-      setAddedLaboratories([...addedLaboratories, response.data]);
+      const newLab: Laboratory = {
+        id: response.data.id || "unknown",
+        labId: response.data.labId || labIdInput,
+        labName: response.data.labName || "Unknown Lab",
+        email: response.data.email || "N/A",
+        location: response.data.location || "Unknown Location",
+        addedDate: response.data.addedDate || addedDate,
+        addedTime: response.data.addedTime || addedTime,
+      };
+
+      setAddedLaboratories([...addedLaboratories, newLab]);
+      console.log("Updated addedLaboratories:", [...addedLaboratories, newLab]);
       setShowPopup(false);
       setLabIdInput("");
       setError(null);
@@ -100,7 +120,7 @@ const LaboratoryPage = () => {
   };
 
   const handleMessageClick = (labId: string) => {
-    router.push(`/dashboard/patient/laboratory/message?labId=${labId}`);
+    router.push(`/dashboard/patient/laboratory/message?labId=${labId}`); // Fixed syntax
   };
 
   return (
