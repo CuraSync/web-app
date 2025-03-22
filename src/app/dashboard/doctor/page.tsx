@@ -27,7 +27,6 @@ const DoctorDashboard = () => {
   });
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
     const userRole = localStorage.getItem('userRole');
     if (userRole !== 'doctor') {
       router.push('/auth/login/doctor');

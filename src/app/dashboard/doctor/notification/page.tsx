@@ -26,7 +26,6 @@ const DoctorRequestPage = () => {
   const [activeTab, setActiveTab] = useState<string>("patient");
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
     fetchRequests();
   }, []);
 

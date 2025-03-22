@@ -20,7 +20,6 @@ const MessagesPage = () => {
   const selectedPatient = searchParams.get("patientId");
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
     fetchMessages();
 
     const serverUrl = "wss://curasync-backend.onrender.com/chat";

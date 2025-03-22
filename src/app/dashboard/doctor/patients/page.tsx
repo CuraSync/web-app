@@ -43,7 +43,6 @@ const PatientsPage = () => {
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
     fetchList();
   }, []);
 

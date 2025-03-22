@@ -34,7 +34,6 @@ const DoctorProfileView = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
     const userRole = localStorage.getItem('userRole');
     if (userRole !== 'doctor') {
       router.push('/auth/login/doctor');

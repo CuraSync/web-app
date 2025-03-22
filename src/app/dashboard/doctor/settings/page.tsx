@@ -44,7 +44,6 @@ const SettingsPage = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
     const userRole = localStorage.getItem("userRole");
     if (userRole !== "doctor") {
       router.push("/auth/login/doctor");

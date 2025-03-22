@@ -24,7 +24,6 @@ const DoctorsPage = () => {
   const [selectedSpecialization, setSelectedSpecialization] = useState("All");
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
     fetchDoctors();
   }, []);
 
