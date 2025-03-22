@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
 import Sidebar from "../sidebar/sidebar";
+import { toast } from "sonner";
 
 interface Request {
   _id: string;
@@ -38,11 +39,8 @@ const PatientRequestPage = () => {
         api.get("/patient/pharmacy/request"),
         api.get("/patient/doctor/request"),
       ]);
-      console.log("Fetched Laboratory Requests:", labRes.data);
-      console.log("Fetched Pharmacy Requests:", pharmacyRes.data);
-      console.log("Fetched Doctor Requests:", doctorRes.data);
 
-      // Adjusted for "true" and "false" status
+
       const pendingLab = labRes.data.filter((req: Request) => req.status === "false");
       const acceptedLab = labRes.data.filter((req: Request) => req.status === "true");
 
@@ -61,6 +59,7 @@ const PatientRequestPage = () => {
       setAcceptedDoctorRequests(acceptedDoctor);
     } catch (error) {
       console.error("Error fetching requests:", error);
+      toast.error("Error fetching requests. Please try again.");
     }
   };
 
@@ -94,6 +93,7 @@ const PatientRequestPage = () => {
       if (type === "doctor") moveRequest(doctorRequests, setDoctorRequests, setAcceptedDoctorRequests);
     } catch (error) {
       console.error("Error accepting request:", error);
+      toast.error("Error accepting requests. Please try again.");
     }
   };
 

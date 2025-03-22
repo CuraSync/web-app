@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { toast } from "sonner"; // Importing toast
 import api from "@/utils/api";
 import PharmacySidebar from "../sidebar/sidebar";
 
@@ -38,6 +39,7 @@ const PharmacyRequestPage = () => {
       setAcceptedRequests(accepted);
     } catch (error) {
       console.error("Error fetching requests:", error);
+      toast.error("Error fetching requests. Please try again.");
     }
   };
 
@@ -61,8 +63,11 @@ const PharmacyRequestPage = () => {
           addedTime: new Date().toLocaleTimeString(), // Current Time
         } as Request,
       ]);
+
+      toast.success("Request accepted successfully!");
     } catch (error) {
       console.error("Error accepting request:", error);
+      toast.error("Error accepting request. Please try again.");
     }
   };
 

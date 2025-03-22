@@ -43,7 +43,7 @@ export const PharmacyDashboard = () => {
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="p-6">
           <div className="border-b p-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold mb-6">Pharmacy Dashboard</h1>
+            <h1 className="text-2xl font-bold mb-6">Pharmacy Dashboard</h1>
           </div>
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center space-x-4">
@@ -69,7 +69,6 @@ export const PharmacyDashboard = () => {
           </div>
 
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
               <div className="space-y-2">
@@ -92,29 +91,34 @@ export const PharmacyDashboard = () => {
               </p>
             </div>
 
+            {/* Handling Additional Contact Information */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-                  <h3 className="text-lg font-semibold mb-4">Additional Contact Information</h3>
-                  {contactInformation ? (
-                    JSON.parse(contactInformation).map(
-                      (contact: { type: string; value: string }, index: number) => (
-                        <p key={index}>
-                          <span className="font-medium capitalize">
-                            {contact.type}:
-                          </span>{" "}
-                          <a
-                            href={contact.value}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-500 underline"
-                          >
-                            {contact.value}
-                          </a>
-                        </p>
-                      )
-                    )
-                  ) : (
-                    <p>No additional contact information available.</p>
-                  )}
+              <h3 className="text-lg font-semibold mb-4">Additional Contact Information</h3>
+              {contactInformation.length!=0 ? (
+                (() => {
+                  try {
+                    const parsedData = JSON.parse(contactInformation);
+                    return parsedData.map((contact: { type: string; value: string }, index: number) => (
+                      <p key={index}>
+                        <span className="font-medium capitalize">{contact.type}:</span>{" "}
+                        <a
+                          href={contact.value}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 underline"
+                        >
+                          {contact.value}
+                        </a>
+                      </p>
+                    ));
+                  } catch (error) {
+                    console.error("Error parsing contact information:", error);
+                    return <p>Invalid contact information format.</p>;
+                  }
+                })()
+              ) : (
+                <p>No additional contact information available.</p>
+              )}
             </div>
           </div>
         </div>

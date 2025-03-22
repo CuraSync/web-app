@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { toast } from "sonner"; // Importing toast
 import api from "@/utils/api";
 import LabSidebar from "../sidebar/sidebar";
 
@@ -36,8 +37,10 @@ const LabRequestPage = () => {
 
       setRequests(pending);
       setAcceptedRequests(accepted);
+      toast.success("Requests fetched successfully!");
     } catch (error) {
       console.error("Request fetching failed:", error);
+      toast.error("Error fetching requests. Please try again.");
     }
   };
 
@@ -60,8 +63,10 @@ const LabRequestPage = () => {
           addedTime: new Date().toLocaleTimeString(), // Current Time
         } as Request,
       ]);
+      toast.success("Request accepted successfully!");
     } catch (error) {
       console.error("Error accepting request:", error);
+      toast.error("Error accepting request. Please try again.");
     }
   };
 

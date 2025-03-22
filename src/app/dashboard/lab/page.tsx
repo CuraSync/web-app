@@ -96,7 +96,7 @@ export const LabDashboard = () => {
 
             <div className="bg-white rounded-lg shadow-sm border p-6">
                   <h3 className="text-lg font-semibold mb-4">Additional Contact Information</h3>
-                  {contactInformation ? (
+                  {contactInformation.length!=0 ? (
                     JSON.parse(contactInformation).map(
                       (contact: { type: string; value: string }, index: number) => (
                         <p key={index}>
