@@ -1,51 +1,143 @@
 "use client";
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import api from "@/utils/api";
 import { useSearchParams } from "next/navigation";
-import router from "next/router";
-import Sidebar from "../../sidebar/sidebar";
+import { File } from "lucide-react";
+import io from "socket.io-client";
+import { toast } from "sonner";
 
-interface Note {
+interface TimelineNote {
   doctorId: string;
-  message: string;
-  addedDate: string; // YYYY-MM-DD format
-  addedTime: string; // HH:MM format
+  data: string | object;
+  addedDate: string;
+  addedTime: string;
   sender: "doctor" | "laboratory";
-  reportId?: string; // Only for lab reports
+  type: "donlynote" | "note" | "prescription" | "report";
 }
 
 const DoctorTimelinePage = () => {
-  const [timelineItems, setTimelineItems] = useState<[]>([]);
-  const [notes, setNotes] = useState<Note[]>([]);
-    const [error, setError] = useState<string | null>(null);
+  const [notes, setNotes] = useState<TimelineNote[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [reportUrl, setReportUrl] = useState<string | null>(null);
+  const prevNotesLengthRef = useRef(0);
+  const [reportData, setReportData] = useState<Record<string, any>>({});
+
   const searchParams = useSearchParams();
-  const selectedDoctor = searchParams.get("doctorId") || "";
+  const selectedDoctor = searchParams.get("doctorId");
 
-  useEffect(() => {
-    fetchNotes();
-  }, [selectedDoctor]);
-
-  const fetchNotes = async () => {
-    try {
-      console.log("Fetching notes for doctorId:", selectedDoctor);
-      const response = await api.post("/patient/timeline/notes", {
-        doctorId: selectedDoctor,
-      });
-      setNotes(response.data as Note[]);
-      console.log("Response data:", response.data);
-    } catch (error: any) {
-      console.error(
-        "Request failed:",
-        error.response?.status,
-        error.response?.data,
-        error.message
-      );
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollToBottom = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop =
+        scrollContainerRef.current.scrollHeight;
     }
   };
 
-  const handleVisualizationClick = (labId: string) => {
-    router.push(`/laboratory/visualization?labId=${labId}`);
+  useEffect(() => {
+    fetchNotes();
+    const serverUrl = "wss://curasync-backend.onrender.com/timeline";
+    const token = localStorage.getItem("accessToken");
+    const additionalData = { id: selectedDoctor };
+
+    const socket = io(serverUrl, {
+      auth: {
+        token,
+        additionalData,
+      },
+    });
+
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket");
+    });
+
+    socket.on("receive-message", (message: TimelineNote) => {
+      console.log("Received message:", message);
+      setNotes((prevMessages) => [...prevMessages, message]);
+      fetchReportData(notes);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (notes.length > 0 && notes.length > prevNotesLengthRef.current) {
+      scrollToBottom();
+    }
+    prevNotesLengthRef.current = notes.length;
+  }, [notes.length]);
+
+  const fetchNotes = async () => {
+    try {
+      const response = await api.post("/patient/timeline/notes", {
+        doctorId: selectedDoctor,
+      });
+      console.log("Fetched notes:", response.data);
+
+      await fetchReportData(response.data);
+      setNotes(response.data);
+    } catch (error) {
+      if (error.response?.status === 404) {
+        return;
+      }
+      console.error("Failed to fetch notes:", error);
+    }
+  };
+
+  const fetchReportData = async (message: any) => {
+    for (const msg of message) {
+      if (msg.type === "report") {
+        try {
+          const reportId = JSON.parse(msg.data)?.reportId;
+          if (reportId && !reportData[reportId]) {
+            const info = await getReportInfo(reportId);
+            if (info) {
+              setReportData((prev) => ({ ...prev, [reportId]: info.data }));
+            }
+          }
+        } catch (error) {
+          toast.warning("Unable to parse report data. Please try again.");
+          console.error("Error parsing report data:", error);
+        }
+      }
+    }
+  };
+
+  const getReportInfo = async (reportId: string) => {
+    if (!reportId) return null;
+
+    try {
+      const response = await api.get(`/labreport/info/${reportId}`);
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      toast.error("Failed to fetch report details. Please try again later.");
+      console.error("Request failed:", error);
+    }
+  };
+
+  const getNoteColor = (type: string) => {
+    switch (type) {
+      case "donlynote":
+        return "bg-pink-100";
+      case "note":
+        return "bg-blue-100";
+      case "prescription":
+        return "bg-green-100";
+      case "report":
+        return "bg-yellow-100";
+      default:
+        return "bg-gray-100";
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
   const sortedNotes = [...notes].sort((a, b) => {
@@ -55,92 +147,149 @@ const DoctorTimelinePage = () => {
     );
   });
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
   let lastDate = "";
 
+  const handleReportClick = (reportId: string) => {
+    setIsOpen(true);
+    getReport(reportId);
+  };
+
+  const getReport = async (reportId: string) => {
+    if (!reportId) return null;
+
+    try {
+      const response = await api.get(`/labreport/file/${reportId}`, {
+        responseType: "blob",
+      });
+      console.log(response.data);
+      setReportUrl(URL.createObjectURL(response.data));
+      console.log(URL.createObjectURL(response.data));
+    } catch (error) {
+      toast.error("Failed to fetch report details. Please try again later.");
+      console.error("Request failed:", error);
+    }
+  };
+
   return (
-    <div className=" min-h-screen flex flex-col md:flex-row bg-white">
-      <div className="flex-shrink-0 md:w-1/4 lg:w-1/5s">
-        <Sidebar />
+    <div className="flex flex-col h-screen bg-gray-100 p-4">
+      {/* Timeline Area */}
+      <div
+        ref={scrollContainerRef}
+        className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4 relative"
+      >
+        {/* Notes */}
+        <div className="space-y-4 relative">
+          {/* Center Line */}
+          <div
+            className="absolute left-1/2 top-0 h-full w-0.5 bg-gray-200 transform -translate-x-1/2"
+            style={{ height: "calc(100% + 16px)" }}
+          />
+
+          {/* Notes */}
+          <div className="space-y-4">
+            {sortedNotes.map((note, index) => {
+              const showDate = note.addedDate !== lastDate;
+              lastDate = note.addedDate;
+              const isReport = note.type === "report";
+              const isNote =
+                note.type !== "donlynote" && note.type !== "report";
+              return (
+                <React.Fragment key={index}>
+                  {showDate && (
+                    <div className="flex justify-center my-4 relative z-10">
+                      <span className="bg-gray-200 text-gray-600 text-sm px-3 py-1 rounded-full">
+                        {formatDate(note.addedDate)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-center">
+                    {/* Left side - Doctor notes */}
+
+                    <div className="w-5/12 pr-8">
+                      {isNote && (
+                        <div
+                          className={`p-4 rounded-lg ${getNoteColor(
+                            note.type
+                          )}`}
+                        >
+                          <p className="text-gray-800">
+                            {typeof note.data == "object"
+                              ? note.data?.note
+                              : JSON.parse(note.data)?.note}
+                          </p>
+                          <div className="mt-2 text-sm text-gray-500 text-right">
+                            {note.addedTime}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Timeline Dot */}
+                    {(isNote || isReport) && (
+                      <div className="w-3 h-3 bg-blue-500 rounded-full z-10" />
+                    )}
+
+                    {/* Right side - Lab notes */}
+                    <div className="w-5/12 pl-8">
+                      {isReport && (
+                        <div
+                          className={`p-4 rounded-lg justify-start ${getNoteColor(
+                            note.type
+                          )}`}
+                        >
+                          <File
+                            size={32}
+                            className="hover: cursor-pointer w-[56px]"
+                            onClick={() =>
+                              handleReportClick(JSON.parse(note.data)?.reportId)
+                            }
+                          />
+                          <p className="w-16 text-center">
+                            {reportData[JSON.parse(note.data)?.reportId]
+                              ?.file_name +
+                              "." +
+                              reportData[JSON.parse(note.data)?.reportId]
+                                ?.file_type}
+                          </p>
+
+                          <p className="text-gray-800">
+                            {typeof note.data == "object"
+                              ? note.data?.note
+                              : JSON.parse(note.data)?.note}
+                          </p>
+                          <div className="mt-2 text-sm text-gray-500 justify-end">
+                            {note.addedTime}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </div>
       </div>
-    <div className="flex-1 p-8">
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
-          {error}
+
+      {isOpen && reportUrl && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center relative z-50">
+            <h2 className="text-xl font-semibold">Report View</h2>
+            <p className="mt-2 text-gray-600"></p>
+            <img src={reportUrl} alt="" />
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                setReportUrl(null);
+              }}
+              className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg"
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
-
-      {/* Main Content */}
-      <div className="flex flex-col flex-1 bg-gray-100 p-4 overflow-y-auto">
-        <div className="flex-grow bg-white rounded-lg shadow-md p-4 relative">
-          <div
-            className="fixed left-1/2 transform -translate-x-1/2 w-0.5 bg-black"
-            style={{ top: 0, bottom: 0, height: "100vh" }}
-          ></div>
-
-          {sortedNotes.map((note, index) => {
-            const showDate = note.addedDate !== lastDate;
-            lastDate = note.addedDate;
-
-            return (
-              <React.Fragment key={index}>
-                {showDate && (
-                  <div className="flex justify-center my-4 relative">
-                    <span className="bg-gray-200 text-gray-600 text-sm px-3 py-1 rounded-full z-10">
-                      {formatDate(note.addedDate)}
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-center mb-4 relative">
-                  {note.sender === "doctor" && (
-                    <>
-                      <div className="w-1/2 pr-4 flex justify-end">
-                        <div className="bg-pink-600 text-white max-w-xs lg:max-w-md px-4 py-2 rounded-bl-none rounded-lg">
-                          <div className="text-sm">{note.message}</div>
-                          <div className="text-xs mt-1 text-white text-right">
-                            {note.addedTime}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="w-1/2"></div>
-                    </>
-                  )}
-
-                  {note.sender === "laboratory" && (
-                    <>
-                      <div className="w-1/2"></div>
-                      <div className="w-1/2 pl-4 flex justify-start">
-                        <div className="bg-green-600 text-white max-w-xs lg:max-w-md px-4 py-2 rounded-br-none rounded-lg">
-                          <div className="text-sm">{note.message}</div>
-                          <div className="text-xs mt-1 text-white text-right">
-                            {note.addedTime}
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </React.Fragment>
-            );
-          })}
-
-          {timelineItems.length === 0 && (
-            <div className="flex justify-center items-center h-64">
-              <p className="text-gray-500">No timeline items found</p>
-            </div>
-          )}
-        </div>
-      </div>
     </div>
-  </div>
   );
 };
 
