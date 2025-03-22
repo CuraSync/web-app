@@ -16,7 +16,6 @@
     dateOfBirth: string;
     email: string;
     guardianContactNumber: string;
-    guardianEmail: string;
     guardianName: string;
     height: string;
     nic: string;
@@ -39,7 +38,6 @@
       dateOfBirth: "",
       email: "",
       guardianContactNumber: "",
-      guardianEmail: "",
       guardianName: "",
       height: "",
       nic: "",
@@ -66,7 +64,6 @@
           dateOfBirth: data.dateOfBirth || "",
           email: data.email || "",
           guardianContactNumber: data.guardianContactNumber || "",
-          guardianEmail: data.guardianEmail || "",
           guardianName: data.guardianName || "",
           height: data.height || "",
           nic: data.nic || "",
@@ -153,7 +150,6 @@
               <div className="mt-4 space-y-2">
                 <p className="text-gray-600">Name: {patientInfo.guardianName}</p>
                 <p className="text-gray-600">Phone: {patientInfo.guardianContactNumber}</p>
-                <p className="text-gray-600">Email: {patientInfo.guardianEmail}</p>
               </div>
             </div>
           </div>

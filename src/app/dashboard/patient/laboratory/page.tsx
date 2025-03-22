@@ -126,10 +126,8 @@ const LaboratoryPage = () => {
   };
 
   return (
-    <div className=" min-h-screen flex flex-col md:flex-row bg-white">
-      <div className="flex-shrink-0 md:w-1/4 lg:w-1/5s">
-        <Sidebar />
-      </div>
+    <div className="flex min-h-screen bg-gray-50">
+      <Sidebar />
       <div className="flex-1 p-8">
         {error && (
           <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">

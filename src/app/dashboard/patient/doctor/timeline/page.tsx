@@ -89,7 +89,10 @@ const DoctorTimelinePage = () => {
     for (const msg of message) {
       if (msg.type === "report") {
         try {
-          const reportId = JSON.parse(msg.data)?.reportId;
+          const reportId =
+            typeof msg.data == "object"
+              ? msg.data.reportId
+              : JSON.parse(msg.data)?.reportId;
           if (reportId && !reportData[reportId]) {
             const info = await getReportInfo(reportId);
             if (info) {
@@ -241,15 +244,25 @@ const DoctorTimelinePage = () => {
                             size={32}
                             className="hover: cursor-pointer w-[56px]"
                             onClick={() =>
-                              handleReportClick(JSON.parse(note.data)?.reportId)
+                              handleReportClick(
+                                typeof note.data == "object"
+                                  ? note.data.reportId
+                                  : JSON.parse(note.data)?.reportId
+                              )
                             }
                           />
                           <p className="w-16 text-center">
-                            {reportData[JSON.parse(note.data)?.reportId]
-                              ?.file_name +
+                            {reportData[
+                              typeof note.data == "object"
+                                ? note.data.reportId
+                                : JSON.parse(note.data)?.reportId
+                            ]?.file_name +
                               "." +
-                              reportData[JSON.parse(note.data)?.reportId]
-                                ?.file_type}
+                              reportData[
+                                typeof note.data == "object"
+                                  ? note.data.reportId
+                                  : JSON.parse(note.data)?.reportId
+                              ]?.file_type}
                           </p>
 
                           <p className="text-gray-800">

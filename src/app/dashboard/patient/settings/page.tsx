@@ -24,7 +24,6 @@ interface PatientInfo {
   bmi: string;
   dateOfBirth: string;
   email: string;
-  guardianEmail: string;
   guardianName: string;
   guardianContactNumber: string;
   height: string;
@@ -53,7 +52,6 @@ const SettingsPage = () => {
     dateOfBirth: "",
     email: "",
     guardianContactNumber: "",
-    guardianEmail: "",
     guardianName: "",
     height: "",
     nic: "",
@@ -136,7 +134,6 @@ const SettingsPage = () => {
         bmi: parseFloat(patientInfo.bmi) ,
         bloodType: patientInfo.bloodType ,
         guardianName: patientInfo.guardianName,
-        guardianEmail: patientInfo.guardianEmail,
         guardianContactNumber: patientInfo.guardianContactNumber,
         profilePic: imageUrl,
       };
@@ -454,18 +451,6 @@ const SettingsPage = () => {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Guardian Email
-              </label>
-              <input
-                type="tel"
-                name="guardianRelation"
-                value={patientInfo.guardianEmail}
-                onChange={handleProfileChange}
-                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
           </div>
         </div>
 

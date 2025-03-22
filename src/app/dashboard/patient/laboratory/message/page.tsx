@@ -13,7 +13,7 @@ interface Message {
   addedDate: string; // YYYY-MM-DD format
   addedTime: string; // HH:MM format
   sender: "laboratory" | "patient";
-  type: "message" | "labReport";
+  type: "message" | "labReport" | "report";
 }
 
 const MessagesPage = () => {
@@ -21,7 +21,7 @@ const MessagesPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [reportData, setReportData] = useState<Record<string, any>>({});
   const [isOpen, setIsOpen] = useState(false);
-  const [reportFile, setReportFile] = useState <File|null> (null);
+  const [reportFile, setReportFile] = useState<File | null>(null);
   const [newMessage, setNewMessage] = useState<string>("");
   const [reportUrl, setReportUrl] = useState<string | null>(null);
   const [currentReportId, setCurrentReportId] = useState<string | null>(null);
@@ -55,24 +55,25 @@ const MessagesPage = () => {
       socket.disconnect();
     };
   }, []);
+
   const fetchReportData = async (message: any) => {
-      for (const msg of message) {
-        if (msg.type === "report") {
-          try {
-            const reportId = JSON.parse(msg.data)?.reportId;
-            if (reportId && !reportData[reportId]) {
-              const info = await getReportInfo(reportId);
-              if (info) {
-                setReportData((prev) => ({ ...prev, [reportId]: info.data }));
-              }
+    for (const msg of message) {
+      if (msg.type === "report") {
+        try {
+          const reportId = JSON.parse(msg.data)?.reportId;
+          if (reportId && !reportData[reportId]) {
+            const info = await getReportInfo(reportId);
+            if (info) {
+              setReportData((prev) => ({ ...prev, [reportId]: info.data }));
             }
-          } catch (error) {
-            toast.warning("Unable to parse report data. Please try again.");
-            console.error("Error parsing report data:", error);
           }
+        } catch (error) {
+          toast.warning("Unable to parse report data. Please try again.");
+          console.error("Error parsing report data:", error);
         }
       }
-    };
+    }
+  };
 
   const fetchMessages = async () => {
     try {
@@ -83,9 +84,9 @@ const MessagesPage = () => {
       console.log(response.data);
       fetchReportData(response.data);
     } catch (error) {
-          toast.error("Failed to load messages. Please check your connection.");
-          console.error("Request failed:", error);
-        }
+      toast.error("Failed to load messages. Please check your connection.");
+      console.error("Request failed:", error);
+    }
   };
 
   const laboratoryMessages = [...messages].sort((a, b) => {
@@ -106,25 +107,29 @@ const MessagesPage = () => {
 
   const handleSendMessage = async () => {
     if (newMessage.trim() === "") return;
-    
+
     const now = new Date();
+    const sriLankaDate = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
 
     try {
       await api.post("/patient/lab/sendMessage", {
         labId: selectedLaboratory,
         message: newMessage,
-        addedDate: now.toISOString().split("T")[0],
-        addedTime: now.toTimeString().substring(0, 5),
+        addedDate: sriLankaDate.toISOString().split("T")[0],
+        addedTime: now.toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
         sender: "patient",
         type: "message",
       });
-   } catch (error) {
-         toast.error("Failed to send the message. Please try again later.");
-         console.error("Request failed:", error);
-       }
-    setNewMessage("");
+      setNewMessage("");
+    } catch (error) {
+      toast.error("Failed to send the message. Please try again later.");
+      console.error("Request failed:", error);
+    }
   };
-  let lastDate = "";
 
   const getReportInfo = async (reportId: string) => {
     if (!reportId) return null;
@@ -143,14 +148,15 @@ const MessagesPage = () => {
     setCurrentReportId(reportId);
     setIsOpen(true);
     getReport(reportId);
-    
   };
 
   const getReport = async (reportId: string) => {
     if (!reportId) return null;
 
     try {
-      const response = await api.get(`/labreport/file/${reportId}`,{ responseType: 'blob' });
+      const response = await api.get(`/labreport/file/${reportId}`, {
+        responseType: "blob",
+      });
       console.log(response.data);
       setReportFile(response.data);
       setReportUrl(URL.createObjectURL(response.data));
@@ -159,9 +165,9 @@ const MessagesPage = () => {
       toast.error("Failed to fetch report details. Please try again later.");
       console.error("Request failed:", error);
     }
-  }; 
+  };
 
-
+  let lastDate = "";
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">
@@ -169,27 +175,27 @@ const MessagesPage = () => {
         <Sidebar />
       </div>
       <div className="flex flex-col flex-grow bg-gray-100 p-4">
-      <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4">
-        {laboratoryMessages.map((msg, index) => {
-          const showDate = msg.addedDate !== lastDate;
-          lastDate = msg.addedDate;
+        <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4">
+          {laboratoryMessages.map((msg, index) => {
+            const showDate = msg.addedDate !== lastDate;
+            lastDate = msg.addedDate;
 
-          return (
-            <React.Fragment key={index}>
-              {showDate && (
-                <div className="flex justify-center my-4">
-                  <span className="bg-gray-200 text-gray-600 text-sm px-3 py-1 rounded-full">
-                    {formatDate(msg.addedDate)}
-                  </span>
-                </div>
-              )}
-              {msg.type ==="message" && (
-              <div
-                className={`flex mb-4 ${
-                  msg.sender === "patient" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
+            return (
+              <React.Fragment key={index}>
+                {showDate && (
+                  <div className="flex justify-center my-4">
+                    <span className="bg-gray-200 text-gray-600 text-sm px-3 py-1 rounded-full">
+                      {formatDate(msg.addedDate)}
+                    </span>
+                  </div>
+                )}
+                {msg.type === "message" && (
+                  <div
+                    className={`flex mb-4 ${
+                      msg.sender === "patient" ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div
                       className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                         msg.sender === "laboratory"
                           ? "bg-blue-600 text-white rounded-br-none"
@@ -201,21 +207,21 @@ const MessagesPage = () => {
                           ? msg.data.message
                           : JSON.parse(msg.data)?.message}
                       </div>
-                  <div
-                    className={`text-xs mt-1 text-right ${
-                      msg.sender === "patient"
-                        ? "text-blue-100"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {msg.addedTime}
+                      <div
+                        className={`text-xs mt-1 text-right ${
+                          msg.sender === "patient"
+                            ? "text-blue-100"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {msg.addedTime}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-              )}
-              {msg.type === "report" &&
+                )}
+                {msg.type === "report" &&
                   reportData[JSON.parse(msg.data)?.reportId] && (
-                    <div className="flex items-center justify-between bg-blue-50 p-4 rounded-lg shadow-md max-w-md ml-auto mb-4 hover:shadow-lg transition-shadow duration-300 ease-in-out">
+                    <div className="flex items-center justify-between bg-blue-50 p-4 rounded-lg shadow-md max-w-md mb-4 hover:shadow-lg transition-shadow duration-300 ease-in-out">
                       <div className="flex items-center gap-3">
                         <span className="text-blue-600 text-2xl">📄</span>
                         <p
@@ -224,20 +230,17 @@ const MessagesPage = () => {
                             handleReportClick(JSON.parse(msg.data)?.reportId)
                           }
                         >
-                          {
-                            reportData[JSON.parse(msg.data)?.reportId]
-                              .file_name
-                          }
+                          {reportData[JSON.parse(msg.data)?.reportId].file_name}
                         </p>
                       </div>
                     </div>
                   )}
-            </React.Fragment>
-          );
-        })}
-      </div>
+              </React.Fragment>
+            );
+          })}
+        </div>
 
-      <div className="bg-white rounded-lg shadow-md p-4 flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
+        <div className="bg-white rounded-lg shadow-md p-4 flex">
           <input
             type="text"
             value={newMessage}
@@ -248,26 +251,25 @@ const MessagesPage = () => {
           />
           <button
             onClick={handleSendMessage}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg w-full sm:w-auto"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-r-lg transition-colors"
           >
             Send
           </button>
         </div>
+      </div>
 
       {isOpen && currentReportId && reportFile && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
             <h2 className="text-xl font-semibold">Report Details</h2>
-            <p className="mt-2 text-gray-600">
-              
-            </p>
-              <img src={reportUrl} alt="" />
+            <p className="mt-2 text-gray-600"></p>
+            <img src={reportUrl} alt="Report" />
             <button
               onClick={() => {
                 setIsOpen(false);
-                setCurrentReportId(null); 
+                setCurrentReportId(null);
                 setReportUrl(null);
-              }} 
+              }}
               className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg"
             >
               Close
@@ -275,7 +277,6 @@ const MessagesPage = () => {
           </div>
         </div>
       )}
-    </div>
     </div>
   );
 };
