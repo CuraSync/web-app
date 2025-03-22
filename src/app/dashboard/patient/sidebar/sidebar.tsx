@@ -117,7 +117,7 @@ const Sidebar = () => {
           </Link>
 
           <Link
-            href="/dashboard/patient/request"
+            href="/dashboard/patient/notification"
             className="flex items-center space-x-3 text-black-600 hover:text-blue-600"
           >
             <FaRocketchat className="w-5 h-5" />
