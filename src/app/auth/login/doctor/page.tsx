@@ -26,6 +26,9 @@ const DoctorLogin = () => {
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (typeof window === "undefined") return;
+
     const { email, password } = formData;
 
     if (!email || !password) {

@@ -33,6 +33,8 @@
   
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
+      
+      if (typeof window === "undefined") return;
   
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {

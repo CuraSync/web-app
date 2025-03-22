@@ -34,6 +34,8 @@ const DoctorSignUpPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (typeof window === "undefined") return;
     
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match");
