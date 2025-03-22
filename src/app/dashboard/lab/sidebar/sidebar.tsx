@@ -60,7 +60,7 @@ const Sidebar = () => {
       {/* Sidebar */}
       <aside 
         className={`fixed top-0 left-0 w-64 h-full bg-white border-r border-gray-200 p-6 flex flex-col transform transition-transform duration-300 z-50
-        ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+        ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:w-72`}
       >
         {/* Close Button (Mobile) */}
         <button 
@@ -71,7 +71,7 @@ const Sidebar = () => {
         </button>
 
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-3">
+        <Link href="/" className="flex items-center space-x-3 mb-6">
           <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white">
             <img src="/assets/logo/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
           </div>
@@ -96,7 +96,7 @@ const Sidebar = () => {
                 <FaUser className="text-purple-800 w-5 h-5" />
               )}
             </div>
-            <div>
+            <div className="hidden sm:block">
               <p className="text-sm font-medium text-gray-900">{labName || "Lab Name"}</p>
             </div>
           </div>

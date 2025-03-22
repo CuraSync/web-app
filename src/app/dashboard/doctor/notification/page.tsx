@@ -13,7 +13,9 @@ interface Request {
   patientId?: string;
   patientName?: string;
   doctorId?: string;
-  doctorName?: string;
+  firstName?: string;
+  lastName?: string;
+  secondDoctorId: string;
 }
 
 const DoctorRequestPage = () => {
@@ -31,35 +33,43 @@ const DoctorRequestPage = () => {
 
   const fetchRequests = async () => {
     try {
-      const [patientRes, doctorRes, sentRes] = await Promise.all([
-        api.get("/doctor/patient/request"),
-        api.get("/doctor/doctor/request"),
-        api.get("/doctor/doctor/sentrequest"),
-      ]);
-      console.log("Fetched Patient Requests:", patientRes.data);
-      console.log("Fetched Doctor Requests:", doctorRes.data);
-      console.log("Fetched Sent Requests:", sentRes.data);
+      const fetchWithFallback = async (url: string) => {
+        try {
+          const response = await api.get(url);
+          return response.data;
+        } catch (error) {
+          console.error(`Error fetching ${url}:`, error);
+          toast.error(`Failed to load data from ${url}`);
+          return [];
+        }
+      };
 
-      // Adjusted for "true" and "false" status
-      const pendingPatient = patientRes.data.filter((req: Request) => req.status === "false");
-      const acceptedPatient = patientRes.data.filter((req: Request) => req.status === "true");
-
-      const pendingDoctor = doctorRes.data.filter((req: Request) => req.status === "false");
-      const acceptedDoctor = doctorRes.data.filter((req: Request) => req.status === "true");
-
-      const pendingSent = sentRes.data.filter((req: Request) => req.status === "false");
-      const acceptedSent = sentRes.data.filter((req: Request) => req.status === "true");
-
+      const patientData = await fetchWithFallback("/doctor/patient/request");
+      const doctorData = await fetchWithFallback("/doctor/doctor/request");
+      const sentData = await fetchWithFallback("/doctor/doctor/sentrequest");
+  
+      console.log("Fetched Patient Requests:", patientData);
+      console.log("Fetched Doctor Requests:", doctorData);
+      console.log("Fetched Sent Requests:", sentData);
+  
+      const pendingPatient = patientData.filter((req) => req.status === "false");
+      const acceptedPatient = patientData.filter((req) => req.status === "true");
       setPatientRequests(pendingPatient);
-      setDoctorRequests(pendingDoctor);
-      setSentRequests(pendingSent);
-
       setAcceptedPatientRequests(acceptedPatient);
+  
+      const pendingDoctor = doctorData.filter((req) => req.status === "false");
+      const acceptedDoctor = doctorData.filter((req) => req.status === "true");
+      setDoctorRequests(pendingDoctor);
       setAcceptedDoctorRequests(acceptedDoctor);
+  
+
+      const pendingSent = sentData.filter((req) => req.status === "false");
+      const acceptedSent = sentData.filter((req) => req.status === "true");
+      setSentRequests(pendingSent);
       setAcceptedSentRequests(acceptedSent);
     } catch (error) {
-      console.error("Error fetching requests:", error);
-      toast.error("Error fetching requests. Please try again.");
+      console.error("Error in request processing:", error);
+      toast.error("An error occurred while processing requests.");
     }
   };
 
@@ -119,7 +129,7 @@ const DoctorRequestPage = () => {
             {requests.map((request) => (
               <tr key={request._id} className="border hover:bg-gray-50">
                 <td className="border p-3 text-gray-700">{request.patientId}</td>
-                <td className="border p-3 text-gray-700">{request.patientName}</td>
+                <td className="border p-3 text-gray-700">{request.firstName}{request.lastName}</td>
                 <td className="border p-3 text-gray-700">{request.addedDate}</td>
                 <td className="border p-3 text-gray-700">{request.addedTime}</td>
                 {!isAccepted && (
@@ -164,7 +174,7 @@ const DoctorRequestPage = () => {
             {requests.map((request) => (
               <tr key={request._id} className="border hover:bg-gray-50">
                 <td className="border p-3 text-gray-700">{request.doctorId}</td>
-                <td className="border p-3 text-gray-700">{request.doctorName}</td>
+                <td className="border p-3 text-gray-700">{request.firstName} {request.lastName}</td>
                 <td className="border p-3 text-gray-700">{request.addedDate}</td>
                 <td className="border p-3 text-gray-700">{request.addedTime}</td>
                 {!isAccepted && (
@@ -198,8 +208,8 @@ const DoctorRequestPage = () => {
         <table className="w-full border-collapse border border-gray-200 shadow-md">
           <thead>
             <tr className="bg-gray-100">
-              <th className="border p-3 text-left">Sent Request ID</th>
-              <th className="border p-3 text-left">Sent Request Name</th>
+              <th className="border p-3 text-left">ID</th>
+              <th className="border p-3 text-left">Name</th>
               <th className="border p-3 text-left">Added Date</th>
               <th className="border p-3 text-left">Added Time</th>
               {!isAccepted && <th className="border p-3 text-left">Actions</th>}
@@ -208,8 +218,8 @@ const DoctorRequestPage = () => {
           <tbody>
             {requests.map((request) => (
               <tr key={request._id} className="border hover:bg-gray-50">
-                <td className="border p-3 text-gray-700">{request._id}</td>
-                <td className="border p-3 text-gray-700">{request.doctorName}</td>
+                <td className="border p-3 text-gray-700">{request.secondDoctorId}</td>
+                <td className="border p-3 text-gray-700">{request.firstName} {request.lastName}</td>
                 <td className="border p-3 text-gray-700">{request.addedDate}</td>
                 <td className="border p-3 text-gray-700">{request.addedTime}</td>
                 {!isAccepted && (
@@ -281,7 +291,6 @@ const DoctorRequestPage = () => {
 
         {activeTab === "sent" && (
           <>
-            {renderSentTable(sentRequests, false)}
             {renderSentTable(acceptedSentRequests, true)}
           </>
         )}
