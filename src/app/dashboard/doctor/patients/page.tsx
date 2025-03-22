@@ -6,7 +6,6 @@ import DoctorSidebar from "@/components/doctor/Sidebar";
 import api from "@/utils/api";
 import { toast } from "sonner";
 
-// Helper function to generate unique IDs for messages
 function generateUniqueId(): string {
   return 'msg_' + Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9);
 }
@@ -41,6 +40,9 @@ const PatientsPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [showAddPatientModal, setShowAddPatientModal] = useState(false);
+  const [newPatientId, setNewPatientId] = useState("");
+  const [isSendingRequest, setIsSendingRequest] = useState(false);
 
   useEffect(() => {
     fetchList();
@@ -56,10 +58,12 @@ const PatientsPage = () => {
     try {
       setIsLoading(true);
       const response = await api.get("/doctor/patient");
-      console.log("Fetched patients:", response.data);
+      console.log("Fetched patients raw data:", response.data);
       setPatients(response.data);
     } catch (error) {
       console.error("Failed to fetch patients:", error);
+      //console.log("Error details:", error.response?.data);
+      toast.error("Failed to load patients");
     } finally {
       setIsLoading(false);
     }
@@ -67,9 +71,7 @@ const PatientsPage = () => {
 
   const fetchMessages = async (patientId: string) => {
     try {
-      console.log("Fetching messages for patientId:", patientId);
       const response = await api.post("/doctor/patient/messages", { patientId });
-      console.log("Fetched messages:", response.data);
       setMessages(response.data);
     } catch (error) {
       console.error("Failed to fetch messages:", error);
@@ -77,12 +79,51 @@ const PatientsPage = () => {
     }
   };
 
+  const handleAddPatient = async () => {
+    if (!newPatientId.trim()) {
+      console.log("Empty patient ID attempt"); 
+      toast.error("Please enter a valid Patient ID");
+      return;
+    }
+
+    const now= new Date();
+    console.log("Sending patient request with:", { 
+      patientId: newPatientId,
+      date: now.toISOString().split("T")[0],
+      time: now.toTimeString().substring(0, 5)
+    });
+
+    try {
+      setIsSendingRequest(true);
+      await api.post("doctor/patient/request", { patientId: newPatientId,addedDate: now.toISOString().split("T")[0],
+        addedTime: now.toTimeString().substring(0, 5),  }); // <---
+      //console.log("Add patient response:", response.data);
+      toast.success("Request sent successfully");
+      setShowAddPatientModal(false);
+      setNewPatientId("");
+    } catch (error) {
+      console.error("Failed to send request:", error);
+      //console.log("Error response data:", error.response?.data);
+      toast.error("Failed to send request. Please check the Patient ID.");
+    } finally {
+      setIsSendingRequest(false);
+    }
+  };
+
   const sendMessage = async () => {
-    if (!selectedPatient || !newMessage.trim()) return;
+    if (!selectedPatient || !newMessage.trim()) {
+      console.log("Message send attempt with empty message");
+      return;
+    }
 
     setIsSending(true);
     try {
       const now = new Date();
+      console.log("Sending message:", { 
+        patientId: selectedPatient.patientId,
+        content: newMessage,
+        time: now.toISOString()
+      });
       const addedDate = now.toISOString().split('T')[0];
       const addedTime = now.toLocaleTimeString('en-US', { 
         hour12: false,
@@ -92,14 +133,6 @@ const PatientsPage = () => {
       
       const messageId = generateUniqueId();
 
-      console.log("Sending message:", {
-        patientId: selectedPatient.patientId,
-        message: newMessage,
-        addedDate,
-        addedTime,
-        messageId
-      });
-
       await api.post("/doctor/patient/sendMessage", {
         patientId: selectedPatient.patientId,
         message: newMessage,
@@ -107,9 +140,8 @@ const PatientsPage = () => {
         addedTime
       });
 
-      console.log("Message sent successfully!");
+      //console.log("Message send response:", response.data);
 
-      // Add the new message to the messages list with a truly unique ID
       setMessages([...messages, {
         id: messageId,
         content: newMessage,
@@ -123,6 +155,7 @@ const PatientsPage = () => {
       toast.success("Message sent");
     } catch (error) {
       console.error("Failed to send message:", error);
+      //console.log("Message error details:", error.response?.data);
       toast.error("Failed to send message");
     } finally {
       setIsSending(false);
@@ -132,7 +165,6 @@ const PatientsPage = () => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      console.log("Sending message on Enter key press");
       sendMessage();
     }
   };
@@ -141,10 +173,19 @@ const PatientsPage = () => {
     const matchesSearch = 
       `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesPriority = selectedPriority === "All" || patient.priority.toString() === selectedPriority;
+    
+    console.log(`Patient ${patient.patientId} - `, { 
+      matchesSearch,
+      matchesPriority,
+      searchQuery,
+      selectedPriority
+    });
+
     return matchesSearch && matchesPriority;
   });
 
   const handleMessageClick = (patientId: string) => {
+    console.log("Navigating to messages for patient:", patientId);
     router.push(`/dashboard/doctor/patient/message?patientId=${patientId}`);
   };
 
@@ -194,9 +235,14 @@ const PatientsPage = () => {
       <div className="flex-1 p-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Patients</h1>
+          <button
+            onClick={() => setShowAddPatientModal(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Add New Patient
+          </button>
         </div>
 
-        {/* Search and Filters */}
         <div className="flex flex-wrap gap-4 mb-6">
           <div className="relative flex-grow max-w-2xl">
             <input
@@ -221,7 +267,6 @@ const PatientsPage = () => {
           </select>
         </div>
 
-        {/* Patients Table */}
         <div className="bg-white rounded-lg shadow overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -243,7 +288,7 @@ const PatientsPage = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredPatients.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                  <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
                     No patients found matching your criteria
                   </td>
                 </tr>
@@ -308,11 +353,39 @@ const PatientsPage = () => {
           </table>
         </div>
 
-        {/* Message Modal */}
+        {showAddPatientModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold mb-4">Send Connection Request</h3>
+              <input
+                type="text"
+                placeholder="Enter Patient ID"
+                className="w-full px-4 py-2 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={newPatientId}
+                onChange={(e) => setNewPatientId(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowAddPatientModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddPatient}
+                  disabled={isSendingRequest}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isSendingRequest ? "Sending..." : "Send Request"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {showMessageModal && selectedPatient && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg w-full max-w-2xl h-[600px] flex flex-col">
-              {/* Modal Header */}
               <div className="p-4 border-b flex justify-between items-center">
                 <div className="flex items-center">
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
@@ -331,7 +404,6 @@ const PatientsPage = () => {
                 </button>
               </div>
 
-              {/* Messages Area */}
               <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
                 <div className="space-y-4">
                   {messages.map((message) => (
@@ -358,7 +430,6 @@ const PatientsPage = () => {
                 </div>
               </div>
 
-              {/* Message Input */}
               <div className="p-4 border-t">
                 <div className="flex items-end space-x-2">
                   <button className="p-2 text-gray-400 hover:text-gray-600">

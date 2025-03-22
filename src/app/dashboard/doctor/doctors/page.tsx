@@ -10,10 +10,8 @@ interface Doctor {
   firstName: string;
   lastName: string;
   doctorId: string;
-  specialization: string;
-  hospital: string;
   profilePic: string;
-  yearsOfExperience: number;
+  messageStatus: boolean;
 }
 
 const DoctorsPage = () => {
@@ -34,15 +32,16 @@ const DoctorsPage = () => {
     try {
       setIsLoading(true);
       const response = await api.get("/doctor/doctors");
+      console.log("Raw doctors data from backend:", response.data);
+
       const mappedDoctors = response.data.map((doctor: any) => ({
         firstName: doctor.firstName,
         lastName: doctor.lastName,
         doctorId: doctor.reciveDoctorId,
-        specialization: doctor.specialization || "Unknown",
-        hospital: doctor.hospital || "Unknown",
         profilePic: doctor.profilePic,
-        yearsOfExperience: doctor.yearsOfExperience || "Unknown",
+        messageStatus: doctor.messageStatus,
       }));
+      console.log("Mapped doctors data:", mappedDoctors);
       setDoctors(mappedDoctors);
     } catch (error) {
       console.error("Failed to fetch doctors:", error);
@@ -54,20 +53,27 @@ const DoctorsPage = () => {
 
   const handleAddDoctor = async () => {
     if (!newDoctorId.trim()) {
+      console.log("Add doctor attempt with empty ID");
       toast.error("Please enter a valid Doctor ID");
       return;
     }
 
     const now= new Date();
     try {
+      console.log("Sending request with:", { 
+        doctorId: newDoctorId,
+        date: now.toISOString().split("T")[0],
+        time: now.toTimeString().substring(0, 5)
+      });
       setIsSendingRequest(true);
       await api.post("/doctor/request", { secondDoctorId: newDoctorId,addedDate: now.toISOString().split("T")[0],
         addedTime: now.toTimeString().substring(0, 5), });
+      console.log("Request successful for ID:", newDoctorId);
       toast.success("Request sent successfully");
       setShowAddDoctorModal(false);
       setNewDoctorId("");
     } catch (error) {
-      console.error("Failed to send request:", error);
+      console.error("Request failed for ID:", newDoctorId, "Error:", error);
       toast.error("Failed to send request. Please check the Doctor ID.");
     } finally {
       setIsSendingRequest(false);
@@ -83,10 +89,13 @@ const DoctorsPage = () => {
     const matchesSpecialization = selectedSpecialization === "All" || 
       doctor.specialization === selectedSpecialization;
 
+    console.log(`Doctor ${doctor.doctorId} - Search match: ${matchesSearch}, Spec match: ${matchesSpecialization}`);
     return matchesSearch && matchesSpecialization;
   });
 
   const handleMessageClick = (doctorId: string) => {
+    console.log("Messaging doctor ID:", doctorId);
+    console.log("Selected doctor:", doctors.find(d => d.doctorId === doctorId));
     router.push(`/dashboard/doctor/doctor/message?doctorId=${doctorId}`);
   };
 
