@@ -162,7 +162,6 @@ const MessagesPage = () => {
 
    try {
      const response = await api.post("/labreport/upload", formData);
-     toast.success("Report uploaded successfully.");
      return response.data.id;
    } catch (error) {
     toast.error("Failed to upload report. Please try again later.");
@@ -177,7 +176,6 @@ const MessagesPage = () => {
    try {
      const response = await api.get(`/labreport/info/${reportId}`);
      console.log(response.data);
-     toast.success("Report details fetched successfully!");
      return response.data;
    } catch (error) {
       toast.error("Failed to fetch report details. Please try again later.");

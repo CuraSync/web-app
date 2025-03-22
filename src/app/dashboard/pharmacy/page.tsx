@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PharmacySidebar from "./sidebar/sidebar";
 import api from "@/utils/api";
+import { toast } from "sonner";
 
 export const PharmacyDashboard = () => {
   const router = useRouter();
@@ -29,6 +30,7 @@ export const PharmacyDashboard = () => {
       setContactInformation(response.data.contactInformation);
       setRating(response.data.rating);
     } catch (error) {
+      toast.error("Failed to load pharmacy data. Please try again.");
       console.log(error);
     }
   };

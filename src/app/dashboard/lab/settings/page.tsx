@@ -24,7 +24,6 @@ const SettingsPage = () => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [image, setImage] = useState<File | null>(null);
 
-  
   interface Contact {
     type: string;
     value: string;
@@ -44,7 +43,7 @@ const SettingsPage = () => {
       setContactInformation(response.data.contactInformation || "");
       setRating(response.data.rating || 0);
       setImageUrl(response.data.profilePic || "");
-      toast.success("Profile has been loaded successfully!");
+     
     } catch (error) {
       toast.error("Failed to load profile");
       console.error(error);
@@ -64,15 +63,14 @@ const SettingsPage = () => {
       setContactInformation(response.data.contactInformation);
       setRating(response.data.rating);
       setImageUrl(response.data.profilePic);
-      toast.success("Profile loaded successfully!");
+      
     } catch (error) {
       toast.error("Error loading profile data. Please try again.");
       console.log(error);
     }
-    
+  };
   
   useEffect(() => {
-    if (typeof window === "undefined") return;
     if (contactInformation) {
       try {
         const parsedContacts = JSON.parse(contactInformation);
@@ -173,6 +171,7 @@ const SettingsPage = () => {
         profilePic:imageUrl,
         rating
       });
+     
       toast.success("Profile updated successfully");
       router.refresh();
     } catch (error) {
@@ -253,6 +252,8 @@ const SettingsPage = () => {
                </div>
              </div>
            </div>
+      
+      
 
           <div className="p-6">
             <label className="block text-gray-700 font-medium mb-2">Laboratory Id</label>

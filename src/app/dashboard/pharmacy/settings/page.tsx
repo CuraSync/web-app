@@ -26,8 +26,6 @@ const SettingsPage = () => {
  const [uploading, setUploading] = useState<boolean>(false);
  const [imageUrl, setImageUrl] = useState<string | null>(null);
  
-
-
   interface Contact {
    type: string;
    value: string;
@@ -45,7 +43,6 @@ const SettingsPage = () => {
      setImageUrl(response.data.profilePic || "");
      setContactInformation(response.data.contactInformation || "");
      setRating(response.data.rating || 0);
-
 
    } catch (error) {
      toast.error("Failed to load profile");

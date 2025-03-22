@@ -29,7 +29,6 @@ export const LabDashboard = () => {
       setProfilePic(response.data.profilePic);
       setContactInformation(response.data.contactInformation);
       setRating(response.data.rating);
-      toast.success("Profile updated successfully");
     } catch (error) {
       toast.error("Failed to update profile");
       console.log(error);

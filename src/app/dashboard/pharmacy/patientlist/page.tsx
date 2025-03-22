@@ -4,6 +4,7 @@ import PharmacySidebar from "../sidebar/sidebar";
 import api from "@/utils/api";
 import { FaRegCommentDots } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner"; 
 
 interface Patient {
     patientId: string;
@@ -26,6 +27,7 @@ const PatientList = () => {
             setPatients(response.data); 
             console.log(response);
         } catch (error) {
+            toast.error("Error fetching patient list")
            console.error("Error fetching patient list:", error);
         }
     };

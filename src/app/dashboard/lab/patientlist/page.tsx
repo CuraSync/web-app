@@ -23,7 +23,6 @@ const PatientList = () => {
     try {
       const response = await api.get("/laboratory/patients");
       setPatients(response.data);
-      toast.success("Patient list fetched successfully!");
       console.log(response);
     } catch (error) {
       toast.error("Error fetching patient list. Please try again.");  // Show error toast

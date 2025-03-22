@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
 import PharmacySidebar from "../sidebar/sidebar";
+import { toast } from "sonner"; 
 
 interface Request {
   _id: string;
@@ -38,6 +39,7 @@ const PharmacyRequestPage = () => {
       setRequests(pending);
       setAcceptedRequests(accepted);
     } catch (error) {
+      toast.error("Error fetching requests. Please try again.");
       console.error("Error fetching requests:", error);
     }
   };
@@ -62,7 +64,9 @@ const PharmacyRequestPage = () => {
           addedTime: new Date().toLocaleTimeString(), // Current Time
         } as Request,
       ]);
+      toast.success("Request accepted successfully!");
     } catch (error) {
+      toast.error("Error accepting request. Please try again.");
       console.error("Error accepting request:", error);
     }
   };
