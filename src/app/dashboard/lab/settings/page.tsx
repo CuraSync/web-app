@@ -44,11 +44,12 @@ const SettingsPage = () => {
       setContactInformation(response.data.contactInformation || "");
       setRating(response.data.rating || 0);
       setImageUrl(response.data.profilePic || "");
-
+      toast.success("Profile has been loaded successfully!");
     } catch (error) {
       toast.error("Failed to load profile");
       console.error(error);
     }
+    
     try {
       const response = await api.get("/laboratory/profile"); 
       setLabName(response.data.labName);
@@ -62,16 +63,16 @@ const SettingsPage = () => {
       setCreatedAt(response.data.createdAt);
       setContactInformation(response.data.contactInformation);
       setRating(response.data.rating);
-      console.log(response.data);
       setImageUrl(response.data.profilePic);
-      
+      toast.success("Profile loaded successfully!");
     } catch (error) {
+      toast.error("Error loading profile data. Please try again.");
       console.log(error);
     }
-  };
+    
   
-
   useEffect(() => {
+    if (typeof window === "undefined") return;
     if (contactInformation) {
       try {
         const parsedContacts = JSON.parse(contactInformation);
@@ -90,7 +91,7 @@ const SettingsPage = () => {
         }
       } catch (error) {
         console.error("Error parsing contact information:", error);
-        toast.error("Error parsing contact information");
+        toast.error("Error loading contact information");
       }
     }
     
@@ -127,7 +128,7 @@ const SettingsPage = () => {
      if (file && file.size <= 5 * 1024 * 1024) {
        setImage(file);
      } else {
-       alert("File size should be less than 5MB");
+       toast.warning("File size should be less than 5MB");
        setImage(null);
      }
    };
@@ -152,7 +153,7 @@ const SettingsPage = () => {
       console.log(imageUrl);
     } catch (error) {
       console.error("Upload failed", error);
-      alert("Image upload failed. Please try again.");
+      toast.warning("Image upload failed. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -172,7 +173,6 @@ const SettingsPage = () => {
         profilePic:imageUrl,
         rating
       });
-     
       toast.success("Profile updated successfully");
       router.refresh();
     } catch (error) {
@@ -253,8 +253,6 @@ const SettingsPage = () => {
                </div>
              </div>
            </div>
-      
-      
 
           <div className="p-6">
             <label className="block text-gray-700 font-medium mb-2">Laboratory Id</label>

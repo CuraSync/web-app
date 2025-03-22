@@ -1,13 +1,11 @@
 "use client";
 
-
 import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
 import io from "socket.io-client";
 import { useSearchParams } from "next/navigation";
 import LabSidebar from "../../sidebar/sidebar";
 import { toast } from "sonner";
-
 
 interface Message {
  patientId: string;
@@ -18,28 +16,21 @@ interface Message {
  type: "message" | "report";
 }
 
-
 const MessagesPage = () => {
  const [report, setReport] = useState<File | null>(null);
  const [messages, setMessages] = useState<Message[]>([]);
  const [newMessage, setNewMessage] = useState<string>("");
  const [reportData, setReportData] = useState<Record<string, any>>({});
-
-
  const searchParams = useSearchParams();
  const selectedPatient = searchParams.get("patientId");
-
 
  useEffect(() => {
    if (typeof window === "undefined") return;
    fetchMessages();
-  
-
 
    const serverUrl = "wss://curasync-backend.onrender.com/chat";
    const token = localStorage.getItem("accessToken");
    const additionalData = { id: selectedPatient };
-
 
    // Connect to WebSocket server with token and additional data in the handshake
    const socket = io(serverUrl, {
@@ -49,23 +40,19 @@ const MessagesPage = () => {
      },
    });
 
-
    socket.on("connect", () => {
      console.log("Connected to WebSocket");
    });
-
 
    socket.on("receive-message", (message) => {
      setMessages((prevMessages) => [...prevMessages, message]);
      console.log("Received message:", message);
    });
 
-
    return () => {
      socket.disconnect();
    };
  }, []);
-
 
  const fetchReportData = async (message:any) => {
    for (const msg of message) {
@@ -79,7 +66,7 @@ const MessagesPage = () => {
            }
          }
        } catch (error) {
-         toast.error("Error parsing report data");
+        toast.warning("Unable to parse report data. Please try again.");
          console.error("Error parsing report data:", error);
        }
      }
@@ -95,13 +82,11 @@ const MessagesPage = () => {
      console.log(response.data);
      fetchReportData(response.data);
 
-
    } catch (error) {
-     toast.error("Request failed");
+    toast.error("Failed to load messages. Please check your connection.");
      console.error("Request failed:", error);
    }
  };
-
 
  // Sort messages by date and time
  const patientMessages = [...messages].sort((a, b) => {
@@ -110,7 +95,6 @@ const MessagesPage = () => {
      a.addedTime.localeCompare(b.addedTime)
    );
  });
-
 
  // Format date for display
  const formatDate = (dateStr: string) => {
@@ -121,7 +105,6 @@ const MessagesPage = () => {
      day: "numeric",
    });
  };
-
 
  // Send new message
  const handleSendMessage = async () => {
@@ -134,9 +117,7 @@ const MessagesPage = () => {
      type = "report";
    }
 
-
    const now = new Date();
-
 
    try {
      const response = await api.post("/laboratory/patient/sendMessage", {
@@ -148,67 +129,61 @@ const MessagesPage = () => {
        sender: "laboratory",
        type,
      });
+     toast.success("Message sent successfully");
      console.log(response.data);
    } catch (error) {
-     toast.error("Request failed");
+    toast.error("Failed to send the message. Please try again later.");
      console.error("Request failed:", error);
    }
    setNewMessage("");
    setReport(null);
  };
 
-
  let lastDate = "";
 
-
  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-   const file = event.target.files?.[0];
-   if (file && file.size <= 15 * 1024 * 1024) {
-     setReport(file);
-   } else {
-     alert("File size should be less than 15MB");
-     setReport(null);
-   }
+  const file = event.target.files?.[0];
+  if (file && file.size <= 15 * 1024 * 1024) {
+    setReport(file);
+    toast.success("File selected successfully.");
+  } else {
+    toast.error("File size exceeds 15MB. Please select a smaller file.");
+    setReport(null);
+  }
  };
-
 
  const uploadReport = async (): Promise<string | null> => {
    if (!report) return null;
-
 
    const formData = new FormData();
    formData.append("file", report);
    formData.append("patientId", selectedPatient);
    formData.append("file_name", report.name);
 
-
    try {
      const response = await api.post("/labreport/upload", formData);
+     toast.success("Report uploaded successfully.");
      return response.data.id;
    } catch (error) {
+    toast.error("Failed to upload report. Please try again later.");
      console.error("Upload failed", error);
-     alert("Image upload failed. Please try again.");
      return null;
    }
  };
 
-
  const getReportInfo = async (reportId: string) => {
    if (!reportId) return null;
-
 
    try {
      const response = await api.get(`/labreport/info/${reportId}`);
      console.log(response.data);
+     toast.success("Report details fetched successfully!");
      return response.data;
    } catch (error) {
-     toast.error("Request failed");
+      toast.error("Failed to fetch report details. Please try again later.");
      console.error("Request failed:", error);
    }
  };
-
- const getLabreport = async (reportId : string) => {}
-
 
  return (
   
@@ -216,15 +191,11 @@ const MessagesPage = () => {
       <div className="w-64 flex-shrink-0">
          <LabSidebar />
        </div>
-
-
      <div className="flex flex-col flex-grow bg-gray-100 p-4">
-       <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4 ">
+       <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4">
          {patientMessages.map((msg, index) => {
            const showDate = msg.addedDate !== lastDate;
            lastDate = msg.addedDate;
-
-
            return (
              <React.Fragment key={index}>
                {showDate && (
@@ -234,8 +205,6 @@ const MessagesPage = () => {
                    </span>
                  </div>
                )}
-
-
                {msg.type === "message" && (
                  <div
                    className={`flex mb-4 ${
@@ -268,25 +237,29 @@ const MessagesPage = () => {
                    </div>
                  </div>
                )}
-                  {msg.type === "report" &&
-                    reportData[JSON.parse(msg.data)?.reportId] && (
-                      <div className="flex items-center justify-between bg-blue-100 p-4 rounded-lg shadow-lg max-w-md ml-auto mb-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-blue-600 text-xl">📄</span>
-                          <p className="font-semibold text-blue-800 text-lg truncate w-3/4">
-                            {reportData[JSON.parse(msg.data)?.reportId].file_name}
-                          </p>
-                        </div>
-                        <div className="text-gray-500 text-sm">
-                          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg">View</button>
-                        </div>
-                      </div>
-                    )}
+              {msg.type === "report" &&
+                 reportData[JSON.parse(msg.data)?.reportId] && (
+                   <div className="flex items-center justify-between bg-blue-50 p-4 rounded-lg shadow-md max-w-md ml-auto mb-4 hover:shadow-lg transition-shadow duration-300 ease-in-out">
+                     <div className="flex items-center gap-3">
+                       <span className="text-blue-600 text-2xl">📄</span>
+                       <p
+                         className="font-semibold text-blue-800 text-lg truncate w-3/4 cursor-pointer hover:text-blue-600 transition-all duration-300"
+                         onClick={() =>
+                          (JSON.parse(msg.data)?.reportId)
+                         }
+                       >
+                         {
+                           reportData[JSON.parse(msg.data)?.reportId]
+                             .file_name
+                         }
+                       </p>
+                     </div>
+                   </div>
+                 )}
              </React.Fragment>
            );
          })}
        </div>
-
 
        {/* Message Input Box */}
        <div className="bg-white rounded-lg shadow-md p-4 flex">
@@ -316,8 +289,4 @@ const MessagesPage = () => {
  );
 };
 
-
 export default MessagesPage;
-
-
-

@@ -26,7 +26,9 @@ const Sidebar = () => {
       const response = await api.get("/laboratory/home");
       setLabName(response.data.labName);
       setProfilePic(response.data.profilePic);
+      toast.success("Lab data loaded successfully!");
     } catch (error) {
+      toast.error("Error fetching lab data. Please try again.");
       console.error("Error fetching lab data:", error);
     }
   };
