@@ -4,6 +4,7 @@ import { MessageSquare, Clock, Plus, Trash2, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../sidebar/sidebar";
 import api from "@/utils/api";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 interface Laboratory {
   id: string;
@@ -95,8 +96,13 @@ const LaboratoryPage = () => {
         addedTime: response.data.addedTime || addedTime,
       };
 
-      setAddedLaboratories([...addedLaboratories, newLab]);
-      console.log("Updated addedLaboratories:", [...addedLaboratories, newLab]);
+      // Display SweetAlert2 success message
+      Swal.fire({
+        title: "Request successfully sent.",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+         
       setShowPopup(false);
       setLabIdInput("");
       setError(null);
@@ -113,10 +119,6 @@ const LaboratoryPage = () => {
         setError(error.response?.data?.message || "Failed to send request. Please try again.");
       }
     }
-  };
-
-  const handleRemoveLaboratory = (labId: string) => {
-    setAddedLaboratories(addedLaboratories.filter((lab) => lab.labId !== labId));
   };
 
   const handleMessageClick = (labId: string) => {
@@ -169,12 +171,6 @@ const LaboratoryPage = () => {
                         className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
                       >
                         <MessageSquare className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
-                      </button>
-                      <button
-                        onClick={() => handleRemoveLaboratory(laboratory.labId)}
-                        className="p-2 rounded-full hover:bg-red-100 text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
                   </div>

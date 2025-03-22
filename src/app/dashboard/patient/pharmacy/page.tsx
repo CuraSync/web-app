@@ -4,6 +4,7 @@ import { MessageSquare, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../sidebar/sidebar";
 import api from "@/utils/api";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 interface Pharmacy {
   id: string;
@@ -11,8 +12,8 @@ interface Pharmacy {
   pharmacyName: string;
   email: string;
   location: string;
-  addedDate: string; // YYYY-MM-DD format
-  addedTime: string; // HH:MM format
+  addedDate: string;  // YYYY-MM-DD format
+  addedTime: string;  // HH:MM format
 }
 
 const PharmacyPage = () => {
@@ -95,8 +96,14 @@ const PharmacyPage = () => {
         addedTime: response.data.addedTime || addedTime,
       };
 
-      setAddedPharmacies([...addedPharmacies, newPharmacy]);
-      console.log("Updated addedPharmacies:", [...addedPharmacies, newPharmacy]);
+
+      // Display SweetAlert2 success message
+      Swal.fire({
+        title: "Request successfully sent.",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+
       setShowPopup(false);
       setPharmacyIdInput("");
       setError(null);
@@ -112,18 +119,6 @@ const PharmacyPage = () => {
       } else {
         setError(error.response?.data?.message || "Failed to send request. Please try again.");
       }
-    }
-  };
-
-  const handleRemovePharmacy = async (pharmacyId: string) => {
-    try {
-      // Optional: Add API call to remove from backend
-      // await api.delete(`/patient/pharmacies/${pharmacyId}`);
-      
-      setAddedPharmacies(addedPharmacies.filter((pharmacy) => pharmacy.pharmacyId !== pharmacyId));
-    } catch (error) {
-      console.error("Error removing pharmacy:", error);
-      setError("Failed to remove pharmacy. Please try again.");
     }
   };
 
@@ -177,12 +172,6 @@ const PharmacyPage = () => {
                         className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
                       >
                         <MessageSquare className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
-                      </button>
-                      <button
-                        onClick={() => handleRemovePharmacy(pharmacy.pharmacyId)}
-                        className="p-2 rounded-full hover:bg-red-100 text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
                   </div>

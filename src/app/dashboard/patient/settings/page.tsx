@@ -15,10 +15,6 @@ import { toast } from "sonner";
 import axios from "axios";
 import api from "@/utils/api";
 
-interface AllergyItem {
-  name: string;
-  severity: "Severe" | "Moderate" | "Low";
-}
 
 interface PatientInfo {
   firstName: string;
@@ -28,11 +24,10 @@ interface PatientInfo {
   bmi: string;
   dateOfBirth: string;
   email: string;
-  guardianContactNumber: string;
   guardianRelation: string;
   guardianName: string;
+  guardianContactNumber: string;
   height: string;
-  //medicationAllergies: AllergyItem[];
   nic: string;
   patientId: string;
   phoneNumber: string;
@@ -45,7 +40,7 @@ const SettingsPage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-    const [profilePic, setProfilePic] = useState("");
+  const [profilePic, setProfilePic] = useState("");
   const [uploading, setUploading] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [image, setImage] = useState<File | null>(null);
@@ -61,7 +56,6 @@ const SettingsPage = () => {
     guardianRelation: "",
     guardianName: "",
     height: "",
-    //medicationAllergies: [],
     nic: "",
     patientId: "",
     phoneNumber: "",
@@ -84,7 +78,7 @@ const SettingsPage = () => {
         console.log("Raw API Response:", JSON.stringify(data, null, 2));
 
         // Normalize dateOfBirth to YYYY-MM-DD
-        const normalizeDate = (date: string | null | undefined) => {
+        const normalizeDate = (date: string | null |  "") => {
           if (!date) return "";
           const parsedDate = new Date(date);
           return isNaN(parsedDate.getTime())
@@ -100,16 +94,10 @@ const SettingsPage = () => {
           bmi: String(data.bmi ?? ""),
           dateOfBirth: normalizeDate(data.dateOfBirth),
           email: String(data.email ?? ""),
-          guardianContactNumber: String(data.guardianContactNumber ?? ""),
           guardianRelation: String(data.guardianRelation ?? ""),
           guardianName: String(data.guardianName ?? ""),
+          guardianContactNumber: String(data.guardianContactNumber ?? ""),
           height: String(data.height ?? ""),
-          // medicationAllergies: Array.isArray(data.medicationAllergies)
-          //   ? data.medicationAllergies.map((allergy: any) => ({
-          //       name: String(allergy?.name ?? ""),
-          //       severity: String(allergy?.severity ?? "Low") as "Severe" | "Moderate" | "Low",
-          //     }))
-          //   : [],
           nic: String(data.nic ?? ""),
           patientId: String(data.patientId ?? ""),
           phoneNumber: String(data.phoneNumber ?? ""),
@@ -137,19 +125,19 @@ const SettingsPage = () => {
     setIsSaving(true);
     try {
       const profileData = {
-        firstName: patientInfo.firstName || undefined,
-        lastName: patientInfo.lastName || undefined,
-        address: patientInfo.address || undefined,
-        phoneNumber: patientInfo.phoneNumber || undefined,
-        dateOfBirth: patientInfo.dateOfBirth || undefined,
-        height: patientInfo.height ? Number(patientInfo.height) : undefined,
-        weight: patientInfo.weight ? Number(patientInfo.weight) : undefined,
-        bmi: patientInfo.bmi ? parseFloat(patientInfo.bmi) : undefined,
-        bloodType: patientInfo.bloodType || undefined,
-        //medicationAllergies: patientInfo.medicationAllergies || undefined, 
-        guardianName: patientInfo.guardianName || undefined,
-        guardianContactNumber: patientInfo.guardianContactNumber || undefined,
-        profilePic: imageUrl || undefined,
+        firstName: patientInfo.firstName || "",
+        lastName: patientInfo.lastName ||  "",
+        address: patientInfo.address ||  "",
+        phoneNumber: patientInfo.phoneNumber ||  "",
+        dateOfBirth: patientInfo.dateOfBirth ||  "",
+        height: patientInfo.height ? Number(patientInfo.height) :  "",
+        weight: patientInfo.weight ? Number(patientInfo.weight) :  "",
+        bmi: patientInfo.bmi ? parseFloat(patientInfo.bmi) :  "",
+        bloodType: patientInfo.bloodType ||  "",
+        guardianName: patientInfo.guardianName ||  "",
+        guardianRelation: patientInfo.guardianRelation ||  "",
+        guardianContactNumber: patientInfo.guardianContactNumber ||  "",
+        profilePic: imageUrl ||  "",
       };
 
       console.log("Sending to API:", JSON.stringify(profileData, null, 2));
@@ -215,7 +203,7 @@ const SettingsPage = () => {
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPatientInfo((prev) => {
-      let newValue = value;
+      let newValue = value ?? ""; // Ensure empty string if value is null/undefined
       if ((name === "height" || name === "weight") && value !== "") {
         newValue = Math.max(0, parseFloat(value)).toString();
       }
@@ -454,7 +442,7 @@ const SettingsPage = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Guardian Contact Number
+                Guardian Phone
               </label>
               <input
                 type="tel"
@@ -464,71 +452,19 @@ const SettingsPage = () => {
                 className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            {/* <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Medication Allergies</label>
-              {patientInfo.medicationAllergies && patientInfo.medicationAllergies.length > 0 ? (
-                patientInfo.medicationAllergies.map((allergy, index) => (
-                  <div key={`allergy-${index}`} className="flex gap-2 mb-2">
-                    <input
-                      type="text"
-                      value={allergy.name}
-                      onChange={(e) => {
-                        const updatedAllergies = [...patientInfo.medicationAllergies];
-                        updatedAllergies[index] = { ...updatedAllergies[index], name: e.target.value };
-                        setPatientInfo((prev) => ({ ...prev, medicationAllergies: updatedAllergies }));
-                      }}
-                      placeholder="Allergy name"
-                      className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                    />
-                    <select
-                      value={allergy.severity}
-                      onChange={(e) => {
-                        const updatedAllergies = [...patientInfo.medicationAllergies];
-                        updatedAllergies[index] = {
-                          ...updatedAllergies[index],
-                          severity: e.target.value as "Severe" | "Moderate" | "Low",
-                        };
-                        setPatientInfo((prev) => ({ ...prev, medicationAllergies: updatedAllergies }));
-                      }}
-                      className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="Severe">Severe</option>
-                      <option value="Moderate">Moderate</option>
-                      <option value="Low">Low</option>
-                    </select>
-                    <button
-                      onClick={() =>
-                        setPatientInfo((prev) => ({
-                          ...prev,
-                          medicationAllergies: prev.medicationAllergies.filter(
-                            (_, i) => i !== index
-                          ),
-                        }))
-                      }
-                      className="px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-sm">No allergies added yet</p>
-              )}
-              <button
-                onClick={() =>
-                  setPatientInfo((prev) => ({
-                    ...prev,
-                    medicationAllergies: [
-                      ...(prev.medicationAllergies || []),
-                      { name: "", severity: "Low" },
-                    ],
-                  }))
-                }
-                className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-              >
-                Add Allergy
-              </button>
-            </div> */}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Guardian Relation
+              </label>
+              <input
+                type="tel"
+                name="guardianRelation"
+                value={patientInfo.guardianRelation}
+                onChange={handleProfileChange}
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
         </div>
 
