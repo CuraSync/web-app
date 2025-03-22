@@ -34,6 +34,7 @@ export const PharmacyDashboard = () => {
   };
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     fetchHomeData();
   }, []);
 

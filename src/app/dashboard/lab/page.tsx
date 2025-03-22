@@ -3,6 +3,7 @@ import { useEffect,useState } from "react"
 import { useRouter } from "next/navigation";
 import LabSidebar from "./sidebar/sidebar";
 import api from "@/utils/api";
+import { toast } from "sonner";
 
 export const LabDashboard = () => {
   const router = useRouter();
@@ -29,11 +30,13 @@ export const LabDashboard = () => {
       setContactInformation(response.data.contactInformation);
       setRating(response.data.rating);
     } catch (error) {
+      toast.error("Failed to update profile");
       console.log(error);
     }
   };
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
       fetchHomeData();
     }, []);
 

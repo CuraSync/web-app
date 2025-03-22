@@ -276,14 +276,14 @@ const PatientRequestPage = () => {
 
         {activeTab === "lab" && (
           <>
-            {renderLabTable(labRequests, false)}
+          
             {renderLabTable(acceptedLabRequests, true)}
           </>
         )}
 
         {activeTab === "pharmacy" && (
           <>
-            {renderPharmacyTable(pharmacyRequests, false)}
+   
             {renderPharmacyTable(acceptedPharmacyRequests, true)}
           </>
         )}

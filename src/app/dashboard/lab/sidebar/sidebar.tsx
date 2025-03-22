@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation'; 
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { FaChartBar, FaCog, FaBell, FaBars, FaUser, FaListUl } from "react-icons/fa";
+import { FaAddressCard, FaRocketchat, FaBars, FaUser, FaListUl } from "react-icons/fa";
 import { LogOut, X } from "lucide-react";
 import api from "@/utils/api";
 
@@ -32,6 +32,7 @@ const Sidebar = () => {
   };
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     fetchHomeData();
   }, []);
 
@@ -78,10 +79,10 @@ const Sidebar = () => {
 
         {/* Navigation */}
         <nav className="mt-8 space-y-3 flex-grow">
-          <SidebarItem href="/dashboard/lab" icon={FaChartBar} label={labName || "Lab"} />
+          <SidebarItem href="/dashboard/lab" icon={FaUser} label="Dashboard" />
           <SidebarItem href="/dashboard/lab/patientlist" icon={FaListUl} label="Patient List" />
-          <SidebarItem href="/dashboard/lab/request" icon={FaBell} label="Requests" />
-          <SidebarItem href="/dashboard/lab/settings" icon={FaCog} label="Profile" />
+          <SidebarItem href="/dashboard/lab/request" icon={FaRocketchat} label="Requests" />
+          <SidebarItem href="/dashboard/lab/settings" icon={FaAddressCard} label="Profile" />
         </nav>
 
         {/* User Info & Logout */}

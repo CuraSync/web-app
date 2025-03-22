@@ -27,6 +27,7 @@ const PatientList = () => {
     };
 
     useEffect(() => {
+        if (typeof window === "undefined") return;
         fetchList();
     }, []);
 

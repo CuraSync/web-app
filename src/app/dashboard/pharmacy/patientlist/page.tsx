@@ -16,6 +16,7 @@ const PatientList = () => {
     const [patients, setPatients] = useState<Patient[]>([]);
 
     useEffect(() => {
+        if (typeof window === "undefined") return;
         fetchList();
     }, []);
 

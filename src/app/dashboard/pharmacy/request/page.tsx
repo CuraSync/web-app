@@ -19,6 +19,7 @@ const PharmacyRequestPage = () => {
   const [acceptedRequests, setAcceptedRequests] = useState<Request[]>([]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     fetchRequests();
   }, []);
 

@@ -267,7 +267,6 @@ const DoctorRequestPage = () => {
 
         {activeTab === "patient" && (
           <>
-            {renderPatientTable(patientRequests, false)}
             {renderPatientTable(acceptedPatientRequests, true)}
           </>
         )}

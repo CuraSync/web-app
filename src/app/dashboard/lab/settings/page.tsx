@@ -90,6 +90,7 @@ const SettingsPage = () => {
         }
       } catch (error) {
         console.error("Error parsing contact information:", error);
+        toast.error("Error parsing contact information");
       }
     }
     
@@ -97,6 +98,7 @@ const SettingsPage = () => {
   }, [contactInformation]);
   
   useEffect(() => {
+    if (typeof window === "undefined") return;
     fetchProfileData();
   }, []);
 

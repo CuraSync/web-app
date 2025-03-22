@@ -72,6 +72,7 @@ const SettingsPage = () => {
    }
  };
   useEffect(() => {
+  if (typeof window === "undefined") return;
    if (contactInformation) {
      try {
        const parsedContacts = JSON.parse(contactInformation);
