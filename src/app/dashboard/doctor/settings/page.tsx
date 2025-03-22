@@ -253,7 +253,7 @@ const SettingsPage = () => {
       <div className="flex-1 p-8">
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Settings</h1>
+            <h1 className="text-2xl font-bold">Profile</h1>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border p-6">

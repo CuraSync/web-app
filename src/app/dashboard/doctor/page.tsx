@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import DoctorSidebar from '@/components/doctor/Sidebar';
 import api from '@/utils/api';
+import Link from 'next/link';
+import { Settings } from 'lucide-react';
 
 interface DoctorStats {
   totalPatients: number;
@@ -40,8 +42,6 @@ const DoctorDashboard = () => {
     try {
       const response = await api.get('/doctor/home');
       setDoctorData(response.data);
-      // You would typically get these stats from your backend
-      // For now using placeholder stats
       setStats({
         totalPatients: 24,
         newPatients: 3,
@@ -67,28 +67,65 @@ const DoctorDashboard = () => {
       
       <div className="flex-1">
         <main className="p-6">
-          <h1 className="text-2xl font-bold mb-6">Doctor Dashboard</h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Dashboard Summary Cards */}
-            <div className="bg-white rounded-lg shadow p-6 border border-gray-100">
-              <h2 className="text-lg font-semibold mb-2">Total Patients</h2>
-              <p className="text-3xl font-bold text-blue-600">{stats.totalPatients}</p>
-              <p className="text-sm text-gray-500 mt-2">+{stats.newPatients} new this week</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6 border border-gray-100">
-              <h2 className="text-lg font-semibold mb-2">Appointments</h2>
-              <p className="text-3xl font-bold text-blue-600">{stats.appointments}</p>
-              <p className="text-sm text-green-500 mt-2">+{stats.appointmentChange}% from last month</p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6 border border-gray-100">
-              <h2 className="text-lg font-semibold mb-2">Rating</h2>
-              <p className="text-3xl font-bold text-blue-600">{stats.rating}</p>
-              <p className="text-sm text-gray-500 mt-2">Based on {stats.reviews} reviews</p>
-            </div>
+          {/* Added Profile Header */}
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">Doctor Dashboard</h1>
           </div>
-          
+
+          {/* Added Profile Preview Section */}
+          {doctorData && (
+            <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
+              <div className="flex items-center pb-6 border-b border-gray-200">
+                {doctorData.profilePic ? (
+                  <img 
+                    src={doctorData.profilePic} 
+                    alt={doctorData.fullName}
+                    className="w-24 h-24 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-3xl font-semibold">
+                    {doctorData.firstName[0]}{doctorData.lastName[0]}
+                  </div>
+                )}
+                <div className="ml-6">
+                  <h2 className="text-2xl font-bold">{doctorData.fullName}</h2>
+                  <p className="text-lg text-gray-600">{doctorData.specialization || 'General Practitioner'}</p>
+                  <div className="flex items-center mt-2">
+                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                      SLMC: {doctorData.slmcRegisterNumber}
+                    </span>
+                    {doctorData.rating && (
+                      <span className="ml-4 flex items-center text-yellow-500">
+                        ★ {doctorData.rating}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Professional Information</h3>
+                  <div className="space-y-3">
+                    <p><span className="font-medium">Experience:</span> {doctorData.yearsOfExperience || 'Not specified'}</p>
+                    <p><span className="font-medium">Hospitals:</span> {doctorData.currentWorkingHospitals?.join(', ') || 'Not specified'}</p>
+                    <p><span className="font-medium">Availability:</span> {doctorData.availability || 'Not specified'}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+                  <div className="space-y-3">
+                    <p><span className="font-medium">Email:</span> {doctorData.email}</p>
+                    <p><span className="font-medium">Phone:</span> {doctorData.phoneNumber}</p>
+                    <p><span className="font-medium">NIC:</span> {doctorData.nic}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Original Quick Actions Section */}
           <div className="mt-8">
             <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

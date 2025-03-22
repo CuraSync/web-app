@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
-  LayoutDashboard, Users, Bell, Settings, LogOut
+  LayoutDashboard, Users, Bell, Settings, LogOut,
+  User
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '@/utils/api';
@@ -12,6 +13,7 @@ interface DoctorProfile {
   lastName: string;
   fullName: string;
   specialization: string;
+  profilePic: string;
 }
 
 const DoctorSidebar = () => {
@@ -21,7 +23,8 @@ const DoctorSidebar = () => {
     firstName: '',
     lastName: '',
     fullName: '',
-    specialization: ''
+    specialization: '',
+    profilePic: '',
   });
 
   const navigationItems = [
@@ -29,7 +32,7 @@ const DoctorSidebar = () => {
     { href: '/dashboard/doctor/patients', icon: Users, label: 'Patients' },
     { href: '/dashboard/doctor/doctors', icon: Users, label: 'Doctors' },
     { href: '/dashboard/doctor/notification', icon: Bell, label: 'Requests' },
-    { href: '/dashboard/doctor/settings', icon: Settings, label: 'Settings' },
+    { href: '/dashboard/doctor/settings', icon: User, label: 'Profile' },
   ];
 
   useEffect(() => {
@@ -85,11 +88,6 @@ const DoctorSidebar = () => {
                 >
                   <Icon className={`w-5 h-5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
                   <span className="font-medium">{item.label}</span>
-                  {item.label === 'Requests' && (
-                    <span className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      3
-                    </span>
-                  )}
                 </Link>
               );
             })}
@@ -99,9 +97,17 @@ const DoctorSidebar = () => {
       
       <div className="p-6 border-t border-gray-200">
         <div className="flex items-center">
-          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
-            {doctorProfile.firstName?.[0]}{doctorProfile.lastName?.[0]}
-          </div>
+          {doctorProfile.profilePic ? (
+            <img 
+              src={doctorProfile.profilePic}
+              alt="Profile"
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
+              {doctorProfile.firstName?.[0]}{doctorProfile.lastName?.[0]}
+            </div>
+          )}
           <div className="ml-3">
             <p className="text-sm font-medium text-gray-900">
               {doctorProfile.fullName || 'Loading...'}

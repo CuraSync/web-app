@@ -79,12 +79,13 @@ const MessagesPage = () => {
     if (newMessage.trim() === "") return;
 
     const now = new Date();
+    const sriLankaDate = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
 
     try {
       await api.post("/doctor/doctor/sendMessage", {
         reciveDoctorId: senderDoctorId,
         message: newMessage,
-        addedDate: now.toISOString().split("T")[0],
+        addedDate: sriLankaDate.toISOString().split("T")[0],
         addedTime: now.toTimeString().substring(0, 5),
         sender: doctorId,
       });
