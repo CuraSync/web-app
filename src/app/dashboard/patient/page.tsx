@@ -156,17 +156,9 @@
   
           {/* Medical Tracking Dashboard Access */}
           <div className="mt-6 bg-white rounded-lg shadow-sm border p-6">
-            <p className="text-center text-lg font-medium">
-              Do you want to access your medical tracking Dashboard?
+            <p className="text-center text-xl font-medium text-red-600">
+              <b>HOPE YOUR HEALTH IS GOOD! KEEP TRACKING YOUR HEALTH WITH US.</b>
             </p>
-            <div className="mt-4 flex justify-center space-x-4">
-              <button className="px-6 py-2 bg-red-500 text-white rounded-md">
-                Yes
-              </button>
-              <button className="px-6 py-2 bg-green-500 text-white rounded-md">
-                No
-              </button>
-            </div>
           </div>
   
         </main>

@@ -1,20 +1,17 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import {
-  Users,
-  HelpCircle,
-  LogOut,
   Settings as SettingsIcon,
   Upload,
   Loader2,
   Camera,
-} from "lucide-react";
+} from "lucide-react"; // Removed unused imports
 import { useRouter } from "next/navigation";
 import Sidebar from "../sidebar/sidebar";
 import { toast } from "sonner";
 import axios from "axios";
 import api from "@/utils/api";
-
+import { AxiosError } from "axios"; // Import AxiosError
 
 interface PatientInfo {
   firstName: string;
@@ -39,7 +36,6 @@ const SettingsPage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [profilePic, setProfilePic] = useState("");
   const [uploading, setUploading] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [image, setImage] = useState<File | null>(null);
@@ -76,7 +72,7 @@ const SettingsPage = () => {
         console.log("Raw API Response:", JSON.stringify(data, null, 2));
 
         // Normalize dateOfBirth to YYYY-MM-DD
-        const normalizeDate = (date: string | null |  "") => {
+        const normalizeDate = (date: string | null | "") => {
           if (!date) return "";
           const parsedDate = new Date(date);
           return isNaN(parsedDate.getTime())
@@ -92,7 +88,6 @@ const SettingsPage = () => {
           bmi: String(data.bmi ?? ""),
           dateOfBirth: normalizeDate(data.dateOfBirth),
           email: String(data.email ?? ""),
-          guardianEmail: String(data.guardianEmail ?? ""),
           guardianName: String(data.guardianName ?? ""),
           guardianContactNumber: String(data.guardianContactNumber ?? ""),
           height: String(data.height ?? ""),
@@ -123,16 +118,16 @@ const SettingsPage = () => {
     setIsSaving(true);
     try {
       const profileData = {
-        firstName: patientInfo.firstName ,
-        lastName: patientInfo.lastName ,
-        fullName:patientInfo.firstName + " " + patientInfo.lastName,
-        address: patientInfo.address ,
-        phoneNumber: patientInfo.phoneNumber ,
-        dateOfBirth: patientInfo.dateOfBirth ,
-        height:  Number(patientInfo.height) ,
-        weight:  Number(patientInfo.weight) ,
-        bmi: parseFloat(patientInfo.bmi) ,
-        bloodType: patientInfo.bloodType ,
+        firstName: patientInfo.firstName,
+        lastName: patientInfo.lastName,
+        fullName: patientInfo.firstName + " " + patientInfo.lastName,
+        address: patientInfo.address,
+        phoneNumber: patientInfo.phoneNumber,
+        dateOfBirth: patientInfo.dateOfBirth,
+        height: Number(patientInfo.height),
+        weight: Number(patientInfo.weight),
+        bmi: parseFloat(patientInfo.bmi),
+        bloodType: patientInfo.bloodType,
         guardianName: patientInfo.guardianName,
         guardianContactNumber: patientInfo.guardianContactNumber,
         profilePic: imageUrl,
@@ -144,7 +139,7 @@ const SettingsPage = () => {
       toast.success("Profile updated successfully");
       localStorage.setItem("patientData", JSON.stringify(response.data));
       router.refresh();
-    } catch (error: any) {
+    } catch (error: AxiosError) { // Replace 'any' with 'AxiosError'
       console.error("Save Error:", {
         message: error.message,
         response: error.response?.data,
@@ -155,7 +150,6 @@ const SettingsPage = () => {
       setIsSaving(false);
     }
   };
-
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -189,7 +183,6 @@ const SettingsPage = () => {
     } finally {
       setUploading(false);
     }
-
   };
 
   const removeProfilePic = () => {
@@ -219,7 +212,6 @@ const SettingsPage = () => {
     });
   };
 
-
   useEffect(() => {
     const userRole = localStorage.getItem("userRole");
     if (userRole !== "patient") {
@@ -245,46 +237,55 @@ const SettingsPage = () => {
           </div>
 
           <div className="p-8 flex-1 flex justify-center items-center">
-        <div>
-          <div className="flex flex-col items-center gap-4 p-4 border rounded-lg shadow-md w-80">
-            <div className="relative w-32 h-32">
-              {imageUrl ? (
-                <img
-                  src={imageUrl}
-                  alt="Profile Picture"
-                  className="w-32 h-32 rounded-full object-cover border"
-                />
-              ) : (
-                <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                  No Image
+            <div>
+              <div className="flex flex-col items-center gap-4 p-4 border rounded-lg shadow-md w-80">
+                <div className="relative w-32 h-32">
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt="Profile Picture"
+                      className="w-32 h-32 rounded-full object-cover border"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                      No Image
+                    </div>
+                  )}
                 </div>
-              )}
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  id="profilePicInput"
+                  onChange={handleProfilePicChange}
+                />
+                <label
+                  htmlFor="profilePicInput"
+                  className="cursor-pointer text-blue-600 hover:text-blue-800"
+                >
+                  <Camera className="inline-block mr-2" /> Choose Image
+                </label>
+
+                <button
+                  onClick={handleUpload}
+                  disabled={!image || uploading}
+                  className="text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {uploading ? "Uploading..." : <><Upload className="inline-block mr-2" /> Upload</>}
+                </button>
+
+                {imageUrl && (
+                  <button
+                    onClick={removeProfilePic}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    Remove Profile Picture
+                  </button>
+                )}
+              </div>
             </div>
-
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              id="profilePicInput"
-              onChange={handleProfilePicChange}
-            />
-            <label
-              htmlFor="profilePicInput"
-      
-            >
-              <Camera className="inline-block mr-2" /> Choose Image
-            </label>
-
-            <button
-              onClick={handleUpload}
-            
-              disabled={!image || uploading}
-            >
-              {uploading ? "Uploading..." : <><Upload className="inline-block mr-2" /> Upload</>}
-            </button>
           </div>
-        </div>
-      </div>
 
           <h2 className="text-lg font-semibold mt-6 mb-4">Personal Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -450,33 +451,31 @@ const SettingsPage = () => {
                 className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               />
             </div>
-
           </div>
-        </div>
 
-        <div className="mt-6 flex space-x-4">
-          <button
-            onClick={handleSaveProfile}
-            disabled={isSaving}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <SettingsIcon className="w-4 h-4 mr-2" />
-                Save Changes
-              </>
-            )}
-          </button>
-
+          <div className="mt-6 flex space-x-4">
+            <button
+              onClick={handleSaveProfile}
+              disabled={isSaving}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <SettingsIcon className="w-4 h-4 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
-    
   );
 };
+
 export default SettingsPage;

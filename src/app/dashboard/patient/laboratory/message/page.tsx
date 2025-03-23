@@ -6,6 +6,7 @@ import io from "socket.io-client";
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 import Sidebar from "../../sidebar/sidebar";
+import { AxiosError } from "axios"; // Import AxiosError
 
 interface Message {
   labId: string;
@@ -17,7 +18,6 @@ interface Message {
 }
 
 const MessagesPage = () => {
-  const [report, setReport] = useState<File | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [reportData, setReportData] = useState<Record<string, any>>({});
   const [isOpen, setIsOpen] = useState(false);
@@ -29,6 +29,20 @@ const MessagesPage = () => {
   const selectedLaboratory = searchParams.get("labId");
 
   useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await api.post("/patient/lab/messages", {
+          labId: selectedLaboratory,
+        });
+        setMessages(response.data);
+        console.log(response.data);
+        await fetchReportData(response.data); // Await to ensure report data is fetched before rendering
+      } catch (error: AxiosError) { // Replace 'any' with 'AxiosError'
+        toast.error("Failed to load messages. Please check your connection.");
+        console.error("Request failed:", error);
+      }
+    };
+
     fetchMessages();
 
     const serverUrl = "wss://curasync-backend.onrender.com/chat";
@@ -49,14 +63,15 @@ const MessagesPage = () => {
     socket.on("receive-message", (message: Message) => {
       setMessages((prevMessages) => [...prevMessages, message]);
       console.log("Received message:", message);
+      fetchReportData([message]); // Fetch report data for the new message
     });
 
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [selectedLaboratory]); // Add selectedLaboratory as a dependency
 
-  const fetchReportData = async (message: any) => {
+  const fetchReportData = async (message: Message[]) => { // Replace 'any' with 'Message[]'
     for (const msg of message) {
       if (msg.type === "report") {
         try {
@@ -72,20 +87,6 @@ const MessagesPage = () => {
           console.error("Error parsing report data:", error);
         }
       }
-    }
-  };
-
-  const fetchMessages = async () => {
-    try {
-      const response = await api.post("/patient/lab/messages", {
-        labId: selectedLaboratory,
-      });
-      setMessages(response.data);
-      console.log(response.data);
-      fetchReportData(response.data);
-    } catch (error) {
-      toast.error("Failed to load messages. Please check your connection.");
-      console.error("Request failed:", error);
     }
   };
 
