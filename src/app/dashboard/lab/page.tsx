@@ -5,7 +5,7 @@ import api from "@/utils/api";
 import { toast } from "sonner";
 import Image from "next/image";
 
-export const LabDashboard = () => {
+const LabDashboard = () => {
   const [labName, setLabName] = useState("");
   const [licenceNumber, setLicenceNumber] = useState("");
   const [email, setEmail] = useState("");
