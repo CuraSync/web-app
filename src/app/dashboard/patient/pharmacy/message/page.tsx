@@ -1,10 +1,10 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import api from "@/utils/api";
 import io from "socket.io-client";
 import Sidebar from "../../sidebar/sidebar";
 import { useSearchParams } from "next/navigation";
-import { AxiosError } from "axios"; // Import AxiosError
+import { AxiosError } from "axios";
 
 interface Message {
   pharmacyId: string;
@@ -15,7 +15,8 @@ interface Message {
   type: "message" | "prescription";
 }
 
-const MessagesPage = () => {
+// Client component that uses useSearchParams
+function MessageContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
 
@@ -31,7 +32,7 @@ const MessagesPage = () => {
         setMessages(response.data);
         console.log(response.data);
       } catch (error) {
-        const axiosError = error as AxiosError; // Replace 'any' with 'AxiosError'
+        const axiosError = error as AxiosError;
         if (axiosError.response?.status === 404) {
           return;
         }
@@ -45,7 +46,6 @@ const MessagesPage = () => {
     const token = localStorage.getItem("accessToken");
     const additionalData = { id: selectedPharmacy };
 
-    // Connect to WebSocket server with token and additional data in the handshake
     const socket = io(serverUrl, {
       auth: {
         token,
@@ -65,9 +65,8 @@ const MessagesPage = () => {
     return () => {
       socket.disconnect();
     };
-  }, [selectedPharmacy]); // Add selectedPharmacy as a dependency
+  }, [selectedPharmacy]);
 
-  // Sort messages by date and time
   const pharmacyMessages = [...messages].sort((a, b) => {
     return (
       a.addedDate.localeCompare(b.addedDate) ||
@@ -75,7 +74,6 @@ const MessagesPage = () => {
     );
   });
 
-  // Format date for display
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("en-US", {
@@ -85,7 +83,6 @@ const MessagesPage = () => {
     });
   };
 
-  // Send new message
   const handleSendMessage = async () => {
     if (newMessage.trim() === "") return;
 
@@ -101,7 +98,7 @@ const MessagesPage = () => {
         type: "message",
       });
       console.log(response.data);
-    } catch (error: AxiosError) { // Replace 'any' with 'AxiosError'
+    } catch (error) {
       console.error("Request failed:", error);
     }
     setNewMessage("");
@@ -178,6 +175,29 @@ const MessagesPage = () => {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function MessagingLoader() {
+  return (
+    <div className="flex h-screen bg-gray-100">
+      <Sidebar />
+      <div className="flex flex-col flex-grow p-4 items-center justify-center">
+        <div className="text-lg font-medium text-gray-600">
+          Loading messages...
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Main page component with Suspense
+const MessagesPage = () => {
+  return (
+    <Suspense fallback={<MessagingLoader />}>
+      <MessageContent />
+    </Suspense>
   );
 };
 

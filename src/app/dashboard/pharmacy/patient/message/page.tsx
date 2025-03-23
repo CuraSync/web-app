@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import api from "@/utils/api";
 import { io } from "socket.io-client";
 import PharmacySidebar from "../../sidebar/sidebar";
 import { useSearchParams } from "next/navigation";
-import { toast } from "sonner"; 
+import { toast } from "sonner";
 
 interface Message {
   patientId: string;
@@ -16,7 +16,8 @@ interface Message {
   type: "message" | "prescription";
 }
 
-const MessagesPage = () => {
+// Client component that uses useSearchParams
+function MessageContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
   const searchParams = useSearchParams();
@@ -30,8 +31,8 @@ const MessagesPage = () => {
     }
 
     try {
-      const response = await api.post("/pharmacy/patient/messages", { 
-        patientId: selectedPatient 
+      const response = await api.post("/pharmacy/patient/messages", {
+        patientId: selectedPatient,
       });
       setMessages(response.data);
     } catch (error) {
@@ -43,7 +44,7 @@ const MessagesPage = () => {
   useEffect(() => {
     // Early return if running on server or no patient selected
     if (typeof window === "undefined" || !selectedPatient) return;
-    
+
     fetchMessages();
 
     const serverUrl = "wss://curasync-backend.onrender.com/chat";
@@ -57,7 +58,7 @@ const MessagesPage = () => {
     socket.on("connect", () => {
       toast.success("Connected to chat!");
     });
-    
+
     socket.on("receive-message", (message) => {
       setMessages((prev) => [...prev, message]);
     });
@@ -72,11 +73,11 @@ const MessagesPage = () => {
       toast.error("No patient selected");
       return;
     }
-    
+
     if (!newMessage.trim()) {
       return;
     }
-    
+
     const now = new Date();
     const sriLankaDate = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
 
@@ -88,19 +89,19 @@ const MessagesPage = () => {
         addedTime: now.toLocaleTimeString("en-US", {
           hour12: false,
           hour: "2-digit",
-          minute: "2-digit"
+          minute: "2-digit",
         }),
         sender: "pharmacy",
-        type: "message"
+        type: "message",
       });
       toast.success("Message sent successfully!");
-      
+
       // No need to manually fetch messages here as the socket will handle it
     } catch (error) {
       toast.error("Failed to send message. Please try again.");
       console.error("Request failed:", error);
     }
-    
+
     setNewMessage("");
   };
 
@@ -127,21 +128,26 @@ const MessagesPage = () => {
             sortedMessages.map((msg, index) => {
               let parsedData;
               try {
-                parsedData = typeof msg.data === "string" ? JSON.parse(msg.data) : msg.data;
+                parsedData =
+                  typeof msg.data === "string"
+                    ? JSON.parse(msg.data)
+                    : msg.data;
               } catch (error) {
                 console.error("Error parsing msg.data:", error);
                 parsedData = { message: msg.data };
               }
 
               return (
-                <div 
-                  key={index} 
-                  className={`flex mb-4 ${msg.sender === "pharmacy" ? "justify-end" : "justify-start"}`}
+                <div
+                  key={index}
+                  className={`flex mb-4 ${
+                    msg.sender === "pharmacy" ? "justify-end" : "justify-start"
+                  }`}
                 >
-                  <div 
+                  <div
                     className={`max-w-xs px-4 py-2 rounded-lg ${
-                      msg.sender === "pharmacy" 
-                        ? "bg-blue-600 text-white rounded-br-none" 
+                      msg.sender === "pharmacy"
+                        ? "bg-blue-600 text-white rounded-br-none"
                         : "bg-gray-200 text-black rounded-bl-none"
                     }`}
                   >
@@ -149,7 +155,13 @@ const MessagesPage = () => {
                       {parsedData?.message || "No message"}
                     </div>
                     <div className="flex justify-end mt-1">
-                      <span className={`text-xs ${msg.sender === "pharmacy" ? "text-blue-100" : "text-gray-500"}`}>
+                      <span
+                        className={`text-xs ${
+                          msg.sender === "pharmacy"
+                            ? "text-blue-100"
+                            : "text-gray-500"
+                        }`}
+                      >
                         {msg.addedTime}
                       </span>
                     </div>
@@ -178,6 +190,31 @@ const MessagesPage = () => {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function MessagingLoader() {
+  return (
+    <div className="min-h-screen flex flex-col md:flex-row bg-white">
+      <div className="flex-shrink-0 md:w-1/4 lg:w-1/5">
+        <PharmacySidebar />
+      </div>
+      <div className="flex flex-col flex-1 p-4 bg-gray-100 items-center justify-center">
+        <div className="text-lg font-medium text-gray-600">
+          Loading messages...
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+const MessagesPage = () => {
+  return (
+    <Suspense fallback={<MessagingLoader />}>
+      <MessageContent />
+    </Suspense>
   );
 };
 

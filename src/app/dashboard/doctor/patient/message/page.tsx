@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import api from "@/utils/api";
 import io from "socket.io-client";
 import { useSearchParams } from "next/navigation";
@@ -12,7 +12,8 @@ interface Message {
   sender: "doctor" | "patient";
 }
 
-const MessagesPage = () => {
+// Client component that uses useSearchParams
+function MessageContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
   const searchParams = useSearchParams();
@@ -157,6 +158,26 @@ const MessagesPage = () => {
         </button>
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function MessagingLoader() {
+  return (
+    <div className="flex flex-col h-screen bg-gray-100 p-4 items-center justify-center">
+      <div className="text-lg font-medium text-gray-600">
+        Loading messages...
+      </div>
+    </div>
+  );
+}
+
+// Main page component with Suspense
+const MessagesPage = () => {
+  return (
+    <Suspense fallback={<MessagingLoader />}>
+      <MessageContent />
+    </Suspense>
   );
 };
 

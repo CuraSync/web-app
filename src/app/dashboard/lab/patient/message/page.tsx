@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import api from "@/utils/api";
 import io from "socket.io-client";
 import { useSearchParams } from "next/navigation";
@@ -21,13 +21,14 @@ interface ReportData {
   file_name: string;
 }
 
-const MessagesPage = () => {
+// Client component that uses useSearchParams
+function MessageContent() {
   const [report, setReport] = useState<File | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
   const [reportData, setReportData] = useState<Record<string, ReportData>>({});
   const searchParams = useSearchParams();
-  const [selectedPatient,setSelectedPatient] = useState<string | null>(null);
+  const selectedPatient = searchParams.get("patientId");
   const [isOpen, setIsOpen] = useState(false);
   const [reportFile, setReportFile] = useState<File | null>(null);
   const [reportUrl, setReportUrl] = useState<string | null>(null);
@@ -48,31 +49,35 @@ const MessagesPage = () => {
   }, []);
 
   // Create a memoized version of fetchReportData
-  const fetchReportData = useCallback(async (messagesToProcess: Message[]) => {
-    for (const msg of messagesToProcess) {
-      if (msg.type === "report") {
-        try {
-          const reportId = typeof msg.data === 'string' 
-            ? JSON.parse(msg.data)?.reportId 
-            : msg.data?.reportId;
-            
-          if (reportId && !reportData[reportId]) {
-            const info = await getReportInfo(reportId);
-            if (info) {
-              setReportData((prev) => ({ ...prev, [reportId]: info.data }));
+  const fetchReportData = useCallback(
+    async (messagesToProcess: Message[]) => {
+      for (const msg of messagesToProcess) {
+        if (msg.type === "report") {
+          try {
+            const reportId =
+              typeof msg.data === "string"
+                ? JSON.parse(msg.data)?.reportId
+                : msg.data?.reportId;
+
+            if (reportId && !reportData[reportId]) {
+              const info = await getReportInfo(reportId);
+              if (info) {
+                setReportData((prev) => ({ ...prev, [reportId]: info.data }));
+              }
             }
+          } catch (error) {
+            console.error("Error parsing report data:", error);
           }
-        } catch (error) {
-          console.error("Error parsing report data:", error);
         }
       }
-    }
-  }, [getReportInfo, reportData]);
+    },
+    [getReportInfo, reportData]
+  );
 
   // Memoize fetchMessages to prevent unnecessary recreations
   const fetchMessages = useCallback(async () => {
     if (!selectedPatient) return;
-    
+
     try {
       const response = await api.post("/laboratory/patient/messages", {
         patientId: selectedPatient,
@@ -86,7 +91,6 @@ const MessagesPage = () => {
   }, [selectedPatient, fetchReportData]);
 
   useEffect(() => {
-    setSelectedPatient(searchParams.get("patientId"));
     fetchMessages();
 
     const serverUrl = "wss://curasync-backend.onrender.com/chat";
@@ -138,12 +142,12 @@ const MessagesPage = () => {
       toast.error("No patient selected");
       return;
     }
-    
+
     if (!newMessage.trim() && !report) {
       toast.error("Please enter a message or select a report");
       return;
     }
-    
+
     let type = "message";
     let uploadedReportId = null;
 
@@ -174,14 +178,14 @@ const MessagesPage = () => {
         type,
       });
       toast.success("Message sent successfully");
-      
+
       // No need to call fetchMessages() here as the WebSocket will update
       // the messages when the server broadcasts the message
     } catch (error) {
       toast.error("Failed to send the message. Please try again later.");
       console.error("Request failed:", error);
     }
-    
+
     setNewMessage("");
     setReport(null);
   };
@@ -274,7 +278,8 @@ const MessagesPage = () => {
                       } shadow-md`}
                     >
                       <div className="text-sm">
-                        {typeof msg.data === "string" && msg.data.startsWith("{")
+                        {typeof msg.data === "string" &&
+                        msg.data.startsWith("{")
                           ? JSON.parse(msg.data)?.message
                           : msg.data.message || msg.data}
                       </div>
@@ -291,38 +296,42 @@ const MessagesPage = () => {
                   </div>
                 )}
 
-                {msg.type === "report" && (() => {
-                  const reportId = typeof msg.data === "string"
-                    ? JSON.parse(msg.data)?.reportId
-                    : msg.data?.reportId;
+                {msg.type === "report" &&
+                  (() => {
+                    const reportId =
+                      typeof msg.data === "string"
+                        ? JSON.parse(msg.data)?.reportId
+                        : msg.data?.reportId;
 
-                  return reportData[reportId] && (
-                    <div className="flex flex-col bg-blue-50 p-6 rounded-lg shadow-lg max-w-md ml-auto mb-6 hover:shadow-xl transition-shadow duration-300 ease-in-out">
-                      {/* Report Section */}
-                      <div className="flex items-center gap-4 mb-6">
-                        <span className="text-blue-600 text-3xl">📄</span>
-                        <p
-                          className="font-semibold text-blue-800 text-lg truncate w-3/4 cursor-pointer hover:text-blue-600 transition-all duration-300"
-                          onClick={() => handleReportClick(reportId)}
-                        >
-                          {reportData[reportId].file_name}
-                        </p>
-                      </div>
+                    return (
+                      reportData[reportId] && (
+                        <div className="flex flex-col bg-blue-50 p-6 rounded-lg shadow-lg max-w-md ml-auto mb-6 hover:shadow-xl transition-shadow duration-300 ease-in-out">
+                          {/* Report Section */}
+                          <div className="flex items-center gap-4 mb-6">
+                            <span className="text-blue-600 text-3xl">📄</span>
+                            <p
+                              className="font-semibold text-blue-800 text-lg truncate w-3/4 cursor-pointer hover:text-blue-600 transition-all duration-300"
+                              onClick={() => handleReportClick(reportId)}
+                            >
+                              {reportData[reportId].file_name}
+                            </p>
+                          </div>
 
-                      {/* Divider between Report and Message */}
-                      <div className="border-t border-gray-300 my-6"></div>
+                          {/* Divider between Report and Message */}
+                          <div className="border-t border-gray-300 my-6"></div>
 
-                      {/* Message Section */}
-                      <div className="text-sm text-gray-600 font-bold ml-2 mt-2 max-w-[220px] overflow-hidden text-ellipsis">
-                        <p>
-                          {typeof msg.data === "string"
-                            ? JSON.parse(msg.data)?.message
-                            : msg.data?.message}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })()}
+                          {/* Message Section */}
+                          <div className="text-sm text-gray-600 font-bold ml-2 mt-2 max-w-[220px] overflow-hidden text-ellipsis">
+                            <p>
+                              {typeof msg.data === "string"
+                                ? JSON.parse(msg.data)?.message
+                                : msg.data?.message}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    );
+                  })()}
               </React.Fragment>
             );
           })}
@@ -359,7 +368,9 @@ const MessagesPage = () => {
       {isOpen && currentReportId && reportFile && reportUrl && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-70">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96 space-y-6 transform transition-all duration-300 scale-100 hover:scale-105">
-            <h2 className="text-3xl font-medium text-gray-900">Report Details</h2>
+            <h2 className="text-3xl font-medium text-gray-900">
+              Report Details
+            </h2>
             <div className="relative w-full h-64">
               <Image
                 src={reportUrl}
@@ -384,6 +395,31 @@ const MessagesPage = () => {
         </div>
       )}
     </div>
+  );
+}
+
+// Loading fallback component
+function MessagingLoader() {
+  return (
+    <div className="flex flex-col md:flex-row h-screen bg-gray-100">
+      <div className="w-64 flex-shrink-0 bg-gray-800 text-white">
+        <LabSidebar />
+      </div>
+      <div className="flex flex-col flex-grow bg-gray-50 p-6 items-center justify-center">
+        <div className="text-xl font-medium text-gray-600">
+          Loading messages...
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+const MessagesPage = () => {
+  return (
+    <Suspense fallback={<MessagingLoader />}>
+      <MessageContent />
+    </Suspense>
   );
 };
 

@@ -1,5 +1,11 @@
 "use client";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  Suspense,
+} from "react";
 import api from "@/utils/api";
 import { useSearchParams } from "next/navigation";
 import { Send, File } from "lucide-react";
@@ -29,7 +35,8 @@ interface ReportData {
   [key: string]: unknown;
 }
 
-const DoctorTimelinePage = () => {
+// Extracted client component that uses useSearchParams
+function TimelineContent() {
   const [notes, setNotes] = useState<TimelineNote[]>([]);
   const [newNote, setNewNote] = useState<string>("");
   const [noteType, setNoteType] = useState<
@@ -70,11 +77,10 @@ const DoctorTimelinePage = () => {
       for (const msg of messages) {
         if (msg.type === "report") {
           try {
-            const data = typeof msg.data === "string" 
-              ? JSON.parse(msg.data) 
-              : msg.data;
+            const data =
+              typeof msg.data === "string" ? JSON.parse(msg.data) : msg.data;
             const reportId = data?.reportId;
-            
+
             if (reportId && !reportData[reportId]) {
               const info = await getReportInfo(reportId);
               if (info) {
@@ -198,7 +204,9 @@ const DoctorTimelinePage = () => {
 
   const sortedNotes = [...notes].sort((a, b) => {
     const dateCompare = a.addedDate.localeCompare(b.addedDate);
-    return dateCompare !== 0 ? dateCompare : a.addedTime.localeCompare(b.addedTime);
+    return dateCompare !== 0
+      ? dateCompare
+      : a.addedTime.localeCompare(b.addedTime);
   });
 
   let lastDate = "";
@@ -240,9 +248,10 @@ const DoctorTimelinePage = () => {
               const showDate = note.addedDate !== lastDate;
               lastDate = note.addedDate;
               const isReport = note.type === "report";
-              const noteData = typeof note.data === "string" 
-                ? JSON.parse(note.data) 
-                : note.data;
+              const noteData =
+                typeof note.data === "string"
+                  ? JSON.parse(note.data)
+                  : note.data;
 
               return (
                 <React.Fragment key={index}>
@@ -268,12 +277,10 @@ const DoctorTimelinePage = () => {
                           />
                           <p className="w-16 text-center">
                             {reportData[noteData.reportId]?.file_name}
-                            {reportData[noteData.reportId]?.file_type && 
+                            {reportData[noteData.reportId]?.file_type &&
                               `.${reportData[noteData.reportId]?.file_type}`}
                           </p>
-                          <p className="text-gray-800">
-                            {noteData.note}
-                          </p>
+                          <p className="text-gray-800">{noteData.note}</p>
                           <div className="mt-2 text-sm text-gray-500 justify-end">
                             {note.addedTime}
                           </div>
@@ -290,9 +297,7 @@ const DoctorTimelinePage = () => {
                             note.type
                           )}`}
                         >
-                          <p className="text-gray-800">
-                            {noteData.note}
-                          </p>
+                          <p className="text-gray-800">{noteData.note}</p>
                           <div className="mt-2 text-sm text-gray-500 text-right">
                             {note.addedTime}
                           </div>
@@ -365,6 +370,26 @@ const DoctorTimelinePage = () => {
         </div>
       )}
     </div>
+  );
+}
+
+// Loading fallback component
+function TimelineLoader() {
+  return (
+    <div className="flex flex-col h-screen bg-gray-100 p-4 items-center justify-center">
+      <div className="text-lg font-medium text-gray-600">
+        Loading timeline...
+      </div>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+const DoctorTimelinePage = () => {
+  return (
+    <Suspense fallback={<TimelineLoader />}>
+      <TimelineContent />
+    </Suspense>
   );
 };
 

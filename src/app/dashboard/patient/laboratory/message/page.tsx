@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import api from "@/utils/api";
 import io from "socket.io-client";
 import { toast } from "sonner";
@@ -23,7 +23,8 @@ interface ReportData {
   // Add other report properties as needed
 }
 
-const MessagesPage = () => {
+// Client component that uses useSearchParams
+function MessageContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [reportData, setReportData] = useState<Record<string, ReportData>>({});
   const [isOpen, setIsOpen] = useState(false);
@@ -152,19 +153,6 @@ const MessagesPage = () => {
     }
   };
 
-  // const getReportInfo = async (reportId: string) => {
-  //   if (!reportId) return null;
-
-  //   try {
-  //     const response = await api.get(`/labreport/info/${reportId}`);
-  //     console.log(response.data);
-  //     return response.data;
-  //   } catch (error) {
-  //     toast.error("Failed to fetch report details. Please try again later.");
-  //     console.error("Request failed:", error);
-  //   }
-  // };
-
   const handleReportClick = (reportId: string) => {
     setCurrentReportId(reportId);
     setIsOpen(true);
@@ -280,33 +268,60 @@ const MessagesPage = () => {
       </div>
 
       {isOpen && currentReportId && reportFile && reportUrl && (
-          <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-70">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-96 space-y-6 transform transition-all duration-300 scale-100 hover:scale-105">
-              <h2 className="text-3xl font-medium text-gray-900">Report Details</h2>
-              <div className="relative w-full h-64">
-                <Image 
-                  src={reportUrl}
-                  alt="Report" 
-                  fill
-                  style={{ objectFit: 'contain' }}
-                  className="rounded-lg shadow-md border border-gray-300"
-                  unoptimized // Important for blob URLs
-                />
-              </div>
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  setCurrentReportId(null);
-                  setReportUrl(null);
-                }}
-                className="mt-6 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-300"
-              >
-                Close
-              </button>
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-70">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96 space-y-6 transform transition-all duration-300 scale-100 hover:scale-105">
+            <h2 className="text-3xl font-medium text-gray-900">
+              Report Details
+            </h2>
+            <div className="relative w-full h-64">
+              <Image
+                src={reportUrl}
+                alt="Report"
+                fill
+                style={{ objectFit: "contain" }}
+                className="rounded-lg shadow-md border border-gray-300"
+                unoptimized // Important for blob URLs
+              />
             </div>
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                setCurrentReportId(null);
+                setReportUrl(null);
+              }}
+              className="mt-6 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-300"
+            >
+              Close
+            </button>
           </div>
+        </div>
       )}
     </div>
+  );
+}
+
+// Loading fallback component
+function MessagingLoader() {
+  return (
+    <div className="flex flex-col md:flex-row h-screen bg-gray-100">
+      <div className="w-64 flex-shrink-0">
+        <Sidebar />
+      </div>
+      <div className="flex flex-col flex-grow bg-gray-100 p-4 items-center justify-center">
+        <div className="text-lg font-medium text-gray-600">
+          Loading messages...
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+const MessagesPage = () => {
+  return (
+    <Suspense fallback={<MessagingLoader />}>
+      <MessageContent />
+    </Suspense>
   );
 };
 

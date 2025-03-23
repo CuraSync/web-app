@@ -1,11 +1,17 @@
 "use client";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  Suspense,
+} from "react";
 import api from "@/utils/api";
 import { useSearchParams } from "next/navigation";
 import { File } from "lucide-react";
 import io from "socket.io-client";
 import { toast } from "sonner";
-import Image from 'next/image';
+import Image from "next/image";
 
 interface TimelineNote {
   doctorId: string;
@@ -32,19 +38,20 @@ interface ApiError {
   };
 }
 
-const DoctorTimelinePage = () => {
+// Client component that uses useSearchParams
+function TimelineContent() {
   const [notes, setNotes] = useState<TimelineNote[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [reportUrl, setReportUrl] = useState<string | null>(null);
   const prevNotesLengthRef = useRef(0);
   const [reportData, setReportData] = useState<Record<string, ReportInfo>>({});
   const reportDataRef = useRef(reportData);
-  
+
   const searchParams = useSearchParams();
   const selectedDoctor = searchParams.get("doctorId");
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
+
   useEffect(() => {
     reportDataRef.current = reportData;
   }, [reportData]);
@@ -59,7 +66,10 @@ const DoctorTimelinePage = () => {
   const processNote = useCallback(async (note: TimelineNote) => {
     if (note.type === "report") {
       try {
-        const data = typeof note.data === "object" ? note.data : JSON.parse(note.data as string) as ReportNoteData;
+        const data =
+          typeof note.data === "object"
+            ? note.data
+            : (JSON.parse(note.data as string) as ReportNoteData);
         const reportId = (data as ReportNoteData).reportId;
         if (reportId && !reportDataRef.current[reportId]) {
           const info = await getReportInfo(reportId);
@@ -95,7 +105,7 @@ const DoctorTimelinePage = () => {
 
   useEffect(() => {
     fetchNotes();
-    
+
     const serverUrl = "wss://curasync-backend.onrender.com/timeline";
     const token = localStorage.getItem("accessToken");
     const additionalData = { id: selectedDoctor };
@@ -175,11 +185,15 @@ const DoctorTimelinePage = () => {
   };
 
   const getNoteData = (note: TimelineNote) => {
-    return typeof note.data === "object" ? note.data : JSON.parse(note.data as string);
+    return typeof note.data === "object"
+      ? note.data
+      : JSON.parse(note.data as string);
   };
 
-  const sortedNotes = [...notes].sort((a, b) => 
-    a.addedDate.localeCompare(b.addedDate) || a.addedTime.localeCompare(b.addedTime)
+  const sortedNotes = [...notes].sort(
+    (a, b) =>
+      a.addedDate.localeCompare(b.addedDate) ||
+      a.addedTime.localeCompare(b.addedTime)
   );
 
   let lastDate = "";
@@ -197,7 +211,7 @@ const DoctorTimelinePage = () => {
               const showDate = note.addedDate !== lastDate;
               if (showDate) lastDate = note.addedDate;
               const noteData = getNoteData(note);
-              
+
               return (
                 <React.Fragment key={index}>
                   {showDate && (
@@ -210,7 +224,11 @@ const DoctorTimelinePage = () => {
                   <div className="flex items-center justify-center">
                     <div className="w-5/12 pr-8">
                       {note.type === "note" && (
-                        <div className={`p-4 rounded-lg ${getNoteColor(note.type)}`}>
+                        <div
+                          className={`p-4 rounded-lg ${getNoteColor(
+                            note.type
+                          )}`}
+                        >
                           <p className="text-gray-800">{noteData.note}</p>
                           <div className="mt-2 text-sm text-gray-500 text-right">
                             {note.addedTime}
@@ -221,16 +239,34 @@ const DoctorTimelinePage = () => {
                     <div className="w-3 h-3 bg-blue-500 rounded-full z-10" />
                     <div className="w-5/12 pl-8">
                       {note.type === "report" && (
-                        <div className={`p-4 rounded-lg ${getNoteColor(note.type)}`}>
+                        <div
+                          className={`p-4 rounded-lg ${getNoteColor(
+                            note.type
+                          )}`}
+                        >
                           <File
                             size={32}
                             className="cursor-pointer w-14"
-                            onClick={() => handleReportClick((noteData as ReportNoteData).reportId)}
+                            onClick={() =>
+                              handleReportClick(
+                                (noteData as ReportNoteData).reportId
+                              )
+                            }
                           />
                           <p className="w-16 text-center">
-                            {reportData[(noteData as ReportNoteData).reportId]?.file_name}.{reportData[(noteData as ReportNoteData).reportId]?.file_type}
+                            {
+                              reportData[(noteData as ReportNoteData).reportId]
+                                ?.file_name
+                            }
+                            .
+                            {
+                              reportData[(noteData as ReportNoteData).reportId]
+                                ?.file_type
+                            }
                           </p>
-                          <p className="text-gray-800">{(noteData as ReportNoteData).note}</p>
+                          <p className="text-gray-800">
+                            {(noteData as ReportNoteData).note}
+                          </p>
                           <div className="mt-2 text-sm text-gray-500 text-right">
                             {note.addedTime}
                           </div>
@@ -249,11 +285,11 @@ const DoctorTimelinePage = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center relative">
             <h2 className="text-xl font-semibold">Report View</h2>
-            <Image 
-              src={reportUrl} 
-              alt="Report" 
-              width={400} 
-              height={400} 
+            <Image
+              src={reportUrl}
+              alt="Report"
+              width={400}
+              height={400}
               className="mt-4 mx-auto"
             />
             <button
@@ -269,6 +305,26 @@ const DoctorTimelinePage = () => {
         </div>
       )}
     </div>
+  );
+}
+
+// Loading fallback component
+function TimelineLoader() {
+  return (
+    <div className="flex flex-col h-screen bg-gray-100 p-4 items-center justify-center">
+      <div className="text-lg font-medium text-gray-600">
+        Loading timeline...
+      </div>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+const DoctorTimelinePage = () => {
+  return (
+    <Suspense fallback={<TimelineLoader />}>
+      <TimelineContent />
+    </Suspense>
   );
 };
 
