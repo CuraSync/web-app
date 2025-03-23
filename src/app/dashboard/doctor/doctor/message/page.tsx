@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "@/utils/api";
 import io from "socket.io-client";
 import { getId } from "@/utils/jwt";
@@ -20,6 +20,17 @@ const MessagesPage = () => {
   const searchParams = useSearchParams();
   const senderDoctorId = searchParams.get("doctorId");
   const doctorId = getId();
+
+  const fetchMessages = useCallback(async () => {
+    try {
+      const response = await api.post("/doctor/doctor/messages", {
+        reciveDoctorId: senderDoctorId,
+      });
+      setMessages(response.data);
+    } catch (error) {
+      console.error("Request failed:", error);
+    }
+  }, [senderDoctorId]); // Add senderDoctorId as dependency
 
   useEffect(() => {
     fetchMessages();
@@ -46,19 +57,9 @@ const MessagesPage = () => {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [fetchMessages, senderDoctorId]); // Add dependencies here
 
-  const fetchMessages = async () => {
-    try {
-      const response = await api.post("/doctor/doctor/messages", {
-        reciveDoctorId: senderDoctorId,
-      });
-      setMessages(response.data);
-    } catch (error) {
-      console.error("Request failed:", error);
-    }
-  };
-
+  // Rest of the component remains the same
   const doctorMessages = [...messages].sort((a, b) => {
     return (
       a.addedDate.localeCompare(b.addedDate) ||

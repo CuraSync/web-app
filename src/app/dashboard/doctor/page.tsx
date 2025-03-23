@@ -1,32 +1,31 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import DoctorSidebar from '@/components/doctor/Sidebar';
 import api from '@/utils/api';
-import Link from 'next/link';
-import { Settings } from 'lucide-react';
 
-interface DoctorStats {
-  totalPatients: number;
-  newPatients: number;
-  appointments: number;
-  appointmentChange: number;
-  rating: number;
-  reviews: number;
+interface DoctorProfile {
+  doctorId: string;
+  profilePic?: string;
+  firstName: string;
+  lastName: string;
+  specialization?: string;
+  slmcRegisterNumber: string;
+  rating?: number;
+  yearsOfExperience?: string;
+  currentWorkingHospitals?: string[];
+  availability?: string;
+  email: string;
+  phoneNumber: string;
+  nic: string;
+  role?: string;
 }
 
 const DoctorDashboard = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [doctorData, setDoctorData] = useState<any>(null);
-  const [stats, setStats] = useState<DoctorStats>({
-    totalPatients: 0,
-    newPatients: 0,
-    appointments: 0,
-    appointmentChange: 0,
-    rating: 0,
-    reviews: 0
-  });
+  const [doctorData, setDoctorData] = useState<DoctorProfile | null>(null);
 
   useEffect(() => {
     const userRole = localStorage.getItem('userRole');
@@ -42,14 +41,6 @@ const DoctorDashboard = () => {
     try {
       const response = await api.get('/doctor/home');
       setDoctorData(response.data);
-      setStats({
-        totalPatients: 24,
-        newPatients: 3,
-        appointments: 156,
-        appointmentChange: 5,
-        rating: parseFloat(response.data.rating) || 4.8,
-        reviews: 450
-      });
       setIsLoading(false);
     } catch (error) {
       console.error('Failed to fetch doctor data:', error);
@@ -67,19 +58,19 @@ const DoctorDashboard = () => {
       
       <div className="flex-1">
         <main className="p-6">
-          {/* Added Profile Header */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Doctor Dashboard</h1>
           </div>
 
-          {/* Added Profile Preview Section */}
           {doctorData && (
             <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
               <div className="flex items-center pb-6 border-b border-gray-200">
                 {doctorData.profilePic ? (
-                  <img 
+                  <Image 
                     src={doctorData.profilePic} 
-                    alt={doctorData.fullName}
+                    alt={`${doctorData.firstName} ${doctorData.lastName}`}
+                    width={96}
+                    height={96}
                     className="w-24 h-24 rounded-full object-cover"
                   />
                 ) : (
@@ -88,11 +79,13 @@ const DoctorDashboard = () => {
                   </div>
                 )}
                 <div className="ml-6">
-                  <h2 className="text-2xl font-bold">{doctorData.fullName}</h2>
+                  <h2 className="text-2xl font-bold">
+                    {doctorData.firstName} {doctorData.lastName}
+                  </h2>
                   <p className="text-lg text-gray-600">{doctorData.specialization || 'General Practitioner'}</p>
                   <div className="flex items-center mt-2">
                     <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                      SLMC: {doctorData.slmcRegisterNumber}
+                      Doctor ID: {doctorData.doctorId}
                     </span>
                     {doctorData.rating && (
                       <span className="ml-4 flex items-center text-yellow-500">
@@ -125,7 +118,6 @@ const DoctorDashboard = () => {
             </div>
           )}
 
-          {/* Original Quick Actions Section */}
           <div className="mt-8">
             <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

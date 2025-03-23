@@ -1,8 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import {
-  Users,
-  HelpCircle,
   LogOut,
   Settings as SettingsIcon,
   Upload,
@@ -10,6 +8,7 @@ import {
   X
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Sidebar from "@/components/doctor/Sidebar";
 import { toast } from "sonner";
 import api from "@/utils/api";
@@ -41,7 +40,6 @@ const SettingsPage = () => {
   const [profile, setProfile] = useState<DoctorProfile | null>(null);
   const [newEducation, setNewEducation] = useState('');
   const [newCertification, setNewCertification] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     const userRole = localStorage.getItem("userRole");
@@ -49,7 +47,6 @@ const SettingsPage = () => {
       router.push("/auth/login/doctor");
       return;
     }
-
     fetchDoctorProfile();
   }, [router]);
 
@@ -69,21 +66,17 @@ const SettingsPage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image size should be less than 5MB");
       return;
     }
 
-    // Validate file type
     if (!file.type.match(/image\/(jpeg|jpg|png|gif|webp)/i)) {
       toast.error("Only JPG, PNG, GIF, or WebP images are allowed");
       return;
     }
 
-    setImageFile(file);
     setIsUploading(true);
-
     const formData = new FormData();
     formData.append("file", file);
     formData.append(
@@ -94,22 +87,16 @@ const SettingsPage = () => {
     try {
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dxurgfxgr"}/image/upload`,
-        {
-          method: 'POST',
-          body: formData
-        }
+        { method: 'POST', body: formData }
       );
 
       if (!response.ok) throw new Error('Upload failed');
-
       const data = await response.json();
       
-      if (profile) {
-        setProfile({
-          ...profile,
-          profilePic: data.secure_url
-        });
-      }
+      setProfile(prev => prev ? {
+        ...prev,
+        profilePic: data.secure_url
+      } : null);
 
       toast.success("Profile picture uploaded successfully");
     } catch (error) {
@@ -117,80 +104,52 @@ const SettingsPage = () => {
       toast.error("Failed to upload profile picture");
     } finally {
       setIsUploading(false);
-      setImageFile(null);
     }
   };
 
   const removeProfilePic = () => {
-    if (profile) {
-      setProfile({
-        ...profile,
-        profilePic: null
-      });
-    }
+    setProfile(prev => prev ? { ...prev, profilePic: null } : null);
     toast.success("Profile picture removed");
   };
 
-  const handleProfileChange = (field: keyof DoctorProfile, value: any) => {
+  const handleProfileChange = (
+    field: keyof DoctorProfile,
+    value: string | string[] | null
+  ) => {
     if (!profile) return;
-
-    setProfile(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        [field]: value
-      };
-    });
+    setProfile(prev => prev ? { ...prev, [field]: value } : null);
   };
 
   const handleAddEducation = () => {
     if (!profile || !newEducation.trim()) return;
-
-    setProfile(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        education: [...prev.education, newEducation.trim()]
-      };
-    });
+    setProfile(prev => prev ? {
+      ...prev,
+      education: [...prev.education, newEducation.trim()]
+    } : null);
     setNewEducation('');
   };
 
   const handleRemoveEducation = (index: number) => {
-    if (!profile) return;
-
-    setProfile(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        education: prev.education.filter((_, i) => i !== index)
-      };
-    });
+    setProfile(prev => prev ? {
+      ...prev,
+      education: prev.education.filter((_, i) => i !== index)
+    } : null);
   };
 
   const handleAddCertification = () => {
     if (!profile || !newCertification.trim()) return;
-
-    setProfile(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        certifications: [...prev.certifications, newCertification.trim()]
-      };
-    });
+    setProfile(prev => prev ? {
+      ...prev,
+      certifications: [...prev.certifications, newCertification.trim()]
+    } : null);
     setNewCertification('');
   };
 
   const handleRemoveCertification = (index: number) => {
-    if (!profile) return;
-
-    setProfile(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        certifications: prev.certifications.filter((_, i) => i !== index)
-      };
-    });
+    setProfile(prev => prev ? {
+      ...prev,
+      certifications: prev.certifications.filter((_, i) => i !== index)
+    } : null);
   };
 
   const handleSaveProfile = async () => {
@@ -198,9 +157,7 @@ const SettingsPage = () => {
 
     try {
       setIsSaving(true);
-      
-      // Include all profile data including the profilePic URL
-      const profileData = {
+      await api.post("/doctor/profile", {
         firstName: profile.firstName,
         lastName: profile.lastName,
         fullName: profile.fullName,
@@ -216,9 +173,7 @@ const SettingsPage = () => {
         availability: profile.availability,
         description: profile.description,
         profilePic: profile.profilePic
-      };
-
-      await api.post("/doctor/profile", profileData);
+      });
       
       toast.success('Profile updated successfully');
       router.refresh();
@@ -231,10 +186,7 @@ const SettingsPage = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('id');
+    localStorage.clear();
     router.push('/auth/login/doctor');
     toast.success('Logged out successfully');
   };
@@ -265,9 +217,11 @@ const SettingsPage = () => {
                   </div>
                 ) : profile.profilePic ? (
                   <>
-                    <img
+                    <Image
                       src={profile.profilePic}
                       alt="Profile"
+                      width={80}
+                      height={80}
                       className="w-full h-full object-cover"
                     />
                     <button 

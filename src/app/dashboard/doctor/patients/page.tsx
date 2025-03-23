@@ -1,14 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, Clock, Search, Paperclip, Send, X } from "lucide-react";
+import Image from "next/image";
+import { MessageCircle, Clock, Search } from "lucide-react"; // Removed unused Send import
 import DoctorSidebar from "@/components/doctor/Sidebar";
 import api from "@/utils/api";
 import { toast } from "sonner";
-
-function generateUniqueId(): string {
-  return 'msg_' + Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9);
-}
 
 interface Patient {
   firstName: string;
@@ -20,26 +17,12 @@ interface Patient {
   profilePic: string;
 }
 
-interface Message {
-  id: string;
-  content: string;
-  sender: 'doctor' | 'patient';
-  timestamp: string;
-  addedDate: string;
-  addedTime: string;
-}
-
 const PatientsPage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPriority, setSelectedPriority] = useState("All");
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [showMessageModal, setShowMessageModal] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [isSending, setIsSending] = useState(false);
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
   const [newPatientId, setNewPatientId] = useState("");
   const [isSendingRequest, setIsSendingRequest] = useState(false);
@@ -48,144 +31,55 @@ const PatientsPage = () => {
     fetchList();
   }, []);
 
-  useEffect(() => {
-    if (selectedPatient) {
-      fetchMessages(selectedPatient.patientId);
-    }
-  }, [selectedPatient]);
-
   const fetchList = async () => {
     try {
       setIsLoading(true);
       const response = await api.get("/doctor/patient");
-      console.log("Fetched patients raw data:", response.data);
       setPatients(response.data);
     } catch (error) {
       console.error("Failed to fetch patients:", error);
-      //console.log("Error details:", error.response?.data);
       toast.error("Failed to load patients");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const fetchMessages = async (patientId: string) => {
-    try {
-      const response = await api.post("/doctor/patient/messages", { patientId });
-      setMessages(response.data);
-    } catch (error) {
-      console.error("Failed to fetch messages:", error);
-      toast.error("Failed to load messages");
-    }
-  };
-
   const handleAddPatient = async () => {
     if (!newPatientId.trim()) {
-      console.log("Empty patient ID attempt"); 
       toast.error("Please enter a valid Patient ID");
       return;
     }
 
-    const now= new Date();
-    console.log("Sending patient request with:", { 
-      patientId: newPatientId,
-      date: now.toISOString().split("T")[0],
-      time: now.toTimeString().substring(0, 5)
-    });
-
+    const now = new Date();
     try {
       setIsSendingRequest(true);
-      await api.post("doctor/patient/request", { patientId: newPatientId,addedDate: now.toISOString().split("T")[0],
-        addedTime: now.toTimeString().substring(0, 5),  }); // <---
-      //console.log("Add patient response:", response.data);
+      await api.post("/patient/request", {
+        patientId: newPatientId,
+        addedDate: now.toISOString().split("T")[0],
+        addedTime: now.toTimeString().substring(0, 5),
+      });
       toast.success("Request sent successfully");
       setShowAddPatientModal(false);
       setNewPatientId("");
     } catch (error) {
       console.error("Failed to send request:", error);
-      //console.log("Error response data:", error.response?.data);
       toast.error("Failed to send request. Please check the Patient ID.");
     } finally {
       setIsSendingRequest(false);
     }
   };
 
-  const sendMessage = async () => {
-    if (!selectedPatient || !newMessage.trim()) {
-      console.log("Message send attempt with empty message");
-      return;
-    }
-
-    setIsSending(true);
-    try {
-      const now = new Date();
-      console.log("Sending message:", { 
-        patientId: selectedPatient.patientId,
-        content: newMessage,
-        time: now.toISOString()
-      });
-      const addedDate = now.toISOString().split('T')[0];
-      const addedTime = now.toLocaleTimeString('en-US', { 
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      
-      const messageId = generateUniqueId();
-
-      await api.post("/doctor/patient/sendMessage", {
-        patientId: selectedPatient.patientId,
-        message: newMessage,
-        addedDate,
-        addedTime
-      });
-
-      //console.log("Message send response:", response.data);
-
-      setMessages([...messages, {
-        id: messageId,
-        content: newMessage,
-        sender: 'doctor',
-        timestamp: new Date().toLocaleTimeString(),
-        addedDate,
-        addedTime
-      }]);
-
-      setNewMessage("");
-      toast.success("Message sent");
-    } catch (error) {
-      console.error("Failed to send message:", error);
-      //console.log("Message error details:", error.response?.data);
-      toast.error("Failed to send message");
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  const filteredPatients = patients.filter(patient => {
-    const matchesSearch = 
-      `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPriority = selectedPriority === "All" || patient.priority.toString() === selectedPriority;
-    
-    console.log(`Patient ${patient.patientId} - `, { 
-      matchesSearch,
-      matchesPriority,
-      searchQuery,
-      selectedPriority
-    });
-
+  const filteredPatients = patients.filter((patient) => {
+    const matchesSearch = `${patient.firstName} ${patient.lastName}`
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesPriority =
+      selectedPriority === "All" ||
+      patient.priority.toString() === selectedPriority;
     return matchesSearch && matchesPriority;
   });
 
   const handleMessageClick = (patientId: string) => {
-    console.log("Navigating to messages for patient:", patientId);
     router.push(`/dashboard/doctor/patient/message?patientId=${patientId}`);
   };
 
@@ -195,19 +89,27 @@ const PatientsPage = () => {
 
   const getPriorityColor = (priority: number) => {
     switch (priority) {
-      case 1: return "bg-red-100 text-red-800";
-      case 2: return "bg-yellow-100 text-yellow-800";
-      case 3: return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
+      case 1:
+        return "bg-red-100 text-red-800";
+      case 2:
+        return "bg-yellow-100 text-yellow-800";
+      case 3:
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getPriorityText = (priority: number) => {
     switch (priority) {
-      case 1: return "High";
-      case 2: return "Medium";
-      case 3: return "Low";
-      default: return "Unknown";
+      case 1:
+        return "High";
+      case 2:
+        return "Medium";
+      case 3:
+        return "Low";
+      default:
+        return "Unknown";
     }
   };
 
@@ -299,14 +201,17 @@ const PatientsPage = () => {
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
                           {patient.profilePic ? (
-                            <img
+                            <Image
+                              width={40}
+                              height={40}
                               className="h-10 w-10 rounded-full object-cover"
                               src={patient.profilePic}
                               alt={`${patient.firstName} ${patient.lastName}`}
                             />
                           ) : (
                             <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
-                              {patient.firstName[0]}{patient.lastName[0]}
+                              {patient.firstName[0]}
+                              {patient.lastName[0]}
                             </div>
                           )}
                         </div>
@@ -326,7 +231,11 @@ const PatientsPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(patient.priority)}`}>
+                      <span
+                        className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getPriorityColor(
+                          patient.priority
+                        )}`}
+                      >
                         {getPriorityText(patient.priority)}
                       </span>
                     </td>
@@ -356,7 +265,9 @@ const PatientsPage = () => {
         {showAddPatientModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-              <h3 className="text-lg font-semibold mb-4">Send Connection Request</h3>
+              <h3 className="text-lg font-semibold mb-4">
+                Send Connection Request
+              </h3>
               <input
                 type="text"
                 placeholder="Enter Patient ID"
@@ -378,81 +289,6 @@ const PatientsPage = () => {
                 >
                   {isSendingRequest ? "Sending..." : "Send Request"}
                 </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showMessageModal && selectedPatient && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg w-full max-w-2xl h-[600px] flex flex-col">
-              <div className="p-4 border-b flex justify-between items-center">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
-                    {selectedPatient.firstName[0]}{selectedPatient.lastName[0]}
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="font-medium">{selectedPatient.firstName} {selectedPatient.lastName}</h3>
-                    <p className="text-sm text-gray-500">Patient</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setShowMessageModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
-                <div className="space-y-4">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${message.sender === 'doctor' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-xs md:max-w-md rounded-lg p-3 ${
-                          message.sender === 'doctor'
-                            ? 'bg-blue-500 text-white ml-auto'
-                            : 'bg-white border'
-                        }`}
-                      >
-                        <p>{message.content}</p>
-                        <p className={`text-xs mt-1 text-right ${
-                          message.sender === 'doctor' ? 'text-blue-100' : 'text-gray-500'
-                        }`}>
-                          {message.timestamp}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="p-4 border-t">
-                <div className="flex items-end space-x-2">
-                  <button className="p-2 text-gray-400 hover:text-gray-600">
-                    <Paperclip className="w-5 h-5" />
-                  </button>
-                  <div className="flex-1">
-                    <textarea
-                      placeholder="Type a message..."
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                      rows={1}
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                    />
-                  </div>
-                  <button
-                    onClick={sendMessage}
-                    disabled={!newMessage.trim() || isSending}
-                    className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Send className="w-5 h-5" />
-                  </button>
-                </div>
               </div>
             </div>
           </div>
