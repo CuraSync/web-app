@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { FaFlask } from "react-icons/fa";
 import { toast } from "sonner";
 import LoginLayout from "@/components/auth/LoginLayout";
@@ -15,6 +15,13 @@ const LabLogin = () => {
     remember: false,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [shouldNavigate, setShouldNavigate] = useState(false);
+
+  useEffect(() => {
+    if (shouldNavigate) {
+      router.push("/dashboard/lab");
+    }
+  }, [shouldNavigate, router]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -29,16 +36,13 @@ const LabLogin = () => {
     const { email, password } = formData;
 
     if (!email || !password) {
-      toast.error("Please enter both email and password");
+      setTimeout(() => toast.error("Please enter both email and password"), 0);
       return;
     }
 
-    if (email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        toast.error("Please enter a valid email address");
-        return;
-      }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setTimeout(() => toast.error("Please enter a valid email address"), 0);
+      return;
     }
 
     setIsLoading(true);
@@ -56,28 +60,29 @@ const LabLogin = () => {
           credential_type: "email",
           credential_data: email,
           role: "lab",
-          password: password,
-          deviceId: deviceId,
+          password,
+          deviceId,
         }
       );
 
       localStorage.setItem("accessToken", response.data.accessToken);
       localStorage.setItem("refreshToken", response.data.refreshToken);
       localStorage.setItem("userRole", "lab");
-      localStorage.setItem("id", response.data.id);
 
-      toast.success("Login successful!");
-      router.push("/dashboard/lab");
-    } catch (error: any) {
-      if (error.response) {
-        toast.error(error.response.data.message || "Authentication failed");
+      setTimeout(() => toast.success("Login successful!"), 0);
+
+      setShouldNavigate(true);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response && error.response.data) {
+        const errorMessage = error.response.data.message || "Authentication failed";
+        setTimeout(() => toast.error(errorMessage), 0);
       } else {
-        toast.error("An error occurred during login");
+        setTimeout(() => toast.error("An error occurred during login"), 0);
       }
     } finally {
       setIsLoading(false);
     }
-  }, [formData, router]);
+  }, [formData]);
 
   return (
     <LoginLayout title="Laboratory Portal" icon={<FaFlask />} userType="lab">

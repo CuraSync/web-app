@@ -20,7 +20,7 @@ const MessagesPage = () => {
   const [report, setReport] = useState<File | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
-  const [reportData, setReportData] = useState<Record<string, any>>({});
+  const [reportData, setReportData] = useState<Record<string, { data: string }>>({});
   const searchParams = useSearchParams();
   const selectedPatient = searchParams.get("patientId");
   const [isOpen, setIsOpen] = useState(false);
@@ -110,7 +110,7 @@ const MessagesPage = () => {
     });
   };
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = async () => { 
     let type = "message";
     let uploadedReportId = null;
 
@@ -122,7 +122,8 @@ const MessagesPage = () => {
         return;
       }
       type = "report";
-    }
+    }   
+    
     const now = new Date();
     const sriLankaDate = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
 
@@ -304,26 +305,32 @@ const MessagesPage = () => {
   
         {/* Message Input Box */}
         <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
+        <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="file:bg-gradient-to-r file:from-blue-600 file:to-blue-400 file:text-white file:px-6 file:py-3 file:rounded-lg file:shadow-md file:transition-all file:duration-300 file:ease-in-out hover:file:bg-gradient-to-r hover:file:from-blue-500 hover:file:to-blue-300 hover:file:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-100 p-3 rounded-xl shadow-lg cursor-pointer text-gray-700 text-sm hover:bg-gray-200 transition-colors duration-300"
+            />
+
           <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="mb-4 sm:mb-0 bg-gray-100 p-2 rounded-lg text-sm cursor-pointer"
-          />
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-            className="flex-grow border border-gray-300 rounded-l-lg px-6 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
-          />
-          <button
-            onClick={handleSendMessage}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg w-full sm:w-auto transition-all duration-300 ease-in-out"
-          >
-            Send
-          </button>
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type a message..."
+              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+              className="flex-grow border border-gray-300 rounded-lg px-6 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-100 transition-all duration-300 ease-in-out hover:ring-2 hover:ring-blue-300 bg-gray-50 shadow-sm hover:bg-gray-100"
+            />
+
+            <button
+              onClick={handleSendMessage}
+              className="bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-500 hover:to-blue-300 text-white font-semibold py-3 px-6 rounded-lg shadow-lg w-full sm:w-auto transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-200"
+            >
+              Send
+            </button>
+
+
+
+
         </div>
       </div>
   

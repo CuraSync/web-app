@@ -55,7 +55,7 @@ const LabSignUpPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://curasync-backend.onrender.com/laboratory/register',{
+      await axios.post('https://curasync-backend.onrender.com/laboratory/register',{
         labName: formData.labName,
         email: formData.email,
         licenceNumber: formData.licenceNumber,
@@ -65,8 +65,8 @@ const LabSignUpPage = () => {
       })
       toast.success("Account created successfully!");
       router.push('/auth/login/lab');
-    } catch (error: any) {
-      if (error.response){
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response){
         toast.error(error.response.data.message || "Registration failed");
       }else{
         toast.error("An error occurred during registration. Please try again.");

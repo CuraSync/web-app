@@ -1,12 +1,11 @@
 "use client"
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import LabSidebar from "./sidebar/sidebar";
 import api from "@/utils/api";
 import { toast } from "sonner";
+import Image from "next/image";
 
 export const LabDashboard = () => {
-  const router = useRouter();
   const [labName, setLabName] = useState("");
   const [licenceNumber, setLicenceNumber] = useState("");
   const [email, setEmail] = useState("");
@@ -54,9 +53,11 @@ export const LabDashboard = () => {
       <div className="flex items-center space-x-4">
         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center">
           {profilePic ? (
-            <img
+            <Image
               src={profilePic}
               alt={labName}
+              width={80}
+              height={80}
               className="w-full h-full rounded-full object-cover"
             />
           ) : (
