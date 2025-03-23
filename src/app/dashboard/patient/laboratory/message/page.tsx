@@ -6,7 +6,7 @@ import io from "socket.io-client";
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 import Sidebar from "../../sidebar/sidebar";
-import { AxiosError } from "axios"; // Import AxiosError
+import Image from "next/image";
 
 interface Message {
   labId: string;
@@ -17,9 +17,15 @@ interface Message {
   type: "message" | "labReport" | "report";
 }
 
+// Define a proper type for report data
+interface ReportData {
+  file_name: string;
+  // Add other report properties as needed
+}
+
 const MessagesPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [reportData, setReportData] = useState<Record<string, any>>({});
+  const [reportData, setReportData] = useState<Record<string, ReportData>>({});
   const [isOpen, setIsOpen] = useState(false);
   const [reportFile, setReportFile] = useState<File | null>(null);
   const [newMessage, setNewMessage] = useState<string>("");
@@ -29,6 +35,39 @@ const MessagesPage = () => {
   const selectedLaboratory = searchParams.get("labId");
 
   useEffect(() => {
+    // Move fetchReportData inside useEffect to avoid dependency issues
+    const getReportInfo = async (reportId: string) => {
+      if (!reportId) return null;
+
+      try {
+        const response = await api.get(`/labreport/info/${reportId}`);
+        console.log(response.data);
+        return response.data;
+      } catch (error) {
+        toast.error("Failed to fetch report details. Please try again later.");
+        console.error("Request failed:", error);
+      }
+    };
+
+    const fetchReportData = async (messagesToProcess: Message[]) => {
+      for (const msg of messagesToProcess) {
+        if (msg.type === "report") {
+          try {
+            const reportId = JSON.parse(msg.data)?.reportId;
+            if (reportId && !reportData[reportId]) {
+              const info = await getReportInfo(reportId);
+              if (info) {
+                setReportData((prev) => ({ ...prev, [reportId]: info.data }));
+              }
+            }
+          } catch (error) {
+            toast.warning("Unable to parse report data. Please try again.");
+            console.error("Error parsing report data:", error);
+          }
+        }
+      }
+    };
+
     const fetchMessages = async () => {
       try {
         const response = await api.post("/patient/lab/messages", {
@@ -37,7 +76,7 @@ const MessagesPage = () => {
         setMessages(response.data);
         console.log(response.data);
         await fetchReportData(response.data); // Await to ensure report data is fetched before rendering
-      } catch (error: AxiosError) { // Replace 'any' with 'AxiosError'
+      } catch (error: unknown) {
         toast.error("Failed to load messages. Please check your connection.");
         console.error("Request failed:", error);
       }
@@ -69,26 +108,7 @@ const MessagesPage = () => {
     return () => {
       socket.disconnect();
     };
-  }, [selectedLaboratory]); // Add selectedLaboratory as a dependency
-
-  const fetchReportData = async (message: Message[]) => { // Replace 'any' with 'Message[]'
-    for (const msg of message) {
-      if (msg.type === "report") {
-        try {
-          const reportId = JSON.parse(msg.data)?.reportId;
-          if (reportId && !reportData[reportId]) {
-            const info = await getReportInfo(reportId);
-            if (info) {
-              setReportData((prev) => ({ ...prev, [reportId]: info.data }));
-            }
-          }
-        } catch (error) {
-          toast.warning("Unable to parse report data. Please try again.");
-          console.error("Error parsing report data:", error);
-        }
-      }
-    }
-  };
+  }, [selectedLaboratory, reportData]); // reportData is needed since it's used in fetchReportData
 
   const laboratoryMessages = [...messages].sort((a, b) => {
     return (
@@ -132,18 +152,18 @@ const MessagesPage = () => {
     }
   };
 
-  const getReportInfo = async (reportId: string) => {
-    if (!reportId) return null;
+  // const getReportInfo = async (reportId: string) => {
+  //   if (!reportId) return null;
 
-    try {
-      const response = await api.get(`/labreport/info/${reportId}`);
-      console.log(response.data);
-      return response.data;
-    } catch (error) {
-      toast.error("Failed to fetch report details. Please try again later.");
-      console.error("Request failed:", error);
-    }
-  };
+  //   try {
+  //     const response = await api.get(`/labreport/info/${reportId}`);
+  //     console.log(response.data);
+  //     return response.data;
+  //   } catch (error) {
+  //     toast.error("Failed to fetch report details. Please try again later.");
+  //     console.error("Request failed:", error);
+  //   }
+  // };
 
   const handleReportClick = (reportId: string) => {
     setCurrentReportId(reportId);
@@ -259,24 +279,32 @@ const MessagesPage = () => {
         </div>
       </div>
 
-      {isOpen && currentReportId && reportFile && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
-            <h2 className="text-xl font-semibold">Report Details</h2>
-            <p className="mt-2 text-gray-600"></p>
-            <img src={reportUrl} alt="Report" />
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                setCurrentReportId(null);
-                setReportUrl(null);
-              }}
-              className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg"
-            >
-              Close
-            </button>
+      {isOpen && currentReportId && reportFile && reportUrl && (
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-70">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-96 space-y-6 transform transition-all duration-300 scale-100 hover:scale-105">
+              <h2 className="text-3xl font-medium text-gray-900">Report Details</h2>
+              <div className="relative w-full h-64">
+                <Image 
+                  src={reportUrl}
+                  alt="Report" 
+                  fill
+                  style={{ objectFit: 'contain' }}
+                  className="rounded-lg shadow-md border border-gray-300"
+                  unoptimized // Important for blob URLs
+                />
+              </div>
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  setCurrentReportId(null);
+                  setReportUrl(null);
+                }}
+                className="mt-6 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-300"
+              >
+                Close
+              </button>
+            </div>
           </div>
-        </div>
       )}
     </div>
   );

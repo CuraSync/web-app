@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import SignUpLayout from "@/components/auth/SignUpLayout";
 import { toast } from "sonner";
-import axios, { AxiosError } from "axios"; // Updated to import AxiosError
+import axios from "axios"; 
 import { useRouter } from "next/navigation";
 
 const PatientSignUpPage = () => {
@@ -124,9 +124,9 @@ const PatientSignUpPage = () => {
       setTimeout(() => {
         router.push("/auth/login/patient");
       }, 1500);
-    } catch (error: AxiosError) { // Replaced 'any' with 'AxiosError'
-      if (error.response) {
-        toast.error(error.response.data.message || "Registration failed");
+    } catch (error: unknown) { 
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data.message || "Registration failed");
       } else {
         toast.error("An error occurred during registration");
       }

@@ -108,17 +108,22 @@ const LaboratoryPage = () => {
       setShowPopup(false);
       setLabIdInput("");
       setError(null);
-    } catch (error: AxiosError) { // Replace 'any' with 'AxiosError'
-      console.error(
-        "Error sending request:",
-        error.response?.status,
-        error.response?.data,
-        error.message
-      );
-      if (error.response?.status === 409) {
-        setError("This laboratory request already exists.");
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        console.error(
+          "Error sending request:",
+          error.response?.status,
+          error.response?.data,
+          error.message
+        );
+        if (error.response?.status === 409) {
+          setError("This laboratory request already exists.");
+        } else {
+          setError(error.response?.data?.message || "Failed to send request. Please try again.");
+        }
       } else {
-        setError(error.response?.data?.message || "Failed to send request. Please try again.");
+        console.error("Unexpected error:", error);
+        setError("An unexpected error occurred. Please try again.");
       }
     }
   };

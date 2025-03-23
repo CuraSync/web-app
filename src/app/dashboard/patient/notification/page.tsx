@@ -107,12 +107,12 @@ const PatientRequestPage = () => {
         <table className="w-full border-collapse border border-gray-200 shadow-md">
           <thead>
             <tr className="bg-gray-100">
-            <th className="border p-3 text-left">Lab ID</th>
-            <th className="border p-3 text-left">Lab Name</th>
-              <th className="border p-3 text-left">Added Date</th>
-              <th className="border p-3 text-left">Added Time</th>
+            <th className="border p-3 text-center">Lab ID</th>
+            <th className="border p-3 text-center">Lab Name</th>
+              <th className="border p-3 text-center">Added Date</th>
+              <th className="border p-3 text-center">Added Time</th>
             
-              {!isAccepted && <th className="border p-3 text-left">Actions</th>}
+              {!isAccepted && <th className="border p-3 text-center">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -125,12 +125,12 @@ const PatientRequestPage = () => {
              
                 {!isAccepted && (
                   <td className="border p-3">
-                    <button
-                      onClick={() => handleAcceptRequest(request._id, "lab")}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                    <div
+                    
+                      className="bg-yellow-100 text-black px-4 py-2 rounded-lg text-center"
                     >
-                      Accept
-                    </button>
+                      Pending
+                    </div>
                   </td>
                 )}
               </tr>
@@ -155,12 +155,12 @@ const PatientRequestPage = () => {
         <table className="w-full border-collapse border border-gray-200 shadow-md">
           <thead>
             <tr className="bg-gray-100">
-            <th className="border p-3 text-left">Pharmacy ID</th>
-            <th className="border p-3 text-left">Pharmacy Name</th>
-              <th className="border p-3 text-left">Added Date</th>
-              <th className="border p-3 text-left">Added Time</th>
+            <th className="border p-3 text-center">Pharmacy ID</th>
+            <th className="border p-3 text-center">Pharmacy Name</th>
+              <th className="border p-3 text-center">Added Date</th>
+              <th className="border p-3 text-center">Added Time</th>
             
-              {!isAccepted && <th className="border p-3 text-left">Actions</th>}
+              {!isAccepted && <th className="border p-3 text-center">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -173,12 +173,12 @@ const PatientRequestPage = () => {
                
                 {!isAccepted && (
                   <td className="border p-3">
-                    <button
-                      onClick={() => handleAcceptRequest(request._id, "pharmacy")}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-                    >
-                      Accept
-                    </button>
+                    <div
+                    
+                    className="bg-yellow-100 text-black px-4 py-2 rounded-lg text-center"
+                  >
+                    Pending
+                  </div>
                   </td>
                 )}
               </tr>
@@ -203,12 +203,12 @@ const PatientRequestPage = () => {
         <table className="w-full border-collapse border border-gray-200 shadow-md">
           <thead>
             <tr className="bg-gray-100">
-            <th className="border p-3 text-left">Doctor ID</th>
-            <th className="border p-3 text-left">Doctor Name</th>
-              <th className="border p-3 text-left">Added Date</th>
-              <th className="border p-3 text-left">Added Time</th>
+            <th className="border p-3 text-center">Doctor ID</th>
+            <th className="border p-3 text-center">Doctor Name</th>
+              <th className="border p-3 text-center">Added Date</th>
+              <th className="border p-3 text-center">Added Time</th>
               
-              {!isAccepted && <th className="border p-3 text-left">Actions</th>}
+              {!isAccepted && <th className="border p-3 text-center">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -223,12 +223,12 @@ const PatientRequestPage = () => {
             
                 {!isAccepted && (
                   <td className="border p-3">
-                    <button
-                      onClick={() => handleAcceptRequest(request._id, "doctor")}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-                    >
-                      Accept
-                    </button>
+                    <div
+                    
+                    className="bg-yellow-100 text-black px-4 py-2 rounded-lg text-center"
+                  >
+                    Pending
+                  </div>
                   </td>
                 )}
               </tr>
@@ -276,14 +276,14 @@ const PatientRequestPage = () => {
 
         {activeTab === "lab" && (
           <>
-          
+          {renderLabTable(labRequests, false)}
             {renderLabTable(acceptedLabRequests, true)}
           </>
         )}
 
         {activeTab === "pharmacy" && (
           <>
-   
+            {renderPharmacyTable(pharmacyRequests, false)}
             {renderPharmacyTable(acceptedPharmacyRequests, true)}
           </>
         )}

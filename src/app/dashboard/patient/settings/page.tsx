@@ -10,8 +10,9 @@ import { useRouter } from "next/navigation";
 import Sidebar from "../sidebar/sidebar";
 import { toast } from "sonner";
 import axios from "axios";
+import Image from "next/image";
 import api from "@/utils/api";
-import { AxiosError } from "axios"; // Import AxiosError
+
 
 interface PatientInfo {
   firstName: string;
@@ -139,13 +140,18 @@ const SettingsPage = () => {
       toast.success("Profile updated successfully");
       localStorage.setItem("patientData", JSON.stringify(response.data));
       router.refresh();
-    } catch (error: AxiosError) { // Replace 'any' with 'AxiosError'
-      console.error("Save Error:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
-      toast.error(error.response?.data?.message || "Failed to update profile");
+    } catch (error: unknown) {
+      console.error("Save Error:", error);
+      if (axios.isAxiosError(error)) {
+        console.error("Axios Error:", {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+        });
+        toast.error(error.response?.data?.message || "Failed to update profile");
+      } else {
+        toast.error("Failed to update profile");
+      }
     } finally {
       setIsSaving(false);
     }
@@ -241,11 +247,13 @@ const SettingsPage = () => {
               <div className="flex flex-col items-center gap-4 p-4 border rounded-lg shadow-md w-80">
                 <div className="relative w-32 h-32">
                   {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt="Profile Picture"
-                      className="w-32 h-32 rounded-full object-cover border"
-                    />
+                    <Image
+                    src={imageUrl}
+                    alt="Profile Picture"
+                    width={128}
+                    height={128}
+                    className="rounded-full object-cover border"
+                  />
                   ) : (
                     <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
                       No Image

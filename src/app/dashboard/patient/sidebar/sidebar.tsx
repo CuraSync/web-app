@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation"; // Removed usePathname
+import Image from "next/image"; 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import {
@@ -84,7 +85,13 @@ const Sidebar = () => {
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white">
-            <img src="/assets/logo/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+          <Image 
+              src="/assets/logo/logo.png" 
+              alt="Logo" 
+              width={40} 
+              height={40}
+              className="object-contain" 
+            />
           </div>
           <span className="text-xl font-bold text-gray-900">CuraSync</span>
         </Link>
@@ -143,11 +150,13 @@ const Sidebar = () => {
           <div className="flex items-center">
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-800 font-semibold">
               {profilePic ? (
-                <img
-                  src={profilePic}
-                  alt="Profile"
-                  className="w-full h-full object-cover rounded-full"
-                />
+                 <Image
+                 src={profilePic}
+                 alt="Profile"
+                 width={40}
+                 height={40}
+                 className="w-full h-full object-cover rounded-full"
+               />
               ) : (
                 <FaUser className="text-purple-800 w-5 h-5" />
               )}

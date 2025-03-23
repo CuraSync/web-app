@@ -30,8 +30,9 @@ const MessagesPage = () => {
         });
         setMessages(response.data);
         console.log(response.data);
-      } catch (error: AxiosError) { // Replace 'any' with 'AxiosError'
-        if (error.response?.status === 404) {
+      } catch (error) {
+        const axiosError = error as AxiosError; // Replace 'any' with 'AxiosError'
+        if (axiosError.response?.status === 404) {
           return;
         }
         console.error("Request failed:", error);

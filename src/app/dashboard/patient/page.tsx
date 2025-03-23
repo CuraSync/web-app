@@ -4,6 +4,7 @@
   import Sidebar from "./sidebar/sidebar";
   import { FaUser } from "react-icons/fa";
   import api from "@/utils/api";
+  import Image from "next/image";
   
   // Define the shape of the state object and API response
   interface PatientInfo {
@@ -106,9 +107,11 @@
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
                 {patientInfo.profilePic ? (
-                  <img
+                  <Image
                     src={patientInfo.profilePic}
                     alt={patientInfo.firstName}
+                    width={64}
+                    height={64}
                     className="w-full h-full object-cover"
                   />
                 ) : (

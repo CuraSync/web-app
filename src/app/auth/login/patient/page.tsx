@@ -4,7 +4,7 @@ import { FaUser } from "react-icons/fa";
 import { toast } from "sonner";
 import LoginLayout from "@/components/auth/LoginLayout";
 import { useRouter } from "next/navigation";
-import axios, { AxiosError } from "axios"; // Updated import to include AxiosError
+import axios from "axios"; 
 import { v4 as uuidv4 } from "uuid";
 
 const PatientLogin = () => {
@@ -68,9 +68,9 @@ const PatientLogin = () => {
 
         toast.success("Login successful!");
         router.push("/dashboard/patient");
-      } catch (error: AxiosError) { // Replaced 'any' with 'AxiosError'
-        if (error.response) {
-          toast.error(error.response.data.message || "Authentication failed");
+      } catch (error: unknown) { 
+        if (axios.isAxiosError(error)) {
+          toast.error(error.response?.data.message || "Authentication failed");
         } else {
           toast.error("An error occurred during login");
         }

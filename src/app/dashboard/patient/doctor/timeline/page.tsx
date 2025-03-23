@@ -1,10 +1,11 @@
 "use client";
-import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
+import React, { useState, useEffect, useRef} from "react";
 import api from "@/utils/api";
 import { useSearchParams } from "next/navigation";
 import { File } from "lucide-react";
 import io from "socket.io-client";
 import { toast } from "sonner";
+import Image from 'next/image';
 
 interface TimelineNote {
   doctorId: string;
@@ -285,23 +286,23 @@ const DoctorTimelinePage = () => {
       </div>
 
       {isOpen && reportUrl && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center relative z-50">
-            <h2 className="text-xl font-semibold">Report View</h2>
-            <p className="mt-2 text-gray-600"></p>
-            <img src={reportUrl} alt="" />
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                setReportUrl(null);
-              }}
-              className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-96 text-center relative z-50">
+                <h2 className="text-xl font-semibold">Report View</h2>
+                <p className="mt-2 text-gray-600"></p>
+                <Image src={reportUrl} alt="Report" width={400} height={400} />
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    setReportUrl(null);
+                  }}
+                  className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg"
+                >
+                  Close
+                </button>
+    </div>
+  </div>
+)}
     </div>
   );
 };
