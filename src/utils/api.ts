@@ -1,6 +1,12 @@
 import axios from "axios";
 import { toast } from "sonner";
-import {decodeToken} from "./jwt";
+import { decodeToken } from "./jwt";
+
+// Define interface for decoded token
+interface DecodedToken {
+  id: string;
+  // Add other expected properties from your JWT payload here
+}
 
 const axiosInstance = axios.create({
   baseURL: "https://curasync-backend.onrender.com",
@@ -10,7 +16,6 @@ const axiosInstance = axios.create({
 // Request Interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Only run on client side
     if (typeof window !== "undefined") {
       const accessToken = localStorage.getItem("accessToken");
       if (accessToken) {
@@ -22,7 +27,7 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// New access token generate using refreshtoken
+// Response Interceptor
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -32,27 +37,28 @@ axiosInstance.interceptors.response.use(
     ) {
       try {
         const refreshToken = localStorage.getItem("refreshToken");
-        const deco = refreshToken ? decodeToken(refreshToken) : null;
+        const deco = refreshToken ? decodeToken(refreshToken) as DecodedToken : null;
+        
         const refreshResponse = await axios.post(
           "https://curasync-backend.onrender.com/refresh",
           {
             deviceId: localStorage.getItem("deviceId"),
             refreshToken: refreshToken,
-            id: deco ? (deco as any).id : undefined,
+            id: deco?.id,
           }
         );
 
         const newAccessToken = refreshResponse.data.accessToken;
-        localStorage.setItem("accessToken", newAccessToken);
+        const newRefreshToken = refreshResponse.data.refreshToken;
 
-        const newRefreshToken = refreshResponse.data.accessToken;
+        localStorage.setItem("accessToken", newAccessToken);
         localStorage.setItem("refreshToken", newRefreshToken);
 
-        // Retry the original request with the new access token
         error.config.headers.Authorization = `Bearer ${newAccessToken}`;
         return axiosInstance.request(error.config);
       } catch (refreshError) {
         localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
         toast.error("Session expired. Please log in again.");
         if (typeof window !== "undefined") {
           window.location.href = "/";

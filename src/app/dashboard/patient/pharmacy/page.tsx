@@ -1,10 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { MessageSquare, Plus} from "lucide-react";
+import { MessageSquare, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../sidebar/sidebar";
 import api from "@/utils/api";
-import Swal from "sweetalert2"; // Import SweetAlert2
+import Swal from "sweetalert2";
+import { AxiosError } from "axios"; // Import AxiosError for type checking
 
 interface Pharmacy {
   id: string;
@@ -12,15 +13,13 @@ interface Pharmacy {
   pharmacyName: string;
   email: string;
   location: string;
-  addedDate: string;  // YYYY-MM-DD format
-  addedTime: string;  // HH:MM format
+  addedDate: string;
+  addedTime: string;
 }
 
 const PharmacyPage = () => {
   const router = useRouter();
   const [addedPharmacies, setAddedPharmacies] = useState<Pharmacy[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [pharmacyIdInput, setPharmacyIdInput] = useState("");
@@ -28,8 +27,7 @@ const PharmacyPage = () => {
   const fetchPharmacies = async () => {
     try {
       const response = await api.get("/patient/pharmacies");
-      setPharmacies(response.data as Pharmacy[]);
-      console.log("Pharmacies data:", response.data);
+      setAddedPharmacies(response.data as Pharmacy[]);
       setError(null);
     } catch (error) {
       console.error("Error fetching pharmacies:", error);
@@ -41,7 +39,6 @@ const PharmacyPage = () => {
     try {
       const response = await api.get("/patient/pharmacies");
       setAddedPharmacies(response.data as Pharmacy[]);
-      console.log("Added pharmacies:", response.data);
     } catch (error) {
       console.error("Error fetching added pharmacies:", error);
       setError("Failed to load added pharmacies.");
@@ -52,11 +49,6 @@ const PharmacyPage = () => {
     fetchPharmacies();
     fetchAddedPharmacies();
   }, []);
-
-  const filteredPharmacies = pharmacies.filter((pharmacy) =>
-    pharmacy.pharmacyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    pharmacy.location?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const handleAddPharmacy = async () => {
     if (!pharmacyIdInput) {
@@ -70,11 +62,11 @@ const PharmacyPage = () => {
     }
 
     const now = new Date();
-    const addedDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+    const addedDate = now.toISOString().split("T")[0];
     const addedTime = `${now.getHours().toString().padStart(2, "0")}:${now
       .getMinutes()
       .toString()
-      .padStart(2, "0")}`; // HH:MM
+      .padStart(2, "0")}`;
 
     try {
       const payload = {
@@ -82,43 +74,35 @@ const PharmacyPage = () => {
         addedDate: addedDate,
         addedTime: addedTime,
       };
-      console.log("Sending request with payload:", payload);
-      const response = await api.post("/pharmacy/request", payload);
-      console.log("Request sent successfully:", response.data);
+      
+      await api.post("/pharmacy/request", payload);
 
-      const newPharmacy: Pharmacy = {
-        id: response.data.id || "unknown",
-        pharmacyId: response.data.pharmacyId || pharmacyIdInput,
-        pharmacyName: response.data.pharmacyName || "Unknown Pharmacy",
-        email: response.data.email || "N/A",
-        location: response.data.location || "Unknown Location",
-        addedDate: response.data.addedDate || addedDate,
-        addedTime: response.data.addedTime || addedTime,
-      };
-
-
-      // Display SweetAlert2 success message
       Swal.fire({
         title: "Request successfully sent.",
         icon: "success",
         confirmButtonText: "OK",
       });
 
+      // Refresh the added pharmacies list
+      await fetchAddedPharmacies();
+      
       setShowPopup(false);
       setPharmacyIdInput("");
       setError(null);
-    } catch (error: any) {
-      console.error(
-        "Error sending request:",
-        error.response?.status,
-        error.response?.data,
-        error.message
-      );
-      if (error.response?.status === 409) {
-        setError("This pharmacy request already exists.");
-      } else {
-        setError(error.response?.data?.message || "Failed to send request. Please try again.");
+    } catch (error) {
+      let errorMessage = "Failed to send request. Please try again.";
+      
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 409) {
+          errorMessage = "This pharmacy request already exists.";
+        } else {
+          errorMessage = error.response?.data?.message || errorMessage;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
+
+      setError(errorMessage);
     }
   };
 

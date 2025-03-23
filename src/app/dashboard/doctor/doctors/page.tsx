@@ -18,6 +18,7 @@ interface Doctor {
 interface ApiDoctor {
   firstName: string;
   lastName: string;
+  doctorId: string;
   reciveDoctorId: string;
   profilePic: string;
   messageStatus: boolean;
@@ -40,13 +41,17 @@ const DoctorsPage = () => {
     try {
       setIsLoading(true);
       const response = await api.get("/doctor/doctors");
-      const mappedDoctors = response.data.map((doctor: ApiDoctor) => ({
-        firstName: doctor.firstName,
-        lastName: doctor.lastName,
-        doctorId: doctor.reciveDoctorId,
-        profilePic: doctor.profilePic,
-        messageStatus: doctor.messageStatus,
-      }));
+      const mappedDoctors = response.data.map((doctor: ApiDoctor) => {
+        const id = doctor.doctorId || doctor.reciveDoctorId;
+      
+        return {
+          firstName: doctor.firstName,
+          lastName: doctor.lastName,
+          doctorId: id,
+          profilePic: doctor.profilePic,
+          messageStatus: doctor.messageStatus,
+        };
+      });
       setDoctors(mappedDoctors);
     } catch (error) {
       console.error("Failed to fetch doctors:", error);
@@ -74,6 +79,7 @@ const DoctorsPage = () => {
       setShowAddDoctorModal(false);
       setNewDoctorId("");
     } catch (error) {
+      console.error("Failed to send request:", error); // Added error logging
       toast.error("Failed to send request. Please check the Doctor ID.");
     } finally {
       setIsSendingRequest(false);
@@ -157,8 +163,8 @@ const DoctorsPage = () => {
                   </td>
                 </tr>
               ) : (
-                filteredDoctors.map((doctor) => (
-                  <tr key={doctor.doctorId} className="hover:bg-gray-50">
+                filteredDoctors.map((doctor,index) => (
+                  <tr key={index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
