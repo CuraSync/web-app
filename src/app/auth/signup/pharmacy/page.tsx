@@ -55,7 +55,7 @@ const PharmacySignUpPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://curasync-backend.onrender.com/pharmacy/register', {
+      await axios.post('https://curasync-backend.onrender.com/pharmacy/register', {
         pharmacyName: formData.pharmacyName,
         email: formData.email,
         licenceNumber: formData.licenceNumber,
@@ -66,8 +66,8 @@ const PharmacySignUpPage = () => {
 
       toast.success("Account created successfully!");
       router.push('/auth/login/pharmacy');
-    } catch (error: any) {
-      if (error.response) {
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response) {
         toast.error(error.response.data.message || "Registration failed");
       } else {
         toast.error("An error occurred during registration");

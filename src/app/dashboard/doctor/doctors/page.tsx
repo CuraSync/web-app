@@ -5,6 +5,7 @@ import { MessageCircle, Search } from "lucide-react";
 import DoctorSidebar from "@/components/doctor/Sidebar";
 import api from "@/utils/api";
 import { toast } from "sonner";
+import Image from "next/image";
 
 interface Doctor {
   firstName: string;
@@ -14,12 +15,20 @@ interface Doctor {
   messageStatus: boolean;
 }
 
+interface ApiDoctor {
+  firstName: string;
+  lastName: string;
+  doctorId: string;
+  reciveDoctorId: string;
+  profilePic: string;
+  messageStatus: boolean;
+}
+
 const DoctorsPage = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSpecialization, setSelectedSpecialization] = useState("All");
   const [showAddDoctorModal, setShowAddDoctorModal] = useState(false);
   const [newDoctorId, setNewDoctorId] = useState("");
   const [isSendingRequest, setIsSendingRequest] = useState(false);
@@ -32,16 +41,17 @@ const DoctorsPage = () => {
     try {
       setIsLoading(true);
       const response = await api.get("/doctor/doctors");
-      console.log("Raw doctors data from backend:", response.data);
-
-      const mappedDoctors = response.data.map((doctor: any) => ({
-        firstName: doctor.firstName,
-        lastName: doctor.lastName,
-        doctorId: doctor.reciveDoctorId,
-        profilePic: doctor.profilePic,
-        messageStatus: doctor.messageStatus,
-      }));
-      console.log("Mapped doctors data:", mappedDoctors);
+      const mappedDoctors = response.data.map((doctor: ApiDoctor) => {
+        const id = doctor.doctorId || doctor.reciveDoctorId;
+      
+        return {
+          firstName: doctor.firstName,
+          lastName: doctor.lastName,
+          doctorId: id,
+          profilePic: doctor.profilePic,
+          messageStatus: doctor.messageStatus,
+        };
+      });
       setDoctors(mappedDoctors);
     } catch (error) {
       console.error("Failed to fetch doctors:", error);
@@ -53,27 +63,23 @@ const DoctorsPage = () => {
 
   const handleAddDoctor = async () => {
     if (!newDoctorId.trim()) {
-      console.log("Add doctor attempt with empty ID");
       toast.error("Please enter a valid Doctor ID");
       return;
     }
 
-    const now= new Date();
+    const now = new Date();
     try {
-      console.log("Sending request with:", { 
-        doctorId: newDoctorId,
-        date: now.toISOString().split("T")[0],
-        time: now.toTimeString().substring(0, 5)
-      });
       setIsSendingRequest(true);
-      await api.post("/doctor/request", { secondDoctorId: newDoctorId,addedDate: now.toISOString().split("T")[0],
-        addedTime: now.toTimeString().substring(0, 5), });
-      console.log("Request successful for ID:", newDoctorId);
+      await api.post("/doctor/request", { 
+        secondDoctorId: newDoctorId,
+        addedDate: now.toISOString().split("T")[0],
+        addedTime: now.toTimeString().substring(0, 5), 
+      });
       toast.success("Request sent successfully");
       setShowAddDoctorModal(false);
       setNewDoctorId("");
     } catch (error) {
-      console.error("Request failed for ID:", newDoctorId, "Error:", error);
+      console.error("Failed to send request:", error); // Added error logging
       toast.error("Failed to send request. Please check the Doctor ID.");
     } finally {
       setIsSendingRequest(false);
@@ -89,8 +95,6 @@ const DoctorsPage = () => {
   });
 
   const handleMessageClick = (doctorId: string) => {
-    console.log("Messaging doctor ID:", doctorId);
-    console.log("Selected doctor:", doctors.find(d => d.doctorId === doctorId));
     router.push(`/dashboard/doctor/doctor/message?doctorId=${doctorId}`);
   };
 
@@ -117,7 +121,7 @@ const DoctorsPage = () => {
       <DoctorSidebar />
       <div className="flex-1 p-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Colleagues</h1>
+          <h1 className="text-2xl font-bold">Doctors</h1>
           <button
             onClick={() => setShowAddDoctorModal(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -159,16 +163,18 @@ const DoctorsPage = () => {
                   </td>
                 </tr>
               ) : (
-                filteredDoctors.map((doctor) => (
-                  <tr key={doctor.doctorId} className="hover:bg-gray-50">
+                filteredDoctors.map((doctor,index) => (
+                  <tr key={index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
                           {doctor.profilePic ? (
-                            <img
+                            <Image
                               className="h-10 w-10 rounded-full object-cover"
                               src={doctor.profilePic}
                               alt={`${doctor.firstName} ${doctor.lastName}`}
+                              width={40}
+                              height={40}
                             />
                           ) : (
                             <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">

@@ -52,19 +52,19 @@ const DoctorRequestPage = () => {
       console.log("Fetched Doctor Requests:", doctorData);
       console.log("Fetched Sent Requests:", sentData);
   
-      const pendingPatient = patientData.filter((req) => req.status === "false");
-      const acceptedPatient = patientData.filter((req) => req.status === "true");
+      const pendingPatient = patientData.filter((req: Request) => req.status === "false");
+      const acceptedPatient = patientData.filter((req: Request) => req.status === "true");
       setPatientRequests(pendingPatient);
       setAcceptedPatientRequests(acceptedPatient);
   
-      const pendingDoctor = doctorData.filter((req) => req.status === "false");
-      const acceptedDoctor = doctorData.filter((req) => req.status === "true");
+      const pendingDoctor = doctorData.filter((req: Request) => req.status === "false");
+      const acceptedDoctor = doctorData.filter((req: Request) => req.status === "true");
       setDoctorRequests(pendingDoctor);
       setAcceptedDoctorRequests(acceptedDoctor);
   
 
-      const pendingSent = sentData.filter((req) => req.status === "false");
-      const acceptedSent = sentData.filter((req) => req.status === "true");
+      const pendingSent = sentData.filter((req: Request) => req.status === "false");
+      const acceptedSent = sentData.filter((req: Request) => req.status === "true");
       setSentRequests(pendingSent);
       setAcceptedSentRequests(acceptedSent);
     } catch (error) {
@@ -73,39 +73,30 @@ const DoctorRequestPage = () => {
     }
   };
 
-  const handleAcceptRequest = async (_id: string, type: string) => {
+  const handleAcceptRequest = async (_id: string) => {
     try {
       const response = await api.post("/doctor/request/accept", { requestId: _id });
-      console.log(`Accepted ${type} Request Response:`, response.data);
+      console.log("Accepted Request Response:", response.data);
+      
 
-      const moveRequest = (
-        requests: Request[],
-        setRequests: React.Dispatch<React.SetStateAction<Request[]>>,
-        setAcceptedRequests: React.Dispatch<React.SetStateAction<Request[]>>
-      ) => {
-        const acceptedRequest = requests.find((req) => req._id === _id);
-        if (!acceptedRequest) return;
+      const acceptedRequest = sentRequests.find((req) => req._id === _id);
+      if (!acceptedRequest) return;
 
-        setRequests((prev) => prev.filter((req) => req._id !== _id));
-        setAcceptedRequests((prev) => [
-          ...prev,
-          {
-            ...acceptedRequest,
-            status: "true",
-            addedDate: new Date().toISOString().split("T")[0], // Current Date
-            addedTime: new Date().toLocaleTimeString(), // Current Time
-          } as Request,
-        ]);
-      };
+      setSentRequests((prev) => prev.filter((req) => req._id !== _id));
 
-      if (type === "patient") moveRequest(patientRequests, setPatientRequests, setAcceptedPatientRequests);
-      if (type === "doctor") moveRequest(doctorRequests, setDoctorRequests, setAcceptedDoctorRequests);
-      if (type === "sent") moveRequest(sentRequests, setSentRequests, setAcceptedSentRequests);
-
-      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} request accepted successfully!`);
+      setAcceptedSentRequests((prev) => [
+        ...prev,
+        {
+          ...acceptedRequest,
+          status: "accepted",
+          addedDate: new Date().toISOString().split("T")[0], // Current Date
+          addedTime: new Date().toLocaleTimeString(), // Current Time
+        } as Request,
+      ]);
+      toast.success("Request accepted successfully!");
     } catch (error) {
+      toast.error("Error accepting request. Please try again.");
       console.error("Error accepting request:", error);
-      toast.error(`Error accepting ${type} request. Please try again.`);
     }
   };
 
@@ -118,28 +109,27 @@ const DoctorRequestPage = () => {
         <table className="w-full border-collapse border border-gray-200 shadow-md">
           <thead>
             <tr className="bg-gray-100">
-              <th className="border p-3 text-left">Patient ID</th>
-              <th className="border p-3 text-left">Patient Name</th>
-              <th className="border p-3 text-left">Added Date</th>
-              <th className="border p-3 text-left">Added Time</th>
-              {!isAccepted && <th className="border p-3 text-left">Actions</th>}
+              <th className="border p-3 text-center">Patient ID</th>
+              <th className="border p-3 text-center">Patient Name</th>
+              <th className="border p-3 text-center">Added Date</th>
+              <th className="border p-3 text-center">Added Time</th>
+              {!isAccepted && <th className="border p-3 text-center">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {requests.map((request) => (
               <tr key={request._id} className="border hover:bg-gray-50">
                 <td className="border p-3 text-gray-700">{request.patientId}</td>
-                <td className="border p-3 text-gray-700">{request.firstName}{request.lastName}</td>
+                <td className="border p-3 text-gray-700">{request.firstName} {request.lastName}</td>
                 <td className="border p-3 text-gray-700">{request.addedDate}</td>
                 <td className="border p-3 text-gray-700">{request.addedTime}</td>
                 {!isAccepted && (
                   <td className="border p-3">
-                    <button
-                      onClick={() => handleAcceptRequest(request._id, "patient")}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-                    >
-                      Accept
-                    </button>
+                    <div
+                    className="bg-yellow-100 text-black px-4 py-2 rounded-lg text-center"
+                  >
+                    Pending
+                  </div>
                   </td>
                 )}
               </tr>
@@ -179,8 +169,8 @@ const DoctorRequestPage = () => {
                 <td className="border p-3 text-gray-700">{request.addedTime}</td>
                 {!isAccepted && (
                   <td className="border p-3">
-                    <button
-                      onClick={() => handleAcceptRequest(request._id, "doctor")}
+                  <button
+                      onClick={() => handleAcceptRequest(request._id)}
                       className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
                     >
                       Accept
@@ -224,12 +214,11 @@ const DoctorRequestPage = () => {
                 <td className="border p-3 text-gray-700">{request.addedTime}</td>
                 {!isAccepted && (
                   <td className="border p-3">
-                    <button
-                      onClick={() => handleAcceptRequest(request._id, "sent")}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
-                    >
-                      Accept
-                    </button>
+                     <div
+                    className="bg-yellow-100 text-black px-4 py-2 rounded-lg text-center"
+                  >
+                    Pending
+                  </div>
                   </td>
                 )}
               </tr>
@@ -291,6 +280,7 @@ const DoctorRequestPage = () => {
 
         {activeTab === "sent" && (
           <>
+            {renderSentTable(sentRequests, false)}
             {renderSentTable(acceptedSentRequests, true)}
           </>
         )}

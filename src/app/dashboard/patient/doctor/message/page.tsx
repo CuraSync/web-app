@@ -4,8 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import api from "@/utils/api";
 import io from "socket.io-client";
 import { useSearchParams } from "next/navigation";
-import {Menu, X, Send } from "lucide-react";
-
+import { Menu, X, Send } from "lucide-react";
 
 interface Message {
   doctorId: string;
@@ -25,6 +24,18 @@ const MessagesPage = () => {
   const selectedDoctor = searchParams.get("doctorId");
 
   useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await api.post("/patient/doctor/messages", {
+          doctorId: selectedDoctor,
+        });
+        setMessages(response.data);
+        console.log(response.data);
+      } catch (error) {
+        console.error("Request failed:", error);
+      }
+    };
+
     fetchMessages();
 
     const serverUrl = "wss://curasync-backend.onrender.com/chat";
@@ -60,18 +71,6 @@ const MessagesPage = () => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const fetchMessages = async () => {
-    try {
-      const response = await api.post("/patient/doctor/messages", {
-        doctorId: selectedDoctor,
-      });
-      setMessages(response.data);
-      console.log(response.data);
-    } catch (error) {
-      console.error("Request failed:", error);
-    }
   };
 
   const doctorMessages = [...messages].sort((a, b) => {
@@ -119,7 +118,7 @@ const MessagesPage = () => {
   return (
     <div className="flex h-screen bg-gray-100 relative">
       {/* Sidebar - hidden on mobile by default */}
-      <div 
+      <div
         className={`bg-white shadow-lg fixed inset-y-0 left-0 transform ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:relative md:translate-x-0 transition duration-200 ease-in-out z-30 w-64`}
@@ -127,8 +126,8 @@ const MessagesPage = () => {
         <div className="p-4">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold">Messages</h2>
-            <button 
-              className="md:hidden text-gray-500 hover:text-gray-800" 
+            <button
+              className="md:hidden text-gray-500 hover:text-gray-800"
               onClick={toggleSidebar}
             >
               <X size={24} />
@@ -141,8 +140,8 @@ const MessagesPage = () => {
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Header */}
         <header className="bg-white shadow-sm p-4 flex items-center">
-          <button 
-            className="mr-4 text-gray-500 hover:text-gray-800 md:hidden" 
+          <button
+            className="mr-4 text-gray-500 hover:text-gray-800 md:hidden"
             onClick={toggleSidebar}
           >
             <Menu size={24} />
@@ -219,7 +218,7 @@ const MessagesPage = () => {
 
       {/* Overlay when sidebar is open on mobile */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
           onClick={toggleSidebar}
         ></div>

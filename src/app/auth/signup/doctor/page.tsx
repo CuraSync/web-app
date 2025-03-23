@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import SignUpLayout from '@/components/auth/SignUpLayout';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const DoctorSignUpPage = () => {
   const router = useRouter();
@@ -25,7 +25,6 @@ const DoctorSignUpPage = () => {
     setFormData(prev => ({
       ...prev,
       [name]: value,
-      // Update fullName when first or last name changes
       ...(name === 'firstName' || name === 'lastName' ? {
         fullName: `Dr. ${name === 'firstName' ? value : prev.firstName} ${name === 'lastName' ? value : prev.lastName}`.trim()
       } : {})
@@ -42,14 +41,12 @@ const DoctorSignUpPage = () => {
       return;
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast.error("Please enter a valid email address");
       return;
     }
 
-    // Validate required fields
     const requiredFields = ['firstName', 'lastName', 'fullName', 'email', 'slmcNumber', 'nic', 'password', 'phone'];
     const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
     if (missingFields.length > 0) {
@@ -60,7 +57,7 @@ const DoctorSignUpPage = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('https://curasync-backend.onrender.com/doctor/register', {
+      await axios.post('https://curasync-backend.onrender.com/doctor/register', {
         firstName: formData.firstName,
         lastName: formData.lastName,
         fullName: formData.fullName,
@@ -73,9 +70,9 @@ const DoctorSignUpPage = () => {
 
       toast.success("Account created successfully!");
       router.push('/auth/login/doctor');
-    } catch (error: any) {
-      if (error.response) {
-        toast.error(error.response.data.message || "Registration failed");
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data?.message || "Registration failed");
       } else {
         toast.error("An error occurred during registration");
       }

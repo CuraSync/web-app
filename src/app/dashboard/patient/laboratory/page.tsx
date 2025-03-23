@@ -1,10 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { MessageSquare, Clock, Plus, Trash2, Search } from "lucide-react";
+import { MessageSquare, Plus } from "lucide-react"; // Removed unused imports
 import { useRouter } from "next/navigation";
 import Sidebar from "../sidebar/sidebar";
 import api from "@/utils/api";
-import Swal from "sweetalert2"; // Import SweetAlert2
+import Swal from "sweetalert2";
+import { AxiosError } from "axios"; // Import AxiosError
 
 interface Laboratory {
   id: string;
@@ -39,7 +40,7 @@ const LaboratoryPage = () => {
 
   const fetchAddedLaboratories = async () => {
     try {
-      const response = await api.get("/patient/laboratories"); // Adjust endpoint as needed
+      const response = await api.get("/patient/laboratories"); // Adjust endpoint if different
       setAddedLaboratories(response.data as Laboratory[]);
       console.log("Added laboratories:", response.data);
     } catch (error) {
@@ -96,33 +97,39 @@ const LaboratoryPage = () => {
         addedTime: response.data.addedTime || addedTime,
       };
 
-      // Display SweetAlert2 success message
+      setAddedLaboratories((prev) => [...prev, newLab]); // Use newLab to update state
+
       Swal.fire({
         title: "Request successfully sent.",
         icon: "success",
         confirmButtonText: "OK",
       });
-         
+
       setShowPopup(false);
       setLabIdInput("");
       setError(null);
-    } catch (error: any) {
-      console.error(
-        "Error sending request:",
-        error.response?.status,
-        error.response?.data,
-        error.message
-      );
-      if (error.response?.status === 409) {
-        setError("This laboratory request already exists.");
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        console.error(
+          "Error sending request:",
+          error.response?.status,
+          error.response?.data,
+          error.message
+        );
+        if (error.response?.status === 409) {
+          setError("This laboratory request already exists.");
+        } else {
+          setError(error.response?.data?.message || "Failed to send request. Please try again.");
+        }
       } else {
-        setError(error.response?.data?.message || "Failed to send request. Please try again.");
+        console.error("Unexpected error:", error);
+        setError("An unexpected error occurred. Please try again.");
       }
     }
   };
 
   const handleMessageClick = (labId: string) => {
-    router.push(`/dashboard/patient/laboratory/message?labId=${labId}`); // Fixed syntax
+    router.push(`/dashboard/patient/laboratory/message?labId=${labId}`);
   };
 
   return (
@@ -135,14 +142,21 @@ const LaboratoryPage = () => {
           </div>
         )}
         <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
+          <div className="mb-8 flex flex-col gap-4">
             <button
               onClick={() => setShowPopup(true)}
-              className="px-4 py-3 bg-blue-500 text-white font-medium rounded-lg flex items-center gap-1 hover:bg-blue-600 transition-colors"
+              className="px-4 py-3 bg-blue-500 text-white font-medium rounded-lg flex items-center gap-1 hover:bg-blue-600 transition-colors w-fit"
             >
               <Plus className="w-5 h-5" />
               Add Laboratory
             </button>
+            <input
+              type="text"
+              placeholder="Search laboratories by name or location..."
+              className="p-2 border rounded-lg w-full max-w-md"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
 
           <div className="bg-white rounded-lg shadow-sm">
@@ -153,7 +167,7 @@ const LaboratoryPage = () => {
               </div>
             ) : (
               <div className="divide-y">
-                {addedLaboratories.map((laboratory) => (
+                {filteredLaboratories.map((laboratory) => ( // Use filteredLaboratories
                   <div
                     key={laboratory.labId}
                     className="p-4 flex items-center justify-between hover:bg-gray-50"

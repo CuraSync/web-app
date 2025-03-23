@@ -1,9 +1,19 @@
 "use client";
-import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
-import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
-import { FaChartBar, FaCog, FaEnvelope, FaBell, FaBars, FaUser, FaAddressCard, FaRocketchat, FaFile, FaPage4, FaCapsules, FaStethoscope } from "react-icons/fa";
+import Link from "next/link";
+import { useRouter } from "next/navigation"; // Removed usePathname
+import Image from "next/image"; 
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+import {
+  FaChartBar,
+  FaBars,
+  FaUser,
+  FaAddressCard,
+  FaRocketchat,
+  FaFile,
+  FaCapsules,
+  FaStethoscope,
+} from "react-icons/fa"; // Removed unused FaCog, FaEnvelope, FaBell, FaPage4
 import { LogOut, X } from "lucide-react";
 import api from "@/utils/api";
 
@@ -13,9 +23,13 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [patientFullName, setPatientFullName] = useState("Patient Name");
 
-  const handleLogout = useCallback(() => {
-    localStorage.removeItem('userRole');
-    router.push('/auth/login/patient');
+  const handleLogout = useCallback(() => {// Remove tokens
+    
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    // Remove user role
+    localStorage.removeItem("userRole");localStorage.removeItem("userRole");
+    router.push("/auth/login/patient");
     setTimeout(() => {
       toast.success("Logged out successfully");
     }, 0);
@@ -37,8 +51,8 @@ const Sidebar = () => {
 
   return (
     <>
-     {/* Mobile Toggle Button */}
-     <div className="absolute top-0 left-0 w-full p-4 flex justify-end items-center z-30 md:hidden">
+      {/* Mobile Toggle Button */}
+      <div className="absolute top-0 left-0 w-full p-4 flex justify-end items-center z-30 md:hidden">
         <button
           className="p-3 text-gray-600 focus:outline-none"
           onClick={() => setIsOpen(!isOpen)}
@@ -60,8 +74,8 @@ const Sidebar = () => {
           isOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0 transition-transform duration-300 z-50`}
       >
-             {/* Close Button (Mobile) */}
-             <button
+        {/* Close Button (Mobile) */}
+        <button
           className="absolute top-4 right-4 md:hidden text-gray-600"
           onClick={() => setIsOpen(false)}
         >
@@ -71,17 +85,16 @@ const Sidebar = () => {
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white">
-            <img src="/assets/logo/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+          <Image 
+              src="/assets/logo/logo.png" 
+              alt="Logo" 
+              width={40} 
+              height={40}
+              className="object-contain" 
+            />
           </div>
           <span className="text-xl font-bold text-gray-900">CuraSync</span>
         </Link>
-
-        <button
-          className="absolute top-4 right-4 md:hidden text-gray-600"
-          onClick={() => setIsOpen(false)}
-        >
-          <X className="w-6 h-6" />
-        </button>
 
         <nav className="mt-12 space-y-6 flex-grow">
           <Link
@@ -137,11 +150,13 @@ const Sidebar = () => {
           <div className="flex items-center">
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-800 font-semibold">
               {profilePic ? (
-                <img
-                  src={profilePic}
-                  alt="Profile"
-                  className="w-full h-full object-cover rounded-full"
-                />
+                 <Image
+                 src={profilePic}
+                 alt="Profile"
+                 width={40}
+                 height={40}
+                 className="w-full h-full object-cover rounded-full"
+               />
               ) : (
                 <FaUser className="text-purple-800 w-5 h-5" />
               )}

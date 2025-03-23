@@ -1,9 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import LabSidebar from "../sidebar/sidebar";
 import { toast } from "sonner";
-import { Plus, Trash2, Upload, X, Camera, Star } from "lucide-react";
+import { Plus, Trash2, Upload, Camera, Star } from "lucide-react";
 import api from "@/utils/api";
 import axios from "axios";
 
@@ -215,10 +216,12 @@ const SettingsPage = () => {
           <div className="flex flex-col items-center gap-4 p-4 border rounded-lg shadow-md w-80">
             <div className="relative w-32 h-32">
               {imageUrl ? (
-                <img
+                <Image
                   src={imageUrl}
                   alt="Profile Picture"
-                  className="w-32 h-32 rounded-full object-cover border"
+                  width={128}
+                  height={128}
+                  className="rounded-full object-cover border"
                 />
               ) : (
                 <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
@@ -403,10 +406,6 @@ const SettingsPage = () => {
         >
           Save Changes
         </button>
-      </div>
-
-      <div className="p-6 text-center text-sm text-gray-500 border-t border-gray-200">
-        © 2025 CuraSync. All rights reserved.
       </div>
     </div>
   </div>

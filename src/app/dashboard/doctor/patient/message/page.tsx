@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "@/utils/api";
 import io from "socket.io-client";
 import { useSearchParams } from "next/navigation";
@@ -15,9 +15,20 @@ interface Message {
 const MessagesPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
-
   const searchParams = useSearchParams();
   const selectedPatient = searchParams.get("patientId");
+
+  const fetchMessages = useCallback(async () => {
+    try {
+      if (!selectedPatient) return;
+      const response = await api.post("/doctor/patient/messages", {
+        patientId: selectedPatient,
+      });
+      setMessages(response.data);
+    } catch (error) {
+      console.error("Request failed:", error);
+    }
+  }, [selectedPatient]);
 
   useEffect(() => {
     fetchMessages();
@@ -44,18 +55,7 @@ const MessagesPage = () => {
     return () => {
       socket.disconnect();
     };
-  }, []);
-
-  const fetchMessages = async () => {
-    try {
-      const response = await api.post("/doctor/patient/messages", {
-        patientId: selectedPatient,
-      });
-      setMessages(response.data);
-    } catch (error) {
-      console.error("Request failed:", error);
-    }
-  };
+  }, [fetchMessages, selectedPatient]);
 
   const patientMessages = [...messages].sort((a, b) => {
     return (
@@ -74,7 +74,7 @@ const MessagesPage = () => {
   };
 
   const handleSendMessage = async () => {
-    if (newMessage.trim() === "") return;
+    if (newMessage.trim() === "" || !selectedPatient) return;
 
     const now = new Date();
     const sriLankaDate = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);

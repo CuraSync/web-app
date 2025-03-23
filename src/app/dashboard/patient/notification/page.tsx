@@ -40,7 +40,6 @@ const PatientRequestPage = () => {
         api.get("/patient/doctor/request"),
       ]);
 
-
       const pendingLab = labRes.data.filter((req: Request) => req.status === "false");
       const acceptedLab = labRes.data.filter((req: Request) => req.status === "true");
 
@@ -65,9 +64,9 @@ const PatientRequestPage = () => {
 
   const handleAcceptRequest = async (_id: string, type: string) => {
     try {
-      const response = await api.post("/patient/request/accept", { requestId: _id });
-      console.log(`Accepted ${type} Request Response:`, response.data);
-
+      await api.post("/patient/request/accept", { requestId: _id });
+      toast.success("Request accepted successfully");
+      
       const moveRequest = (
         requests: Request[],
         setRequests: React.Dispatch<React.SetStateAction<Request[]>>,
@@ -82,21 +81,28 @@ const PatientRequestPage = () => {
           {
             ...acceptedRequest,
             status: "true",
-            addedDate: new Date().toISOString().split("T")[0], // Current Date
-            addedTime: new Date().toLocaleTimeString(), // Current Time
+            addedDate: new Date().toISOString().split("T")[0],
+            addedTime: new Date().toLocaleTimeString(),
           } as Request,
         ]);
       };
 
-      if (type === "lab") moveRequest(labRequests, setLabRequests, setAcceptedLabRequests);
-      if (type === "pharmacy") moveRequest(pharmacyRequests, setPharmacyRequests, setAcceptedPharmacyRequests);
-      if (type === "doctor") moveRequest(doctorRequests, setDoctorRequests, setAcceptedDoctorRequests);
+      switch (type) {
+        case "lab":
+          moveRequest(labRequests, setLabRequests, setAcceptedLabRequests);
+          break;
+        case "pharmacy":
+          moveRequest(pharmacyRequests, setPharmacyRequests, setAcceptedPharmacyRequests);
+          break;
+        case "doctor":
+          moveRequest(doctorRequests, setDoctorRequests, setAcceptedDoctorRequests);
+          break;
+      }
     } catch (error) {
       console.error("Error accepting request:", error);
-      toast.error("Error accepting requests. Please try again.");
+      toast.error("Error accepting request. Please try again.");
     }
   };
-
 
   const renderLabTable = (requests: Request[], isAccepted: boolean) => (
     <div className="bg-white rounded-lg shadow-md p-4 mt-4">
@@ -107,27 +113,25 @@ const PatientRequestPage = () => {
         <table className="w-full border-collapse border border-gray-200 shadow-md">
           <thead>
             <tr className="bg-gray-100">
-            <th className="border p-3 text-left">Lab ID</th>
-            <th className="border p-3 text-left">Lab Name</th>
-              <th className="border p-3 text-left">Added Date</th>
-              <th className="border p-3 text-left">Added Time</th>
-            
-              {!isAccepted && <th className="border p-3 text-left">Actions</th>}
+              <th className="border p-3 text-center">Lab ID</th>
+              <th className="border p-3 text-center">Lab Name</th>
+              <th className="border p-3 text-center">Added Date</th>
+              <th className="border p-3 text-center">Added Time</th>
+              {!isAccepted && <th className="border p-3 text-center">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {requests.map((request) => (
               <tr key={request._id} className="border hover:bg-gray-50">
-                   <td className="border p-3 text-gray-700">{request.labId}</td>
-                   <td className="border p-3 text-gray-700">{request.labName}</td>
+                <td className="border p-3 text-gray-700">{request.labId}</td>
+                <td className="border p-3 text-gray-700">{request.labName}</td>
                 <td className="border p-3 text-gray-700">{request.addedDate}</td>
                 <td className="border p-3 text-gray-700">{request.addedTime}</td>
-             
                 {!isAccepted && (
-                  <td className="border p-3">
+                  <td className="border p-3 text-center">
                     <button
                       onClick={() => handleAcceptRequest(request._id, "lab")}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
                     >
                       Accept
                     </button>
@@ -145,7 +149,6 @@ const PatientRequestPage = () => {
     </div>
   );
 
- 
   const renderPharmacyTable = (requests: Request[], isAccepted: boolean) => (
     <div className="bg-white rounded-lg shadow-md p-4 mt-4">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">
@@ -155,27 +158,25 @@ const PatientRequestPage = () => {
         <table className="w-full border-collapse border border-gray-200 shadow-md">
           <thead>
             <tr className="bg-gray-100">
-            <th className="border p-3 text-left">Pharmacy ID</th>
-            <th className="border p-3 text-left">Pharmacy Name</th>
-              <th className="border p-3 text-left">Added Date</th>
-              <th className="border p-3 text-left">Added Time</th>
-            
-              {!isAccepted && <th className="border p-3 text-left">Actions</th>}
+              <th className="border p-3 text-center">Pharmacy ID</th>
+              <th className="border p-3 text-center">Pharmacy Name</th>
+              <th className="border p-3 text-center">Added Date</th>
+              <th className="border p-3 text-center">Added Time</th>
+              {!isAccepted && <th className="border p-3 text-center">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {requests.map((request) => (
               <tr key={request._id} className="border hover:bg-gray-50">
-                 <td className="border p-3 text-gray-700">{request.pharmacyId}</td>
-                 <td className="border p-3 text-gray-700">{request.pharmacyName}</td>
+                <td className="border p-3 text-gray-700">{request.pharmacyId}</td>
+                <td className="border p-3 text-gray-700">{request.pharmacyName}</td>
                 <td className="border p-3 text-gray-700">{request.addedDate}</td>
                 <td className="border p-3 text-gray-700">{request.addedTime}</td>
-               
                 {!isAccepted && (
-                  <td className="border p-3">
+                  <td className="border p-3 text-center">
                     <button
                       onClick={() => handleAcceptRequest(request._id, "pharmacy")}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
                     >
                       Accept
                     </button>
@@ -193,7 +194,6 @@ const PatientRequestPage = () => {
     </div>
   );
 
-
   const renderDoctorTable = (requests: Request[], isAccepted: boolean) => (
     <div className="bg-white rounded-lg shadow-md p-4 mt-4">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">
@@ -203,29 +203,27 @@ const PatientRequestPage = () => {
         <table className="w-full border-collapse border border-gray-200 shadow-md">
           <thead>
             <tr className="bg-gray-100">
-            <th className="border p-3 text-left">Doctor ID</th>
-            <th className="border p-3 text-left">Doctor Name</th>
-              <th className="border p-3 text-left">Added Date</th>
-              <th className="border p-3 text-left">Added Time</th>
-              
-              {!isAccepted && <th className="border p-3 text-left">Actions</th>}
+              <th className="border p-3 text-center">Doctor ID</th>
+              <th className="border p-3 text-center">Doctor Name</th>
+              <th className="border p-3 text-center">Added Date</th>
+              <th className="border p-3 text-center">Added Time</th>
+              {!isAccepted && <th className="border p-3 text-center">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {requests.map((request) => (
               <tr key={request._id} className="border hover:bg-gray-50">
-                    <td className="border p-3 text-gray-700">{request.doctorId}</td>
+                <td className="border p-3 text-gray-700">{request.doctorId}</td>
                 <td className="border p-3 text-gray-700">
                   {request.firstName} {request.lastName}
                 </td>
                 <td className="border p-3 text-gray-700">{request.addedDate}</td>
                 <td className="border p-3 text-gray-700">{request.addedTime}</td>
-            
                 {!isAccepted && (
-                  <td className="border p-3">
+                  <td className="border p-3 text-center">
                     <button
                       onClick={() => handleAcceptRequest(request._id, "doctor")}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
                     >
                       Accept
                     </button>
@@ -276,14 +274,14 @@ const PatientRequestPage = () => {
 
         {activeTab === "lab" && (
           <>
-          
+            {renderLabTable(labRequests, false)}
             {renderLabTable(acceptedLabRequests, true)}
           </>
         )}
 
         {activeTab === "pharmacy" && (
           <>
-   
+            {renderPharmacyTable(pharmacyRequests, false)}
             {renderPharmacyTable(acceptedPharmacyRequests, true)}
           </>
         )}

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { FaAddressCard, FaRocketchat, FaBars, FaUser, FaListUl } from "react-icons/fa";
 import { LogOut, X } from "lucide-react";
 import api from "@/utils/api";
+import Image from 'next/image';
 
 const Sidebar = () => {
   const router = useRouter();
@@ -14,7 +15,11 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false); 
 
   const handleLogout = useCallback(() => {
-    localStorage.removeItem('userRole');
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("id");
+    
     router.push('/auth/login/pharmacy');
     setTimeout(() => {
       toast.success("Logged out successfully");
@@ -70,12 +75,15 @@ const Sidebar = () => {
         </button>
 
         {/* Logo */}
-        <Link href="/" className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white">
-            <img src="/assets/logo/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+            <Image src="/assets/logo/logo.png" alt="Logo" 
+            width={40}
+             height={40} 
+              className="object-contain" />
           </div>
           <span className="text-xl font-bold text-gray-900">CuraSync</span>
-        </Link>
+        </div>
 
         {/* Navigation */}
         <nav className="mt-8 space-y-3 flex-grow">
@@ -90,7 +98,8 @@ const Sidebar = () => {
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
               {profilePic ? (
-                <img src={profilePic} alt="Profile" className="w-full h-full object-cover rounded-full" />
+                <Image src={profilePic} alt="Profile" width={40}    
+                height={40} className="object-cover rounded-full" />
               ) : (
                 <FaUser className="text-purple-800 w-5 h-5" />
               )}
@@ -112,7 +121,7 @@ const Sidebar = () => {
   );
 };
 
-const SidebarItem = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => {
+const SidebarItem = ({ href, icon: Icon, label }: { href: string; icon: React.ComponentType<{ className?: string }>; label: string }) => {
   return (
     <Link
       href={href}

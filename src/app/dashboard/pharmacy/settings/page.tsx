@@ -3,10 +3,10 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import PharmacySidebar from "../../pharmacy/sidebar/sidebar";
 import { toast } from "sonner";
-import { Plus, Trash2, Upload, X, Camera, Star } from "lucide-react";
+import { Plus, Trash2, Upload, Camera, Star } from "lucide-react";
 import api from "@/utils/api";
 import axios from "axios";
-
+import Image from "next/image";
 
 const SettingsPage = () => {
  const router = useRouter();
@@ -20,7 +20,6 @@ const SettingsPage = () => {
  const [updatedAt, setUpdatedAt] = useState("");
  const [createdAt, setCreatedAt] = useState("");
  const [contactInformation, setContactInformation] = useState("");
- const [isUploading, setIsUploading] = useState(false);
  const [rating, setRating] = useState(0);
  const [image, setImage] = useState<File | null>(null);
  const [uploading, setUploading] = useState<boolean>(false);
@@ -207,11 +206,13 @@ const handleLocationChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 
       <div className="p-8 flex-1 flex justify-center items-center">
         <div className="flex flex-col items-center gap-4 p-4 border rounded-lg shadow-md w-80">
-          <div className="relative w-32 h-32">
+          <div className="relative">
             {imageUrl ? (
-              <img
+              <Image
                 src={imageUrl}
                 alt="Profile Picture"
+                width={128}  
+                height={128}
                 className="w-32 h-32 rounded-full object-cover border"
               />
             ) : (
@@ -396,10 +397,6 @@ const handleLocationChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         >
           Save Changes
         </button>
-      </div>
-
-      <div className="p-6 text-center text-sm text-gray-500 border-t border-gray-200">
-        © 2025 CuraSync. All rights reserved.
       </div>
     </div>
   </div>

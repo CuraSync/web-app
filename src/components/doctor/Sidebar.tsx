@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
-  LayoutDashboard, Users, Bell, Settings, LogOut,
+  LayoutDashboard, Users, Bell, LogOut,
   User
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -65,9 +66,16 @@ const DoctorSidebar = () => {
       <div className="flex-1 overflow-y-auto">
         <div className="p-6">
           <Link href="/" className="flex items-center">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white">
-            <img src="/assets/logo/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
-          </div>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white">
+              <Image 
+                src="/assets/logo/logo.png" 
+                alt="CuraSync Logo"
+                width={40}
+                height={40}
+                className="object-contain"
+                priority
+              />
+            </div>
             <span className="ml-3 text-xl font-bold text-gray-900">CuraSync</span>
           </Link>
           
@@ -98,9 +106,11 @@ const DoctorSidebar = () => {
       <div className="p-6 border-t border-gray-200">
         <div className="flex items-center">
           {doctorProfile.profilePic ? (
-            <img 
+            <Image 
               src={doctorProfile.profilePic}
               alt="Profile"
+              width={40}
+              height={40}
               className="w-10 h-10 rounded-full object-cover"
             />
           ) : (

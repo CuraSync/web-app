@@ -68,11 +68,14 @@ const DoctorLogin = () => {
 
       toast.success("Login successful!");
       router.push("/dashboard/doctor");
-    } catch (error: any) {
-      if (error.response) {
-        toast.error(error.response.data.message || "Authentication failed");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || "Authentication failed";
+        toast.error(message);
+      } else if (error instanceof Error) {
+        toast.error(error.message);
       } else {
-        toast.error("An error occurred during login");
+        toast.error("An unexpected error occurred during login");
       }
     } finally {
       setIsLoading(false);
