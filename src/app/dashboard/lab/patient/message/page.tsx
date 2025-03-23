@@ -27,7 +27,7 @@ const MessagesPage = () => {
   const [newMessage, setNewMessage] = useState<string>("");
   const [reportData, setReportData] = useState<Record<string, ReportData>>({});
   const searchParams = useSearchParams();
-  const selectedPatient = searchParams.get("patientId");
+  const [selectedPatient,setSelectedPatient] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [reportFile, setReportFile] = useState<File | null>(null);
   const [reportUrl, setReportUrl] = useState<string | null>(null);
@@ -86,6 +86,7 @@ const MessagesPage = () => {
   }, [selectedPatient, fetchReportData]);
 
   useEffect(() => {
+    setSelectedPatient(searchParams.get("patientId"));
     fetchMessages();
 
     const serverUrl = "wss://curasync-backend.onrender.com/chat";
