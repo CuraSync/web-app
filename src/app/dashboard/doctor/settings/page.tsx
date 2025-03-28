@@ -62,6 +62,82 @@ const SettingsPage = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col lg:flex-row font-sans bg-white text-gray-900">
+        <Sidebar />
+        <div className="flex-1 p-8">
+          <div className="max-w-4xl mx-auto animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+            
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              {/* Profile Header Skeleton */}
+              <div className="flex items-center pb-8 border-b border-gray-200">
+                <div className="w-20 h-20 bg-gray-200 rounded-full"></div>
+                <div className="ml-6 space-y-2">
+                  <div className="h-6 bg-gray-200 w-48 rounded"></div>
+                  <div className="h-4 bg-gray-200 w-32 rounded"></div>
+                </div>
+              </div>
+
+              {/* Personal Info Skeleton */}
+              <div className="mt-6">
+                <div className="h-6 bg-gray-200 w-1/5 mb-4 rounded"></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <div className="h-4 bg-gray-200 w-1/3 rounded"></div>
+                      <div className="h-10 bg-gray-200 rounded"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Education Skeleton */}
+              <div className="mt-6">
+                <div className="h-6 bg-gray-200 w-1/5 mb-4 rounded"></div>
+                <div className="space-y-4">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="h-12 bg-gray-200 rounded"></div>
+                  ))}
+                  <div className="flex gap-2">
+                    <div className="flex-1 h-10 bg-gray-200 rounded"></div>
+                    <div className="w-20 h-10 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Certifications Skeleton */}
+              <div className="mt-6">
+                <div className="h-6 bg-gray-200 w-1/5 mb-4 rounded"></div>
+                <div className="space-y-4">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="h-12 bg-gray-200 rounded"></div>
+                  ))}
+                  <div className="flex gap-2">
+                    <div className="flex-1 h-10 bg-gray-200 rounded"></div>
+                    <div className="w-20 h-10 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* About Skeleton */}
+              <div className="mt-6">
+                <div className="h-6 bg-gray-200 w-1/5 mb-4 rounded"></div>
+                <div className="h-32 bg-gray-200 rounded"></div>
+              </div>
+
+              {/* Save Button Skeleton */}
+              <div className="mt-8 pt-6 border-t">
+                <div className="h-10 bg-gray-200 w-32 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const handleProfilePicChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -190,10 +266,6 @@ const SettingsPage = () => {
     router.push('/auth/login/doctor');
     toast.success('Logged out successfully');
   };
-
-  if (isLoading) {
-    return <div className="min-h-screen bg-gray-50 p-8">Loading...</div>;
-  }
 
   if (!profile) {
     return <div className="min-h-screen bg-gray-50 p-8">Failed to load profile data</div>;
@@ -430,14 +502,6 @@ const SettingsPage = () => {
                     Save Changes
                   </>
                 )}
-              </button>
-              
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
               </button>
             </div>
           </div>

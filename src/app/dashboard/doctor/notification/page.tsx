@@ -26,6 +26,7 @@ const DoctorRequestPage = () => {
   const [acceptedDoctorRequests, setAcceptedDoctorRequests] = useState<Request[]>([]);
   const [acceptedSentRequests, setAcceptedSentRequests] = useState<Request[]>([]);
   const [activeTab, setActiveTab] = useState<string>("patient");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchRequests();
@@ -33,6 +34,7 @@ const DoctorRequestPage = () => {
 
   const fetchRequests = async () => {
     try {
+      setIsLoading(true);
       const fetchWithFallback = async (url: string) => {
         try {
           const response = await api.get(url);
@@ -48,10 +50,6 @@ const DoctorRequestPage = () => {
       const doctorData = await fetchWithFallback("/doctor/doctor/request");
       const sentData = await fetchWithFallback("/doctor/doctor/sentrequest");
   
-      console.log("Fetched Patient Requests:", patientData);
-      console.log("Fetched Doctor Requests:", doctorData);
-      console.log("Fetched Sent Requests:", sentData);
-  
       const pendingPatient = patientData.filter((req: Request) => req.status === "false");
       const acceptedPatient = patientData.filter((req: Request) => req.status === "true");
       setPatientRequests(pendingPatient);
@@ -62,7 +60,6 @@ const DoctorRequestPage = () => {
       setDoctorRequests(pendingDoctor);
       setAcceptedDoctorRequests(acceptedDoctor);
   
-
       const pendingSent = sentData.filter((req: Request) => req.status === "false");
       const acceptedSent = sentData.filter((req: Request) => req.status === "true");
       setSentRequests(pendingSent);
@@ -70,27 +67,54 @@ const DoctorRequestPage = () => {
     } catch (error) {
       console.error("Error in request processing:", error);
       toast.error("An error occurred while processing requests.");
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen">
+        <DoctorSidebar />
+        <div className="flex flex-col w-full h-screen bg-gray-50 p-8 overflow-y-auto">
+          <div className="mb-8">
+            <div className="h-10 bg-gray-200 rounded-xl w-64 mb-4 animate-pulse"></div>
+          </div>
+          <div className="flex space-x-4 mb-8">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="h-12 bg-gray-200 rounded-xl w-32 animate-pulse"></div>
+            ))}
+          </div>
+          <div className="space-y-8">
+            {[1, 2].map((n) => (
+              <div key={n} className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                <div className="h-8 bg-gray-200 rounded-xl w-64 mb-6 animate-pulse"></div>
+                <div className="space-y-4">
+                  <div className="h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+                  <div className="h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleAcceptRequest = async (_id: string) => {
     try {
       const response = await api.post("/doctor/request/accept", { requestId: _id });
-      console.log("Accepted Request Response:", response.data);
-      
-
       const acceptedRequest = sentRequests.find((req) => req._id === _id);
       if (!acceptedRequest) return;
 
       setSentRequests((prev) => prev.filter((req) => req._id !== _id));
-
       setAcceptedSentRequests((prev) => [
         ...prev,
         {
           ...acceptedRequest,
           status: "accepted",
-          addedDate: new Date().toISOString().split("T")[0], // Current Date
-          addedTime: new Date().toLocaleTimeString(), // Current Time
+          addedDate: new Date().toISOString().split("T")[0],
+          addedTime: new Date().toLocaleTimeString(),
         } as Request,
       ]);
       toast.success("Request accepted successfully!");
@@ -101,35 +125,33 @@ const DoctorRequestPage = () => {
   };
 
   const renderPatientTable = (requests: Request[], isAccepted: boolean) => (
-    <div className="bg-white rounded-lg shadow-md p-4 mt-4">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        {isAccepted ? "Accepted Patient Requests" : "Patient Requests"}
+    <div className="bg-white rounded-xl shadow-md p-6 mt-4 border border-gray-100">
+      <h2 className="text-xl font-semibold text-gray-700 mb-4">
+        {isAccepted ? "Accepted Patient Requests" : "Pending Patient Requests"}
       </h2>
       {requests.length > 0 ? (
-        <table className="w-full border-collapse border border-gray-200 shadow-md">
+        <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-3 text-center">Patient ID</th>
-              <th className="border p-3 text-center">Patient Name</th>
-              <th className="border p-3 text-center">Added Date</th>
-              <th className="border p-3 text-center">Added Time</th>
-              {!isAccepted && <th className="border p-3 text-center">Actions</th>}
+            <tr className="bg-blue-50">
+              <th className="p-4 text-left text-blue-600 font-medium rounded-tl-xl">Patient ID</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Patient Name</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Added Date</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Added Time</th>
+              {!isAccepted && <th className="p-4 text-left text-blue-600 font-medium rounded-tr-xl">Status</th>}
             </tr>
           </thead>
           <tbody>
             {requests.map((request) => (
-              <tr key={request._id} className="border hover:bg-gray-50">
-                <td className="border p-3 text-gray-700">{request.patientId}</td>
-                <td className="border p-3 text-gray-700">{request.firstName} {request.lastName}</td>
-                <td className="border p-3 text-gray-700">{request.addedDate}</td>
-                <td className="border p-3 text-gray-700">{request.addedTime}</td>
+              <tr key={request._id} className="border-b border-gray-100 hover:bg-blue-50">
+                <td className="p-4 text-gray-600">{request.patientId}</td>
+                <td className="p-4 text-gray-600">{request.firstName} {request.lastName}</td>
+                <td className="p-4 text-gray-600">{request.addedDate}</td>
+                <td className="p-4 text-gray-600">{request.addedTime}</td>
                 {!isAccepted && (
-                  <td className="border p-3">
-                    <div
-                    className="bg-yellow-100 text-black px-4 py-2 rounded-lg text-center"
-                  >
-                    Pending
-                  </div>
+                  <td className="p-4">
+                    <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-xl text-center text-sm font-medium">
+                      Pending
+                    </div>
                   </td>
                 )}
               </tr>
@@ -137,43 +159,43 @@ const DoctorRequestPage = () => {
           </tbody>
         </table>
       ) : (
-        <p className="text-gray-500 text-center mt-4">
-          No {isAccepted ? "accepted patient" : "patient"} requests.
-        </p>
+        <div className="p-6 text-center text-gray-400 bg-gray-50 rounded-xl">
+          No {isAccepted ? "accepted patient" : "pending patient"} requests
+        </div>
       )}
     </div>
   );
 
   const renderDoctorTable = (requests: Request[], isAccepted: boolean) => (
-    <div className="bg-white rounded-lg shadow-md p-4 mt-4">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        {isAccepted ? "Accepted Doctor Requests" : "Doctor Requests"}
+    <div className="bg-white rounded-xl shadow-md p-6 mt-4 border border-gray-100">
+      <h2 className="text-xl font-semibold text-gray-700 mb-4">
+        {isAccepted ? "Accepted Doctor Requests" : "Pending Doctor Requests"}
       </h2>
       {requests.length > 0 ? (
-        <table className="w-full border-collapse border border-gray-200 shadow-md">
+        <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-3 text-left">Doctor ID</th>
-              <th className="border p-3 text-left">Doctor Name</th>
-              <th className="border p-3 text-left">Added Date</th>
-              <th className="border p-3 text-left">Added Time</th>
-              {!isAccepted && <th className="border p-3 text-left">Actions</th>}
+            <tr className="bg-blue-50">
+              <th className="p-4 text-left text-blue-600 font-medium rounded-tl-xl">Doctor ID</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Doctor Name</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Added Date</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Added Time</th>
+              {!isAccepted && <th className="p-4 text-left text-blue-600 font-medium rounded-tr-xl">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {requests.map((request) => (
-              <tr key={request._id} className="border hover:bg-gray-50">
-                <td className="border p-3 text-gray-700">{request.doctorId}</td>
-                <td className="border p-3 text-gray-700">{request.firstName} {request.lastName}</td>
-                <td className="border p-3 text-gray-700">{request.addedDate}</td>
-                <td className="border p-3 text-gray-700">{request.addedTime}</td>
+              <tr key={request._id} className="border-b border-gray-100 hover:bg-blue-50">
+                <td className="p-4 text-gray-600">{request.doctorId}</td>
+                <td className="p-4 text-gray-600">{request.firstName} {request.lastName}</td>
+                <td className="p-4 text-gray-600">{request.addedDate}</td>
+                <td className="p-4 text-gray-600">{request.addedTime}</td>
                 {!isAccepted && (
-                  <td className="border p-3">
-                  <button
+                  <td className="p-4">
+                    <button
                       onClick={() => handleAcceptRequest(request._id)}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors text-sm font-semibold"
                     >
-                      Accept
+                      Accept Request
                     </button>
                   </td>
                 )}
@@ -182,43 +204,41 @@ const DoctorRequestPage = () => {
           </tbody>
         </table>
       ) : (
-        <p className="text-gray-500 text-center mt-4">
-          No {isAccepted ? "accepted doctor" : "doctor"} requests.
-        </p>
+        <div className="p-6 text-center text-gray-400 bg-gray-50 rounded-xl">
+          No {isAccepted ? "accepted doctor" : "pending doctor"} requests
+        </div>
       )}
     </div>
   );
 
   const renderSentTable = (requests: Request[], isAccepted: boolean) => (
-    <div className="bg-white rounded-lg shadow-md p-4 mt-4">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        {isAccepted ? "Accepted Sent Requests" : "Sent Requests"}
+    <div className="bg-white rounded-xl shadow-md p-6 mt-4 border border-gray-100">
+      <h2 className="text-xl font-semibold text-gray-700 mb-4">
+        {isAccepted ? "Accepted Sent Requests" : "Pending Sent Requests"}
       </h2>
       {requests.length > 0 ? (
-        <table className="w-full border-collapse border border-gray-200 shadow-md">
+        <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-3 text-left">ID</th>
-              <th className="border p-3 text-left">Name</th>
-              <th className="border p-3 text-left">Added Date</th>
-              <th className="border p-3 text-left">Added Time</th>
-              {!isAccepted && <th className="border p-3 text-left">Actions</th>}
+            <tr className="bg-blue-50">
+              <th className="p-4 text-left text-blue-600 font-medium rounded-tl-xl">Doctor ID</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Doctor Name</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Added Date</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Added Time</th>
+              {!isAccepted && <th className="p-4 text-left text-blue-600 font-medium rounded-tr-xl">Status</th>}
             </tr>
           </thead>
           <tbody>
             {requests.map((request) => (
-              <tr key={request._id} className="border hover:bg-gray-50">
-                <td className="border p-3 text-gray-700">{request.secondDoctorId}</td>
-                <td className="border p-3 text-gray-700">{request.firstName} {request.lastName}</td>
-                <td className="border p-3 text-gray-700">{request.addedDate}</td>
-                <td className="border p-3 text-gray-700">{request.addedTime}</td>
+              <tr key={request._id} className="border-b border-gray-100 hover:bg-blue-50">
+                <td className="p-4 text-gray-600">{request.secondDoctorId}</td>
+                <td className="p-4 text-gray-600">{request.firstName} {request.lastName}</td>
+                <td className="p-4 text-gray-600">{request.addedDate}</td>
+                <td className="p-4 text-gray-600">{request.addedTime}</td>
                 {!isAccepted && (
-                  <td className="border p-3">
-                     <div
-                    className="bg-yellow-100 text-black px-4 py-2 rounded-lg text-center"
-                  >
-                    Pending
-                  </div>
+                  <td className="p-4">
+                    <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-xl text-center text-sm font-medium">
+                      Pending
+                    </div>
                   </td>
                 )}
               </tr>
@@ -226,9 +246,9 @@ const DoctorRequestPage = () => {
           </tbody>
         </table>
       ) : (
-        <p className="text-gray-500 text-center mt-4">
-          No {isAccepted ? "accepted sent" : "sent"} requests.
-        </p>
+        <div className="p-6 text-center text-gray-400 bg-gray-50 rounded-xl">
+          No {isAccepted ? "accepted sent" : "pending sent"} requests
+        </div>
       )}
     </div>
   );
@@ -236,53 +256,65 @@ const DoctorRequestPage = () => {
   return (
     <div className="flex h-screen">
       <DoctorSidebar />
-      <div className="flex flex-col w-full h-screen bg-gray-100 p-4 overflow-y-auto">
-        <div className="flex space-x-4 mb-4">
+      <div className="flex flex-col w-full h-screen bg-gray-50 p-8 overflow-y-auto">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-800 border-b-2 border-blue-200 pb-2">
+            Request Management
+          </h1>
+        </div>
+
+        <div className="flex space-x-4 mb-8">
           <button
-            className={`px-4 py-2 rounded-lg ${
-              activeTab === "patient" ? "bg-blue-700" : "bg-blue-600"
-            } text-white hover:bg-blue-700 transition-colors`}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+              activeTab === "patient"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-white text-blue-600 border-2 border-blue-200 hover:border-blue-300"
+            }`}
             onClick={() => setActiveTab("patient")}
           >
-            Patient Requests
+            New Patient Requests
           </button>
           <button
-            className={`px-4 py-2 rounded-lg ${
-              activeTab === "doctor" ? "bg-blue-700" : "bg-blue-600"
-            } text-white hover:bg-blue-700 transition-colors`}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+              activeTab === "doctor"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-white text-blue-600 border-2 border-blue-200 hover:border-blue-300"
+            }`}
             onClick={() => setActiveTab("doctor")}
           >
-            Doctor Requests
+            New Doctor Invites
           </button>
           <button
-            className={`px-4 py-2 rounded-lg ${
-              activeTab === "sent" ? "bg-blue-700" : "bg-blue-600"
-            } text-white hover:bg-blue-700 transition-colors`}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+              activeTab === "sent"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-white text-blue-600 border-2 border-blue-200 hover:border-blue-300"
+            }`}
             onClick={() => setActiveTab("sent")}
           >
-            Sent Requests
+            New Doctor Requests
           </button>
         </div>
 
         {activeTab === "patient" && (
-          <>
+          <div className="space-y-8">
             {renderPatientTable(patientRequests, false)}
             {renderPatientTable(acceptedPatientRequests, true)}
-          </>
+          </div>
         )}
 
         {activeTab === "doctor" && (
-          <>
+          <div className="space-y-8">
             {renderDoctorTable(doctorRequests, false)}
             {renderDoctorTable(acceptedDoctorRequests, true)}
-          </>
+          </div>
         )}
 
         {activeTab === "sent" && (
-          <>
+          <div className="space-y-8">
             {renderSentTable(sentRequests, false)}
             {renderSentTable(acceptedSentRequests, true)}
-          </>
+          </div>
         )}
       </div>
     </div>

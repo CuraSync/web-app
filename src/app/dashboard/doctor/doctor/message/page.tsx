@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback, Suspense } from "react";
+import React, { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import api from "@/utils/api";
 import io from "socket.io-client";
 import { getId } from "@/utils/jwt";
@@ -13,14 +13,24 @@ interface Message {
   sender: string;
 }
 
-// Client component that uses useSearchParams
 function MessageContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const searchParams = useSearchParams();
   const senderDoctorId = searchParams.get("doctorId");
   const doctorId = getId();
+
+  const scrollToBottom = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const fetchMessages = useCallback(async () => {
     try {
@@ -100,7 +110,10 @@ function MessageContent() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 p-4">
-      <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4">
+      <div 
+        ref={scrollContainerRef}
+        className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4"
+      >
         {doctorMessages.map((msg, index) => {
           const showDate = msg.addedDate !== lastDate;
           lastDate = msg.addedDate;
@@ -165,7 +178,6 @@ function MessageContent() {
   );
 }
 
-// Loading fallback component
 function MessagingLoader() {
   return (
     <div className="flex flex-col h-screen bg-gray-100 p-4 items-center justify-center">
@@ -176,7 +188,6 @@ function MessagingLoader() {
   );
 }
 
-// Main page component with Suspense
 const MessagesPage = () => {
   return (
     <Suspense fallback={<MessagingLoader />}>

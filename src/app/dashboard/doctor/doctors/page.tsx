@@ -43,7 +43,6 @@ const DoctorsPage = () => {
       const response = await api.get("/doctor/doctors");
       const mappedDoctors = response.data.map((doctor: ApiDoctor) => {
         const id = doctor.doctorId || doctor.reciveDoctorId;
-      
         return {
           firstName: doctor.firstName,
           lastName: doctor.lastName,
@@ -79,7 +78,7 @@ const DoctorsPage = () => {
       setShowAddDoctorModal(false);
       setNewDoctorId("");
     } catch (error) {
-      console.error("Failed to send request:", error); // Added error logging
+      console.error("Failed to send request:", error);
       toast.error("Failed to send request. Please check the Doctor ID.");
     } finally {
       setIsSendingRequest(false);
@@ -105,9 +104,9 @@ const DoctorsPage = () => {
         <div className="flex-1 p-8">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className="h-20 bg-gray-200 rounded"></div>
+                <div key={n} className="h-40 bg-gray-200 rounded-xl"></div>
               ))}
             </div>
           </div>
@@ -117,94 +116,80 @@ const DoctorsPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex bg-white">
+    <div className="min-h-screen flex bg-gray-50">
       <DoctorSidebar />
       <div className="flex-1 p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Doctors</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Connected Doctors</h1>
           <button
             onClick={() => setShowAddDoctorModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
           >
-            Add New Doctor
+            <span>+</span>
+            <span>Add Connection</span>
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-4 mb-6">
-          <div className="relative flex-grow max-w-2xl">
-            <input
-              type="text"
-              placeholder="Search doctors by name or ID..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Search className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
+        <div className="mb-8 relative max-w-2xl">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="w-5 h-5 text-gray-400" />
           </div>
+          <input
+            type="text"
+            placeholder="Search doctors by name or ID..."
+            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
 
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Doctor
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Message Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredDoctors.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                    No doctors found matching your criteria
-                  </td>
-                </tr>
-              ) : (
-                filteredDoctors.map((doctor,index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          {doctor.profilePic ? (
-                            <Image
-                              className="h-10 w-10 rounded-full object-cover"
-                              src={doctor.profilePic}
-                              alt={`${doctor.firstName} ${doctor.lastName}`}
-                              width={40}
-                              height={40}
-                            />
-                          ) : (
-                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
-                              {doctor.firstName[0]}{doctor.lastName[0]}
-                            </div>
-                          )}
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            Dr. {doctor.firstName} {doctor.lastName}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            ID: {doctor.doctorId}
-                          </div>
-                        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredDoctors.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <div className="text-gray-500 mb-4">
+                <Search className="w-12 h-12 mx-auto text-gray-300" />
+              </div>
+              <p className="text-gray-600">No doctors found matching your search criteria</p>
+            </div>
+          ) : (
+            filteredDoctors.map((doctor, index) => (
+              <div 
+                key={index}
+                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 p-6 border border-gray-100"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    {doctor.profilePic ? (
+                      <Image
+                        className="h-14 w-14 rounded-full object-cover border-2 border-white shadow-sm"
+                        src={doctor.profilePic}
+                        alt={`${doctor.firstName} ${doctor.lastName}`}
+                        width={56}
+                        height={56}
+                      />
+                    ) : (
+                      <div className="h-14 w-14 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-lg border-2 border-white shadow-sm">
+                        {doctor.firstName[0]}{doctor.lastName[0]}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button 
-                        onClick={() => handleMessageClick(doctor.doctorId)}
-                        className="p-2 hover:bg-gray-100 rounded-full"
-                      >
-                        <MessageCircle className="w-5 h-5 text-blue-600" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Dr. {doctor.firstName} {doctor.lastName}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">ID: {doctor.doctorId}</p>
+                    <button
+                      onClick={() => handleMessageClick(doctor.doctorId)}
+                      className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors duration-200"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Send Message</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {showAddDoctorModal && (

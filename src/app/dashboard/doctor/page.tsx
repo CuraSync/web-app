@@ -26,6 +26,7 @@ const DoctorDashboard = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [doctorData, setDoctorData] = useState<DoctorProfile | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const userRole = localStorage.getItem('userRole');
@@ -35,6 +36,13 @@ const DoctorDashboard = () => {
     }
 
     fetchDoctorData();
+    
+    // Update time every second
+    const timerID = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timerID);
   }, [router]);
 
   const fetchDoctorData = async () => {
@@ -48,8 +56,54 @@ const DoctorDashboard = () => {
     }
   };
 
+  const getTimeOfDay = () => {
+    const hour = currentTime.getHours();
+    if (hour < 12) return 'Morning';
+    if (hour < 18) return 'Afternoon';
+    return 'Evening';
+  };
+
   if (isLoading) {
-    return <div className="min-h-screen bg-gray-50 p-8">Loading...</div>;
+    return (
+      <div className="min-h-screen flex bg-white">
+        <DoctorSidebar />
+        <div className="flex-1 p-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+            <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
+              <div className="flex items-center pb-6 border-b border-gray-200">
+                <div className="w-24 h-24 bg-gray-200 rounded-full"></div>
+                <div className="ml-6 space-y-3">
+                  <div className="h-6 bg-gray-200 rounded w-48"></div>
+                  <div className="h-4 bg-gray-200 rounded w-32"></div>
+                  <div className="h-4 bg-gray-200 rounded w-24"></div>
+                </div>
+              </div>
+              <div className="mt-6 grid grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                </div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-8">
+              <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="h-20 bg-gray-200 rounded-lg"></div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -58,8 +112,32 @@ const DoctorDashboard = () => {
       
       <div className="flex-1">
         <main className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Doctor Dashboard</h1>
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-800 mb-1">
+              Good {getTimeOfDay()}
+            </h1>
+            <p className="text-gray-500 flex items-center">
+              <svg 
+                className="w-4 h-4 mr-2" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth="2" 
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              {currentTime.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+              <span className="mx-2">•</span>
+              {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </p>
           </div>
 
           {doctorData && (
@@ -87,11 +165,6 @@ const DoctorDashboard = () => {
                     <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
                       Doctor ID: {doctorData.doctorId}
                     </span>
-                    {doctorData.rating && (
-                      <span className="ml-4 flex items-center text-yellow-500">
-                        ★ {doctorData.rating}
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -119,7 +192,7 @@ const DoctorDashboard = () => {
           )}
 
           <div className="mt-8">
-            <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <button 
                 onClick={() => router.push('/dashboard/doctor/patients')}

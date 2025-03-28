@@ -113,22 +113,6 @@ const DoctorLogin = () => {
           />
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              name="remember"
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              checked={formData.remember}
-              onChange={handleChange}
-            />
-            <label className="ml-2 text-sm text-gray-600">Remember me</label>
-          </div>
-          <a href="#" className="text-sm text-blue-600 hover:text-blue-700">
-            Forgot password?
-          </a>
-        </div>
-
         <button
           type="submit"
           className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200 flex justify-center items-center"
