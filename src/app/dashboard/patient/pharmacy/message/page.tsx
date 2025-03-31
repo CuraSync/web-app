@@ -5,6 +5,7 @@ import io from "socket.io-client";
 import Sidebar from "../../sidebar/sidebar";
 import { useSearchParams } from "next/navigation";
 import { AxiosError } from "axios";
+import Swal from "sweetalert2";
 
 interface Message {
   pharmacyId: string;
@@ -15,7 +16,6 @@ interface Message {
   type: "message" | "prescription";
 }
 
-// Client component that uses useSearchParams
 function MessageContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
@@ -24,19 +24,37 @@ function MessageContent() {
   const selectedPharmacy = searchParams.get("pharmacyId");
 
   useEffect(() => {
+    document.title = "Patient Pharmacy Message | CuraSync";
     const fetchMessages = async () => {
       try {
         const response = await api.post("/patient/pharmacy/messages", {
           pharmacyId: selectedPharmacy,
         });
-        setMessages(response.data);
-        console.log(response.data);
+
+        // If the response is empty (no messages), show SweetAlert
+        if (!response.data || response.data.length === 0) {
+          Swal.fire({
+            icon: "warning",
+            title: "No messages found!",
+            text: "There are no messages to show.",
+            confirmButtonText: "OK",
+          });
+        } else {
+          setMessages(response.data);
+        }
       } catch (error) {
         const axiosError = error as AxiosError;
+        // If the server returns a 404, show SweetAlert
         if (axiosError.response?.status === 404) {
-          return;
+          Swal.fire({
+            icon: "warning",
+            title: "No messages found!",
+            text: "There are no messages to show.",
+            confirmButtonText: "OK",
+          });
+        } else {
+          console.error("Request failed:", error);
         }
-        console.error("Request failed:", error);
       }
     };
 
@@ -87,9 +105,8 @@ function MessageContent() {
     if (newMessage.trim() === "") return;
 
     const now = new Date();
-
     try {
-      const response = await api.post("/patient/pharmacy/sendMessage", {
+      await api.post("/patient/pharmacy/sendMessage", {
         pharmacyId: selectedPharmacy,
         message: newMessage,
         addedDate: now.toISOString().split("T")[0],
@@ -97,7 +114,6 @@ function MessageContent() {
         sender: "patient",
         type: "message",
       });
-      console.log(response.data);
     } catch (error) {
       console.error("Request failed:", error);
     }

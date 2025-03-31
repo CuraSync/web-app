@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
 import Sidebar from "../sidebar/sidebar";
 import { toast } from "sonner";
+import Swal from "sweetalert2";
+import { AxiosError } from "axios";
 
 interface Request {
   _id: string;
@@ -28,8 +30,10 @@ const PatientRequestPage = () => {
   const [acceptedDoctorRequests, setAcceptedDoctorRequests] = useState<Request[]>([]);
   const [activeTab, setActiveTab] = useState<string>("lab");
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    document.title = "Patient Notification | CuraSync";
     fetchRequests();
   }, []);
 
@@ -58,9 +62,34 @@ const PatientRequestPage = () => {
       setAcceptedLabRequests(acceptedLab);
       setAcceptedPharmacyRequests(acceptedPharmacy);
       setAcceptedDoctorRequests(acceptedDoctor);
+      
+      setError(null);
     } catch (error) {
-      console.error("Error fetching requests:", error);
-      toast.error("Error fetching requests. Please try again.");
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 404) {
+          Swal.fire({
+            title: "No Requests Found",
+            text: "There are no pending or accepted requests at the moment.",
+            icon: "info",
+            confirmButtonText: "OK",
+          });
+          // Reset all request arrays on 404
+          setLabRequests([]);
+          setPharmacyRequests([]);
+          setDoctorRequests([]);
+          setAcceptedLabRequests([]);
+          setAcceptedPharmacyRequests([]);
+          setAcceptedDoctorRequests([]);
+        } else {
+          setError("Failed to load requests. Please try again.");
+          console.error("Error fetching requests:", error.message, error.stack);
+          toast.error("Error fetching requests. Please try again.");
+        }
+      } else {
+        setError("An unexpected error occurred while fetching requests.");
+        console.error("Unexpected error:", error);
+        toast.error("An unexpected error occurred. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -270,6 +299,11 @@ const PatientRequestPage = () => {
     <div className="flex h-screen">
       <Sidebar />
       <div className="flex flex-col w-full h-screen bg-gray-50 p-8 overflow-y-auto">
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-800 border-b-2 border-blue-200 pb-2">
             Request Management

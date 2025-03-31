@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "../sidebar/sidebar";
 import api from "@/utils/api";
 import Swal from "sweetalert2";
-import { AxiosError } from "axios"; // Import AxiosError for type checking
+import { AxiosError } from "axios";
 
 interface Pharmacy {
   id: string;
@@ -23,31 +23,68 @@ const PharmacyPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [pharmacyIdInput, setPharmacyIdInput] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchPharmacies = async () => {
     try {
+      setIsLoading(true);
       const response = await api.get("/patient/pharmacies");
       setAddedPharmacies(response.data as Pharmacy[]);
       setError(null);
     } catch (error) {
-      console.error("Error fetching pharmacies:", error);
-      setError("Failed to load pharmacies. Please try again.");
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 404) {
+          Swal.fire({
+            title: "No Pharmacies Found",
+            text: "There are no pharmacies available at the moment.",
+            icon: "info",
+            confirmButtonText: "OK",
+          });
+          setAddedPharmacies([]);
+        } else {
+          setError("Failed to load pharmacies. Please try again.");
+          console.error("Error fetching pharmacies:", error.message, error.stack);
+        }
+      } else {
+        setError("An unexpected error occurred while fetching pharmacies.");
+        console.error("Unexpected error:", error);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const fetchAddedPharmacies = async () => {
     try {
+      setIsLoading(true);
       const response = await api.get("/patient/pharmacies");
       setAddedPharmacies(response.data as Pharmacy[]);
     } catch (error) {
-      console.error("Error fetching added pharmacies:", error);
-      setError("Failed to load added pharmacies.");
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 404) {
+          Swal.fire({
+            title: "No Pharmacies Found",
+            text: "There are no added pharmacies available.",
+            icon: "info",
+            confirmButtonText: "OK",
+          });
+          setAddedPharmacies([]);
+        } else {
+          setError("Failed to load added pharmacies.");
+          console.error("Error fetching added pharmacies:", error.message, error.stack);
+        }
+      } else {
+        setError("An unexpected error occurred while fetching added pharmacies.");
+        console.error("Unexpected error:", error);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
+    document.title = "Patient Pharmacy | CuraSync";
     fetchPharmacies();
-    fetchAddedPharmacies();
   }, []);
 
   const handleAddPharmacy = async () => {
@@ -69,6 +106,7 @@ const PharmacyPage = () => {
       .padStart(2, "0")}`;
 
     try {
+      setIsLoading(true);
       const payload = {
         pharmacyId: pharmacyIdInput,
         addedDate: addedDate,
@@ -83,7 +121,6 @@ const PharmacyPage = () => {
         confirmButtonText: "OK",
       });
 
-      // Refresh the added pharmacies list
       await fetchAddedPharmacies();
       
       setShowPopup(false);
@@ -98,11 +135,15 @@ const PharmacyPage = () => {
         } else {
           errorMessage = error.response?.data?.message || errorMessage;
         }
+        console.error("Error adding pharmacy:", error.message, error.stack);
       } else if (error instanceof Error) {
         errorMessage = error.message;
+        console.error("Unexpected error:", error);
       }
 
       setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -123,7 +164,8 @@ const PharmacyPage = () => {
           <div className="mb-8">
             <button
               onClick={() => setShowPopup(true)}
-              className="px-4 py-3 bg-blue-500 text-white font-medium rounded-lg flex items-center gap-1 hover:bg-blue-600 transition-colors"
+              className="px-4 py-3 bg-blue-500 text-white font-medium rounded-lg flex items-center gap-1 hover:bg-blue-600 transition-colors disabled:bg-blue-300"
+              disabled={isLoading}
             >
               <Plus className="w-5 h-5" />
               Add Pharmacy
@@ -132,7 +174,22 @@ const PharmacyPage = () => {
 
           <div className="bg-white rounded-lg shadow-sm">
             <h2 className="text-xl font-semibold p-4 border-b">Selected Pharmacies</h2>
-            {addedPharmacies.length === 0 ? (
+            {isLoading ? (
+              <div className="divide-y">
+                {[1, 2, 3].map((_, index) => (
+                  <div key={index} className="p-4 animate-pulse">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 space-y-4">
+                        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                        <div className="h-2 bg-gray-200 rounded w-1/3"></div>
+                      </div>
+                      <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : addedPharmacies.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
                 No pharmacies selected yet.
               </div>
@@ -154,6 +211,7 @@ const PharmacyPage = () => {
                       <button
                         onClick={() => handleMessageClick(pharmacy.pharmacyId)}
                         className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
+                        disabled={isLoading}
                       >
                         <MessageSquare className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
                       </button>
@@ -173,22 +231,25 @@ const PharmacyPage = () => {
             <input
               type="text"
               placeholder="Pharmacy ID"
-              className="w-full p-2 border rounded-lg mb-4"
+              className="w-full p-2 border rounded-lg mb-4 disabled:bg-gray-100"
               value={pharmacyIdInput}
               onChange={(e) => setPharmacyIdInput(e.target.value)}
+              disabled={isLoading}
             />
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowPopup(false)}
-                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 disabled:bg-gray-200"
+                disabled={isLoading}
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddPharmacy}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-blue-300"
+                disabled={isLoading}
               >
-                Add
+                {isLoading ? "Adding..." : "Add"}
               </button>
             </div>
           </div>
