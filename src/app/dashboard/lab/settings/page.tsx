@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import LabSidebar from "../sidebar/sidebar";
 import { toast } from "sonner";
-import { Plus, Trash2, Upload, Camera, Star } from "lucide-react";
+import { Plus, Trash2, Upload, Camera} from "lucide-react";
 import api from "@/utils/api";
 import axios from "axios";
 
@@ -22,8 +22,9 @@ const SettingsPage = () => {
   const [contactInformation, setContactInformation] = useState("");
   const [uploading, setUploading] = useState<boolean>(false);
   const [rating, setRating] = useState(0);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>("");
   const [image, setImage] = useState<File | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   interface Contact {
     type: string;
@@ -33,6 +34,7 @@ const SettingsPage = () => {
   const [contacts, setContacts] = useState<Contact[]>([{ type: "", value: "" }]);
   
   const fetchProfileData = async () => {
+    setLoading(true);
     try {
       const response = await api.post("/laboratory/profile");
       setDescription(response.data.description || "");
@@ -46,8 +48,9 @@ const SettingsPage = () => {
       setImageUrl(response.data.profilePic || "");
      
     } catch (error) {
-      toast.error("Failed to load profile");
       console.error(error);
+    }finally {
+      setLoading(false);
     }
     
     try {
@@ -66,8 +69,9 @@ const SettingsPage = () => {
       setImageUrl(response.data.profilePic);
       
     } catch (error) {
-      toast.error("Error loading profile data. Please try again.");
       console.log(error);
+    }finally {
+      setLoading(false);
     }
   };
   
@@ -89,16 +93,18 @@ const SettingsPage = () => {
           }
         }
       } catch (error) {
-        console.error("Error parsing contact information:", error);
-        toast.error("Error loading contact information");
+        console.log("Error loading contact information");
       }
     }
     
     setContacts([{ type: "", value: "" }]);
   }, [contactInformation]);
+
+    useEffect(() => {
+        document.title = "Laboratory Settings | CuraSync";
+      }, []);
   
   useEffect(() => {
-    if (typeof window === "undefined") return;
     fetchProfileData();
   }, []);
 
@@ -118,9 +124,6 @@ const SettingsPage = () => {
     setLocation(e.target.value);
   };
 
-  const handleRating = (value: number) => {
-    setRating(value);
-  };
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
      const file = e.target.files?.[0];
@@ -198,6 +201,32 @@ const SettingsPage = () => {
     setContacts(contacts.filter((_, index) => index !== indexToRemove));
   };
   
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col md:flex-row bg-white">
+      <div className="flex-shrink-0 md:w-1/4 lg:w-1/5">
+        <LabSidebar />
+      </div>
+        <div className="flex flex-col w-full h-screen bg-gray-50 p-8 overflow-y-auto">
+          <div className="mb-8">
+            <div className="h-10 bg-gray-200 rounded-xl w-64 mb-4 animate-pulse"></div>
+          </div>
+          <div className="space-y-8">
+            {[1, 2].map((n) => (
+              <div key={n} className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                <div className="h-8 bg-gray-200 rounded-xl w-64 mb-6 animate-pulse"></div>
+                <div className="space-y-4">
+                  <div className="h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+                  <div className="h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col lg:flex-row font-sans bg-white text-gray-900">
   <div className="w-64 flex-shrink-0">
@@ -329,34 +358,6 @@ const SettingsPage = () => {
         />
       </div>
 
-      <div className="p-6">
-        <span className="block text-gray-700 font-medium mb-2">Rating:</span>
-        <div className="flex items-center gap-2">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <div key={star} className="relative w-8 h-8">
-              <Star className="absolute w-8 h-8 text-gray-300" />
-              <div
-                className="absolute w-4 h-8 overflow-hidden cursor-pointer"
-                onClick={() => handleRating(star - 0.5)}
-              >
-                {rating >= star - 0.5 && (
-                  <Star className="absolute w-8 h-8 text-yellow-500 fill-yellow-500" />
-                )}
-              </div>
-
-              <div
-                className="absolute left-4 w-4 h-8 overflow-hidden cursor-pointer"
-                onClick={() => handleRating(star)}
-              >
-                {rating >= star && (
-                  <Star className="absolute -left-4 w-8 h-8 text-yellow-500 fill-yellow-500" />
-                )}
-              </div>
-            </div>
-          ))}
-          <span className="ml-2 text-gray-700">({rating}/5)</span>
-        </div>
-      </div>
 
       <div className="p-6">
         <label className="block text-gray-700 font-medium mb-2">Contact Information</label>

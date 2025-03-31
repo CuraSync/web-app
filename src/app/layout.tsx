@@ -9,9 +9,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CuraSync - Healthcare Management System",
+  title: "CuraSync",
   description: "A comprehensive healthcare management system for doctors, patients, labs, and pharmacies",
+  icons: {
+    icon: "/favicon.ico", 
+  },
 };
+
 
 export default function RootLayout({
   children,
@@ -20,6 +24,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
+      <head>
+      <link rel="icon" href="/favicon.ico" sizes="any" />
+      </head>
       <body className={`${inter.variable} antialiased h-full flex flex-col`}>
         <Toaster richColors position="top-center" />
         <div className="flex-grow">{children}</div>
