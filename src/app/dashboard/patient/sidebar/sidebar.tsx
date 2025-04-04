@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // Removed usePathname
-import Image from "next/image"; 
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import {
@@ -13,7 +13,7 @@ import {
   FaFile,
   FaCapsules,
   FaStethoscope,
-} from "react-icons/fa"; // Removed unused FaCog, FaEnvelope, FaBell, FaPage4
+} from "react-icons/fa";
 import { LogOut, X } from "lucide-react";
 import api from "@/utils/api";
 
@@ -23,12 +23,10 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [patientFullName, setPatientFullName] = useState("Patient Name");
 
-  const handleLogout = useCallback(() => {// Remove tokens
-    
+  const handleLogout = useCallback(() => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
-    // Remove user role
-    localStorage.removeItem("userRole");localStorage.removeItem("userRole");
+    localStorage.removeItem("userRole");
     router.push("/auth/login/patient");
     setTimeout(() => {
       toast.success("Logged out successfully");
@@ -70,7 +68,7 @@ const Sidebar = () => {
       )}
 
       <aside
-        className={`fixed md:relative top-0 left-0 w-64 bg-white h-full md:h-auto border-r p-6 flex flex-col transform ${
+        className={`fixed md:relative top-0 left-0 w-64 bg-white h-screen border-r p-6 flex flex-col transform ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0 transition-transform duration-300 z-50`}
       >
@@ -85,12 +83,12 @@ const Sidebar = () => {
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-white">
-          <Image 
-              src="/assets/logo/logo.png" 
-              alt="Logo" 
-              width={40} 
+            <Image
+              src="/assets/logo/logo.png"
+              alt="Logo"
+              width={40}
               height={40}
-              className="object-contain" 
+              className="object-contain"
             />
           </div>
           <span className="text-xl font-bold text-gray-900">CuraSync</span>
@@ -102,7 +100,7 @@ const Sidebar = () => {
             className="flex items-center space-x-3 text-black-600 hover:text-blue-600"
           >
             <FaChartBar className="w-5 h-5" />
-            <span><b>Dashboard</b></span>
+            <span>Dashboard</span>
           </Link>
 
           <Link
@@ -110,7 +108,7 @@ const Sidebar = () => {
             className="flex items-center space-x-3 text-black-600 hover:text-blue-600"
           >
             <FaStethoscope className="w-5 h-5" />
-            <span><b>Doctor</b></span>
+            <span>Doctor</span>
           </Link>
 
           <Link
@@ -118,7 +116,7 @@ const Sidebar = () => {
             className="flex items-center space-x-3 text-black-600 hover:text-blue-600"
           >
             <FaFile className="w-5 h-5" />
-            <span><b>Laboratory</b></span>
+            <span>Laboratory</span>
           </Link>
 
           <Link
@@ -126,7 +124,7 @@ const Sidebar = () => {
             className="flex items-center space-x-3 text-black-600 hover:text-blue-600"
           >
             <FaCapsules className="w-5 h-5" />
-            <span><b>Pharmacy</b></span>
+            <span>Pharmacy</span>
           </Link>
 
           <Link
@@ -134,7 +132,7 @@ const Sidebar = () => {
             className="flex items-center space-x-3 text-black-600 hover:text-blue-600"
           >
             <FaRocketchat className="w-5 h-5" />
-            <span><b>Request</b></span>
+            <span>Request</span>
           </Link>
 
           <Link
@@ -142,21 +140,22 @@ const Sidebar = () => {
             className="flex items-center space-x-3 text-black-600 hover:text-blue-600"
           >
             <FaAddressCard className="w-5 h-5" />
-            <span><b>Profile</b></span>
+            <span>Profile</span>
           </Link>
         </nav>
 
-        <div className="mt-auto p-6 border-t border-gray-200">
-          <div className="flex items-center">
+        {/* Profile and Sign Out Section */}
+        <div className="mt-auto border-t border-gray-200 pt-6">
+          <div className="flex items-center mb-4">
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-800 font-semibold">
               {profilePic ? (
-                 <Image
-                 src={profilePic}
-                 alt="Profile"
-                 width={40}
-                 height={40}
-                 className="w-full h-full object-cover rounded-full"
-               />
+                <Image
+                  src={profilePic}
+                  alt="Profile"
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-cover rounded-full"
+                />
               ) : (
                 <FaUser className="text-purple-800 w-5 h-5" />
               )}
@@ -166,7 +165,7 @@ const Sidebar = () => {
             </div>
           </div>
           <button
-            className="mt-4 w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+            className="w-full flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
             onClick={handleLogout}
           >
             <LogOut className="w-4 h-4" />

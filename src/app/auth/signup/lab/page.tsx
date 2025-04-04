@@ -1,9 +1,10 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SignUpLayout from '@/components/auth/SignUpLayout';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+
 
 const LabSignUpPage = () => {
   const router = useRouter();
@@ -26,6 +27,9 @@ const LabSignUpPage = () => {
     });
   };
 
+  useEffect(() => {
+      document.title = "Laboratory Login | CuraSync";
+    }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +82,7 @@ const LabSignUpPage = () => {
   };
 
   return (
+    
     <SignUpLayout
       title="Laboratory Portal"
       description="Join our network of diagnostic centers and provide quality testing services."
@@ -190,6 +195,7 @@ const LabSignUpPage = () => {
         </div>
       </form>
     </SignUpLayout>
+
   );
 };
 

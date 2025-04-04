@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, Suspense } from "react";
+import React, { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import api from "@/utils/api";
 import { io } from "socket.io-client";
 import PharmacySidebar from "../../sidebar/sidebar";
@@ -16,12 +16,14 @@ interface Message {
   type: "message" | "prescription";
 }
 
-// Client component that uses useSearchParams
-function MessageContent() {
+const MessageContent = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
   const searchParams = useSearchParams();
   const selectedPatient = searchParams.get("patientId");
+
+  // Reference for the message container to scroll it to the bottom
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Memoize fetchMessages function to prevent unnecessary recreations
   const fetchMessages = useCallback(async () => {
@@ -36,10 +38,18 @@ function MessageContent() {
       });
       setMessages(response.data);
     } catch (error) {
-      toast.error("Failed to load messages. Please try again.");
-      console.error("Request failed:", error);
+      if (error instanceof Error && (error as any).response && (error as any).response.status === 404) {
+        // Handle 404 error (No messages)
+        setMessages([]);
+      } else {
+        console.error("Request failed:", error);
+      }
     }
   }, [selectedPatient]);
+
+    useEffect(() => {
+        document.title = "Message | CuraSync";
+      }, []);
 
   useEffect(() => {
     // Early return if running on server or no patient selected
@@ -113,13 +123,32 @@ function MessageContent() {
     );
   });
 
+  // Format date (e.g. "Wed, Mar 28")
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // Scroll to the bottom of the chat whenever the messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "auto" });
+    }
+  }, [messages]);
+
+  let lastDate = "";
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-white">
       <div className="flex-shrink-0 md:w-1/4 lg:w-1/5">
         <PharmacySidebar />
       </div>
       <div className="flex flex-col flex-1 p-4 bg-gray-100">
-        <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4 max-h-[calc(100vh-200px)]">
+        <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-6 mb-6 max-h-[calc(100vh-150px)]"> {/* Adjusted max-height */}
           {sortedMessages.length === 0 ? (
             <div className="flex justify-center items-center h-32 text-gray-500">
               No messages yet. Start a conversation!
@@ -137,39 +166,52 @@ function MessageContent() {
                 parsedData = { message: msg.data };
               }
 
+              const showDate = msg.addedDate !== lastDate;
+              lastDate = msg.addedDate;
+
               return (
-                <div
-                  key={index}
-                  className={`flex mb-4 ${
-                    msg.sender === "pharmacy" ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-xs px-4 py-2 rounded-lg ${
-                      msg.sender === "pharmacy"
-                        ? "bg-blue-600 text-white rounded-br-none"
-                        : "bg-gray-200 text-black rounded-bl-none"
-                    }`}
-                  >
-                    <div className="text-sm">
-                      {parsedData?.message || "No message"}
-                    </div>
-                    <div className="flex justify-end mt-1">
-                      <span
-                        className={`text-xs ${
-                          msg.sender === "pharmacy"
-                            ? "text-blue-100"
-                            : "text-gray-500"
-                        }`}
-                      >
-                        {msg.addedTime}
+                <React.Fragment key={index}>
+                  {showDate && (
+                    <div className="flex justify-center my-4">
+                      <span className="bg-gray-200 text-gray-600 text-sm px-3 py-1 rounded-full">
+                        {formatDate(msg.addedDate)}
                       </span>
                     </div>
+                  )}
+                  <div
+                    className={`flex mb-4 ${
+                      msg.sender === "pharmacy" ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`max-w-xs px-4 py-2 rounded-lg ${
+                        msg.sender === "pharmacy"
+                          ? "bg-blue-600 text-white rounded-br-none"
+                          : "bg-gray-200 text-black rounded-bl-none"
+                      }`}
+                    >
+                      <div className="text-sm">
+                        {parsedData?.message || "No message"}
+                      </div>
+                      <div className="flex justify-end mt-1">
+                        <span
+                          className={`text-xs ${
+                            msg.sender === "pharmacy"
+                              ? "text-blue-100"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {msg.addedTime}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </React.Fragment>
               );
             })
           )}
+          {/* Reference for scroll to bottom */}
+          <div ref={messagesEndRef} />
         </div>
         <div className="bg-white rounded-lg shadow-md p-4 flex">
           <input
@@ -191,17 +233,16 @@ function MessageContent() {
       </div>
     </div>
   );
-}
+};
 
-// Loading fallback component
 function MessagingLoader() {
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-white">
-      <div className="flex-shrink-0 md:w-1/4 lg:w-1/5">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-100">
+      <div className="w-64 flex-shrink-0 bg-gray-800 text-white">
         <PharmacySidebar />
       </div>
-      <div className="flex flex-col flex-1 p-4 bg-gray-100 items-center justify-center">
-        <div className="text-lg font-medium text-gray-600">
+      <div className="flex flex-col flex-grow bg-gray-50 p-6 items-center justify-center">
+        <div className="text-xl font-medium text-gray-600">
           Loading messages...
         </div>
       </div>
@@ -209,10 +250,10 @@ function MessagingLoader() {
   );
 }
 
-// Main component with Suspense boundary
+// Wrapper component with Suspense for async loading
 const MessagesPage = () => {
   return (
-    <Suspense fallback={<MessagingLoader />}>
+      <Suspense fallback={<MessagingLoader />}>
       <MessageContent />
     </Suspense>
   );

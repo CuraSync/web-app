@@ -5,14 +5,13 @@ import {
   Upload,
   Loader2,
   Camera,
-} from "lucide-react"; // Removed unused imports
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../sidebar/sidebar";
 import { toast } from "sonner";
 import axios from "axios";
 import Image from "next/image";
 import api from "@/utils/api";
-
 
 interface PatientInfo {
   firstName: string;
@@ -31,6 +30,8 @@ interface PatientInfo {
   profilePic: string;
   updateAt: string;
   weight: string;
+  // 1. Added `gender` here
+  gender: string;
 }
 
 const SettingsPage = () => {
@@ -40,6 +41,8 @@ const SettingsPage = () => {
   const [uploading, setUploading] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [image, setImage] = useState<File | null>(null);
+
+  // 2. Include `gender` in initial state
   const [patientInfo, setPatientInfo] = useState<PatientInfo>({
     firstName: "",
     lastName: "",
@@ -57,6 +60,7 @@ const SettingsPage = () => {
     profilePic: "",
     updateAt: "",
     weight: "",
+    gender: "", // Added
   });
 
   useEffect(() => {
@@ -68,11 +72,12 @@ const SettingsPage = () => {
       }
 
       try {
+        // Fetch existing profile
         const response = await api.get("/patient/profile");
         const data = response.data as PatientInfo;
         console.log("Raw API Response:", JSON.stringify(data, null, 2));
 
-        // Normalize dateOfBirth to YYYY-MM-DD
+        // Normalize date format for the date picker
         const normalizeDate = (date: string | null | "") => {
           if (!date) return "";
           const parsedDate = new Date(date);
@@ -98,6 +103,8 @@ const SettingsPage = () => {
           profilePic: String(data.profilePic ?? ""),
           updateAt: String(data.updateAt ?? ""),
           weight: String(data.weight ?? ""),
+          // 3. Set the retrieved gender
+          gender: String(data.gender ?? ""),
         };
 
         setPatientInfo(normalizedData);
@@ -118,6 +125,7 @@ const SettingsPage = () => {
   const handleSaveProfile = async () => {
     setIsSaving(true);
     try {
+      // We don't include "gender" here, since user isn't allowed to edit it
       const profileData = {
         firstName: patientInfo.firstName,
         lastName: patientInfo.lastName,
@@ -136,7 +144,7 @@ const SettingsPage = () => {
 
       console.log("Sending to API:", JSON.stringify(profileData, null, 2));
       const response = await api.post("/patient/profile", profileData);
-      setPatientInfo(response.data as PatientInfo); // Update state with backend response
+      setPatientInfo(response.data as PatientInfo);
       toast.success("Profile updated successfully");
       localStorage.setItem("patientData", JSON.stringify(response.data));
       router.refresh();
@@ -200,7 +208,7 @@ const SettingsPage = () => {
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPatientInfo((prev) => {
-      let newValue = value ?? ""; // Ensure empty string if value is null/undefined
+      let newValue = value ?? "";
       if ((name === "height" || name === "weight") && value !== "") {
         newValue = Math.max(0, parseFloat(value)).toString();
       }
@@ -209,7 +217,9 @@ const SettingsPage = () => {
       if (name === "height" || name === "weight") {
         const heightInMeters =
           name === "height" ? parseFloat(newValue) / 100 : parseFloat(prev.height) / 100;
-        const weightInKg = name === "weight" ? parseFloat(newValue) : parseFloat(prev.weight);
+        const weightInKg =
+          name === "weight" ? parseFloat(newValue) : parseFloat(prev.weight);
+
         if (heightInMeters && weightInKg) {
           newData.bmi = (weightInKg / (heightInMeters * heightInMeters)).toFixed(1);
         }
@@ -219,6 +229,7 @@ const SettingsPage = () => {
   };
 
   useEffect(() => {
+    document.title = "Patient Settings | CuraSync";
     const userRole = localStorage.getItem("userRole");
     if (userRole !== "patient") {
       router.push("/auth/login/patient");
@@ -234,9 +245,13 @@ const SettingsPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex bg-white overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 p-8">
+    <div className="flex min-h-screen bg-white">
+      {/* Sidebar wrapper with sticky positioning */}
+      <div className="fixed h-screen w-64 flex-shrink-0">
+        <Sidebar />
+      </div>
+      {/* Main content with margin to prevent overlap */}
+      <div className="flex-1 ml-64 p-8 overflow-y-auto">
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Settings</h1>
@@ -248,12 +263,12 @@ const SettingsPage = () => {
                 <div className="relative w-32 h-32">
                   {imageUrl ? (
                     <Image
-                    src={imageUrl}
-                    alt="Profile Picture"
-                    width={128}
-                    height={128}
-                    className="rounded-full object-cover border"
-                  />
+                      src={imageUrl}
+                      alt="Profile Picture"
+                      width={128}
+                      height={128}
+                      className="rounded-full object-cover border"
+                    />
                   ) : (
                     <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
                       No Image
@@ -280,7 +295,11 @@ const SettingsPage = () => {
                   disabled={!image || uploading}
                   className="text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {uploading ? "Uploading..." : <><Upload className="inline-block mr-2" /> Upload</>}
+                  {uploading ? "Uploading..." : (
+                    <>
+                      <Upload className="inline-block mr-2" /> Upload
+                    </>
+                  )}
                 </button>
 
                 {imageUrl && (
@@ -295,8 +314,11 @@ const SettingsPage = () => {
             </div>
           </div>
 
-          <h2 className="text-lg font-semibold mt-6 mb-4">Personal Information</h2>
+          <h2 className="text-lg font-semibold mt-6 mb-4">
+            Personal Information
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Patient ID */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Patient ID
@@ -308,8 +330,12 @@ const SettingsPage = () => {
                 disabled
               />
             </div>
+
+            {/* NIC */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">NIC</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                NIC
+              </label>
               <input
                 type="text"
                 value={patientInfo.nic}
@@ -317,6 +343,8 @@ const SettingsPage = () => {
                 disabled
               />
             </div>
+
+            {/* First Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 First Name
@@ -329,6 +357,8 @@ const SettingsPage = () => {
                 className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            {/* Last Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Last Name
@@ -341,6 +371,8 @@ const SettingsPage = () => {
                 className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Email Address
@@ -352,6 +384,21 @@ const SettingsPage = () => {
                 disabled
               />
             </div>
+
+            {/* Gender (read-only) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Gender
+              </label>
+              <input
+                type="text"
+                value={patientInfo.gender}
+                className="w-full px-3 py-2 border rounded-md bg-gray-100 cursor-not-allowed"
+                disabled
+              />
+            </div>
+
+            {/* Phone Number */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Phone Number
@@ -364,6 +411,8 @@ const SettingsPage = () => {
                 className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            {/* DOB */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Date of Birth
@@ -376,6 +425,8 @@ const SettingsPage = () => {
                 className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            {/* Address */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Address
@@ -388,6 +439,8 @@ const SettingsPage = () => {
                 className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            {/* Height */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Height (cm)
@@ -400,6 +453,8 @@ const SettingsPage = () => {
                 className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            {/* Weight */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Weight (kg)
@@ -412,6 +467,8 @@ const SettingsPage = () => {
                 className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            {/* BMI */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 BMI (Calculated)
@@ -423,6 +480,8 @@ const SettingsPage = () => {
                 disabled
               />
             </div>
+
+            {/* Blood Type */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Blood Type
@@ -435,6 +494,8 @@ const SettingsPage = () => {
                 className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            {/* Guardian Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Guardian Name
@@ -447,6 +508,8 @@ const SettingsPage = () => {
                 className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            {/* Guardian Phone */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Guardian Phone

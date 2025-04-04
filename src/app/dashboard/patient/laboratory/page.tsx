@@ -1,11 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { MessageSquare, Plus } from "lucide-react"; // Removed unused imports
+import { MessageSquare, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../sidebar/sidebar";
 import api from "@/utils/api";
 import Swal from "sweetalert2";
-import { AxiosError } from "axios"; // Import AxiosError
+import { AxiosError } from "axios";
 
 interface Laboratory {
   id: string;
@@ -13,8 +13,8 @@ interface Laboratory {
   labName: string;
   email: string;
   location: string;
-  addedDate: string; // YYYY-MM-DD format
-  addedTime: string; // HH:MM format
+  addedDate: string;
+  addedTime: string;
 }
 
 const LaboratoryPage = () => {
@@ -25,31 +25,69 @@ const LaboratoryPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [labIdInput, setLabIdInput] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   const ListFetchHomeData = async () => {
     try {
+      setIsLoading(true);
       const response = await api.get("/patient/laboratories");
       setLaboratories(response.data as Laboratory[]);
       console.log("Laboratories data:", response.data);
       setError(null);
     } catch (error) {
-      console.error("Error fetching laboratories:", error);
-      setError("Failed to load laboratories. Please try again.");
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 404) {
+          Swal.fire({
+            title: "No Laboratories Found",
+            text: "There are no laboratories available at the moment.",
+            icon: "info",
+            confirmButtonText: "OK",
+          });
+          setLaboratories([]);
+        } else {
+          setError("Failed to load laboratories. Please try again.");
+          console.error("Error fetching laboratories:", error.message, error.stack);
+        }
+      } else {
+        setError("An unexpected error occurred while fetching laboratories.");
+        console.error("Unexpected error:", error);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const fetchAddedLaboratories = async () => {
     try {
-      const response = await api.get("/patient/laboratories"); // Adjust endpoint if different
+      setIsLoading(true);
+      const response = await api.get("/patient/laboratories");
       setAddedLaboratories(response.data as Laboratory[]);
       console.log("Added laboratories:", response.data);
     } catch (error) {
-      console.error("Error fetching added laboratories:", error);
-      setError("Failed to load added laboratories.");
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 404) {
+          Swal.fire({
+            title: "No Laboratories Found",
+            text: "There are no added laboratories available.",
+            icon: "info",
+            confirmButtonText: "OK",
+          });
+          setAddedLaboratories([]);
+        } else {
+          setError("Failed to load added laboratories.");
+          console.error("Error fetching added laboratories:", error.message, error.stack);
+        }
+      } else {
+        setError("An unexpected error occurred while fetching added laboratories.");
+        console.error("Unexpected error:", error);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
+    document.title = "Patient Lab | CuraSync";
     ListFetchHomeData();
     fetchAddedLaboratories();
   }, []);
@@ -71,13 +109,14 @@ const LaboratoryPage = () => {
     }
 
     const now = new Date();
-    const addedDate = now.toISOString().split("T")[0]; // YYYY-MM-DD
+    const addedDate = now.toISOString().split("T")[0];
     const addedTime = `${now.getHours().toString().padStart(2, "0")}:${now
       .getMinutes()
       .toString()
-      .padStart(2, "0")}`; // HH:MM
+      .padStart(2, "0")}`;
 
     try {
+      setIsLoading(true);
       const payload = {
         labId: labIdInput,
         addedDate: addedDate,
@@ -97,7 +136,7 @@ const LaboratoryPage = () => {
         addedTime: response.data.addedTime || addedTime,
       };
 
-      setAddedLaboratories((prev) => [...prev, newLab]); // Use newLab to update state
+      setAddedLaboratories((prev) => [...prev, newLab]);
 
       Swal.fire({
         title: "Request successfully sent.",
@@ -125,6 +164,8 @@ const LaboratoryPage = () => {
         console.error("Unexpected error:", error);
         setError("An unexpected error occurred. Please try again.");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -145,7 +186,8 @@ const LaboratoryPage = () => {
           <div className="mb-8 flex flex-col gap-4">
             <button
               onClick={() => setShowPopup(true)}
-              className="px-4 py-3 bg-blue-500 text-white font-medium rounded-lg flex items-center gap-1 hover:bg-blue-600 transition-colors w-fit"
+              className="px-4 py-3 bg-blue-500 text-white font-medium rounded-lg flex items-center gap-1 hover:bg-blue-600 transition-colors w-fit disabled:bg-blue-300"
+              disabled={isLoading}
             >
               <Plus className="w-5 h-5" />
               Add Laboratory
@@ -153,21 +195,37 @@ const LaboratoryPage = () => {
             <input
               type="text"
               placeholder="Search laboratories by name or location..."
-              className="p-2 border rounded-lg w-full max-w-md"
+              className="p-2 border rounded-lg w-full max-w-md disabled:bg-gray-100"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              disabled={isLoading}
             />
           </div>
 
           <div className="bg-white rounded-lg shadow-sm">
             <h2 className="text-xl font-semibold p-4 border-b">Selected Laboratories</h2>
-            {addedLaboratories.length === 0 ? (
+            {isLoading ? (
+              <div className="divide-y">
+                {[1, 2, 3].map((_, index) => (
+                  <div key={index} className="p-4 animate-pulse">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 space-y-4">
+                        <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                        <div className="h-2 bg-gray-200 rounded w-1/3"></div>
+                      </div>
+                      <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : addedLaboratories.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
                 No laboratories selected yet.
               </div>
             ) : (
               <div className="divide-y">
-                {filteredLaboratories.map((laboratory) => ( // Use filteredLaboratories
+                {filteredLaboratories.map((laboratory) => (
                   <div
                     key={laboratory.labId}
                     className="p-4 flex items-center justify-between hover:bg-gray-50"
@@ -183,6 +241,7 @@ const LaboratoryPage = () => {
                       <button
                         onClick={() => handleMessageClick(laboratory.labId)}
                         className="p-2 rounded-full hover:bg-blue-100 transition-colors group"
+                        disabled={isLoading}
                       >
                         <MessageSquare className="w-5 h-5 text-blue-500 group-hover:text-blue-600" />
                       </button>
@@ -202,22 +261,25 @@ const LaboratoryPage = () => {
             <input
               type="text"
               placeholder="Lab ID"
-              className="w-full p-2 border rounded-lg mb-4"
+              className="w-full p-2 border rounded-lg mb-4 disabled:bg-gray-100"
               value={labIdInput}
               onChange={(e) => setLabIdInput(e.target.value)}
+              disabled={isLoading}
             />
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowPopup(false)}
-                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 disabled:bg-gray-200"
+                disabled={isLoading}
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddLaboratory}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-blue-300"
+                disabled={isLoading}
               >
-                Add
+                {isLoading ? "Adding..." : "Add"}
               </button>
             </div>
           </div>

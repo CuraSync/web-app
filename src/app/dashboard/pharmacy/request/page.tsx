@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
 import PharmacySidebar from "../sidebar/sidebar";
-import { toast } from "sonner"; 
+import { toast } from "sonner";
 
 interface Request {
   _id: string;
@@ -18,10 +18,13 @@ interface Request {
 const PharmacyRequestPage = () => {
   const [requests, setRequests] = useState<Request[]>([]);
   const [acceptedRequests, setAcceptedRequests] = useState<Request[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);  
+  const [loading, setLoading] = useState<boolean>(false);
+
+    useEffect(() => {
+        document.title = "Pharmacy Requests | CuraSync";
+      }, []);
 
   useEffect(() => {
-  
     fetchRequests();
   }, []);
 
@@ -29,7 +32,12 @@ const PharmacyRequestPage = () => {
     setLoading(true);
     try {
       const response = await api.get("/pharmacy/patient/request");
-      console.log("Fetched Requests:", response.data);
+
+      if (!response.data || !Array.isArray(response.data)) {
+        setRequests([]);
+        setAcceptedRequests([]);
+        return;
+      }
 
       const pending = response.data.filter(
         (req: Request) => req.status === "pending" || req.status === "false"
@@ -40,31 +48,33 @@ const PharmacyRequestPage = () => {
 
       setRequests(pending);
       setAcceptedRequests(accepted);
-    } catch (error) {
-      toast.error("Error fetching requests. Please try again.");
-      console.error("Error fetching requests:", error);
-    }finally {
+    } catch (error: any) {
+
+      if (error.response && error.response.status === 404) {
+        setRequests([]);
+        setAcceptedRequests([]);
+      } else {
+        console.error("Error fetching requests:", error);
+      }
+    } finally {
       setLoading(false);
     }
   };
 
   const handleAcceptRequest = async (_id: string) => {
     try {
-      const response = await api.post("/pharmacy/request/accept", { requestId: _id });
-      console.log("Accepted Request Response:", response.data);
-
+      await api.post("/pharmacy/request/accept", { requestId: _id });
       const acceptedRequest = requests.find((req) => req._id === _id);
       if (!acceptedRequest) return;
 
       setRequests((prev) => prev.filter((req) => req._id !== _id));
-
       setAcceptedRequests((prev) => [
         ...prev,
         {
           ...acceptedRequest,
           status: "accepted",
-          addedDate: new Date().toISOString().split("T")[0], // Current Date
-          addedTime: new Date().toLocaleTimeString(), // Current Time
+          addedDate: new Date().toISOString().split("T")[0],
+          addedTime: new Date().toLocaleTimeString(),
         } as Request,
       ]);
       toast.success("Request accepted successfully!");
@@ -74,100 +84,116 @@ const PharmacyRequestPage = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
-  
-  <div className="flex-shrink-0 md:w-1/4 lg:w-1/5">
-    <PharmacySidebar />
-  </div>
-
-  <div className="flex-1 p-6 overflow-y-auto">
-    {loading ? (
-      <div className="flex justify-center items-center h-full">
-        <span className="text-lg text-gray-500">Loading requests...</span>
-        <div className="w-5 h-5 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col md:flex-row bg-white">
+      <div className="flex-shrink-0 md:w-1/4 lg:w-1/5">
+        <PharmacySidebar />
       </div>
-    ) : (
-      <>
+        <div className="flex flex-col w-full h-screen bg-gray-50 p-8 overflow-y-auto">
+          <div className="mb-8">
+            <div className="h-10 bg-gray-200 rounded-xl w-64 mb-4 animate-pulse"></div>
+          </div>
+          <div className="space-y-8">
+            {[1, 2].map((n) => (
+              <div key={n} className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                <div className="h-8 bg-gray-200 rounded-xl w-64 mb-6 animate-pulse"></div>
+                <div className="space-y-4">
+                  <div className="h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+                  <div className="h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Pending Requests</h2>
-          {requests.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-200 shadow-md">
+  return (
+    <div className="min-h-screen flex flex-col md:flex-row bg-white">
+    <div className="flex-shrink-0 md:w-1/4 lg:w-1/5">
+      <PharmacySidebar />
+    </div>
+      <div className="flex flex-col w-full h-screen bg-gray-50 p-8 overflow-y-auto">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-800 border-b-2 border-blue-200 pb-2">
+            Request Management
+          </h1>
+        </div>
+
+        <div className="space-y-8">
+          {/* Pending Requests */}
+          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4">Pending Requests</h2>
+            {requests.length > 0 ? (
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-blue-50 text-gray-700">
-                    <th className="border p-4 text-left font-medium">Patient ID</th>
-                    <th className="border p-4 text-left font-medium">Patient Name</th>
-                    <th className="border p-4 text-left font-medium">Added Date</th>
-                    <th className="border p-4 text-left font-medium">Added Time</th>
-                    <th className="border p-4 text-left font-medium">Actions</th>
+                  <tr className="bg-blue-50">
+                    <th className="p-4 text-left text-blue-600 font-medium rounded-tl-xl">Patient ID</th>
+                    <th className="p-4 text-left text-blue-600 font-medium">Patient Name</th>
+                    <th className="p-4 text-left text-blue-600 font-medium">Added Date</th>
+                    <th className="p-4 text-left text-blue-600 font-medium rounded-tr-xl">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {requests.map((request) => (
-                    <tr key={request._id} className="border hover:bg-gray-50 transition-colors">
-                      <td className="border p-4 text-gray-700">{request.patientId}</td>
-                      <td className="border p-4 text-gray-700">
-                        {request.firstName} {request.lastName}
-                      </td>
-                      <td className="border p-4 text-gray-700">{request.addedDate}</td>
-                      <td className="border p-4 text-gray-700">{request.addedTime}</td>
-                      <td className="border p-4">
+                    <tr key={request._id} className="border-b border-gray-100 hover:bg-blue-50">
+                      <td className="p-4 text-gray-600">{request.patientId}</td>
+                      <td className="p-4 text-gray-600">{request.firstName} {request.lastName}</td>
+                      <td className="p-4 text-gray-600">{request.addedDate}</td>
+                      <td className="p-4">
                         <button
                           onClick={() => handleAcceptRequest(request._id)}
-                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                          className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors text-sm font-semibold"
                         >
-                          Accept
+                          Accept Request
                         </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
-          ) : (
-            <p className="text-gray-500 text-center mt-4">No pending requests.</p>
-          )}
-        </div>
+            ) : (
+              <div className="p-6 text-center text-gray-400 bg-gray-50 rounded-xl">
+                No pending requests
+              </div>
+            )}
+          </div>
 
-        {/* Accepted Requests Section */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Accepted Requests</h2>
-          {acceptedRequests.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-200 shadow-md">
+          {/* Accepted Requests */}
+          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4">Accepted Requests</h2>
+            {acceptedRequests.length > 0 ? (
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border p-4 text-left font-medium">Patient ID</th>
-                    <th className="border p-4 text-left font-medium">Patient Name</th>
-                    <th className="border p-4 text-left font-medium">Accepted Date</th>
-                    <th className="border p-4 text-left font-medium">Accepted Time</th>
+                  <tr className="bg-blue-50">
+                    <th className="p-4 text-left text-blue-600 font-medium rounded-tl-xl">Patient ID</th>
+                    <th className="p-4 text-left text-blue-600 font-medium">Patient Name</th>
+                    <th className="p-4 text-left text-blue-600 font-medium">Accepted Date</th>
+                    <th className="p-4 text-left text-blue-600 font-medium rounded-tr-xl">Accepted Time</th>
                   </tr>
                 </thead>
                 <tbody>
                   {acceptedRequests.map((request) => (
-                    <tr key={request._id} className="border hover:bg-gray-50 transition-colors">
-                      <td className="border p-4 text-gray-700">{request.patientId}</td>
-                      <td className="border p-4 text-gray-700">
-                        {request.firstName} {request.lastName}
-                      </td>
-                      <td className="border p-4 text-gray-700">{request.addedDate}</td>
-                      <td className="border p-4 text-gray-700">{request.addedTime}</td>
+                    <tr key={request._id} className="border-b border-gray-100 hover:bg-blue-50">
+                      <td className="p-4 text-gray-600">{request.patientId}</td>
+                      <td className="p-4 text-gray-600">{request.firstName} {request.lastName}</td>
+                      <td className="p-4 text-gray-600">{request.addedDate}</td>
+                      <td className="p-4 text-gray-600">{request.addedTime}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
-          ) : (
-            <p className="text-gray-500 text-center mt-4">No accepted requests.</p>
-          )}
+            ) : (
+              <div className="p-6 text-center text-gray-400 bg-gray-50 rounded-xl">
+                No accepted requests
+              </div>
+            )}
+          </div>
         </div>
-      </>
-    )}
-  </div>
-</div>
-
+      </div>
+    </div>
   );
 };
 

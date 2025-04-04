@@ -5,6 +5,7 @@ import api from "@/utils/api";
 import io from "socket.io-client";
 import { useSearchParams } from "next/navigation";
 import { Menu, X, Send } from "lucide-react";
+import Sidebar from "../../sidebar/sidebar";
 
 interface Message {
   doctorId: string;
@@ -14,7 +15,6 @@ interface Message {
   sender: "doctor" | "patient";
 }
 
-// Client component that uses useSearchParams
 function MessageContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>("");
@@ -25,6 +25,7 @@ function MessageContent() {
   const selectedDoctor = searchParams.get("doctorId");
 
   useEffect(() => {
+    document.title = "Patient Doc Message | CuraSync";
     const fetchMessages = async () => {
       try {
         const response = await api.post("/patient/doctor/messages", {
@@ -65,7 +66,6 @@ function MessageContent() {
     };
   }, [selectedDoctor]);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -118,23 +118,19 @@ function MessageContent() {
 
   return (
     <div className="flex h-screen bg-gray-100 relative">
-      {/* Sidebar - hidden on mobile by default */}
+      {/* Sidebar - always visible on desktop, collapsible on mobile */}
       <div
-        className={`bg-white shadow-lg fixed inset-y-0 left-0 transform ${
+        className={`fixed h-screen w-64 flex-shrink-0 z-30 bg-white shadow-lg md:relative md:translate-x-0 transition-transform duration-200 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:relative md:translate-x-0 transition duration-200 ease-in-out z-30 w-64`}
+        }`}
       >
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold">Messages</h2>
-            <button
-              className="md:hidden text-gray-500 hover:text-gray-800"
-              onClick={toggleSidebar}
-            >
-              <X size={24} />
-            </button>
-          </div>
-        </div>
+        <Sidebar />
+        <button
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 md:hidden"
+          onClick={toggleSidebar}
+        >
+          <X size={24} />
+        </button>
       </div>
 
       {/* Main content */}
@@ -228,7 +224,6 @@ function MessageContent() {
   );
 }
 
-// Loading fallback component
 function MessagingLoader() {
   return (
     <div className="flex h-screen bg-gray-100 items-center justify-center">
@@ -239,7 +234,6 @@ function MessagingLoader() {
   );
 }
 
-// Main page component with Suspense
 const MessagesPage = () => {
   return (
     <Suspense fallback={<MessagingLoader />}>

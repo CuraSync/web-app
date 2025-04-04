@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import api from "@/utils/api";
 import Sidebar from "../sidebar/sidebar";
 import { toast } from "sonner";
+import Swal from "sweetalert2";
+import { AxiosError } from "axios";
 
 interface Request {
   _id: string;
@@ -27,13 +29,17 @@ const PatientRequestPage = () => {
   const [acceptedPharmacyRequests, setAcceptedPharmacyRequests] = useState<Request[]>([]);
   const [acceptedDoctorRequests, setAcceptedDoctorRequests] = useState<Request[]>([]);
   const [activeTab, setActiveTab] = useState<string>("lab");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    document.title = "Patient Notification | CuraSync";
     fetchRequests();
   }, []);
 
   const fetchRequests = async () => {
     try {
+      setIsLoading(true);
       const [labRes, pharmacyRes, doctorRes] = await Promise.all([
         api.get("/patient/laboratory/request"),
         api.get("/patient/pharmacy/request"),
@@ -56,9 +62,36 @@ const PatientRequestPage = () => {
       setAcceptedLabRequests(acceptedLab);
       setAcceptedPharmacyRequests(acceptedPharmacy);
       setAcceptedDoctorRequests(acceptedDoctor);
+      
+      setError(null);
     } catch (error) {
-      console.error("Error fetching requests:", error);
-      toast.error("Error fetching requests. Please try again.");
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 404) {
+          Swal.fire({
+            title: "No Requests Found",
+            text: "There are no pending or accepted requests at the moment.",
+            icon: "info",
+            confirmButtonText: "OK",
+          });
+          // Reset all request arrays on 404
+          setLabRequests([]);
+          setPharmacyRequests([]);
+          setDoctorRequests([]);
+          setAcceptedLabRequests([]);
+          setAcceptedPharmacyRequests([]);
+          setAcceptedDoctorRequests([]);
+        } else {
+          setError("Failed to load requests. Please try again.");
+          console.error("Error fetching requests:", error.message, error.stack);
+          toast.error("Error fetching requests. Please try again.");
+        }
+      } else {
+        setError("An unexpected error occurred while fetching requests.");
+        console.error("Unexpected error:", error);
+        toast.error("An unexpected error occurred. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -104,37 +137,63 @@ const PatientRequestPage = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex h-screen">
+        <Sidebar />
+        <div className="flex flex-col w-full h-screen bg-gray-50 p-8 overflow-y-auto">
+          <div className="mb-8">
+            <div className="h-10 bg-gray-200 rounded-xl w-64 mb-4 animate-pulse"></div>
+          </div>
+          <div className="flex space-x-4 mb-8">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="h-12 bg-gray-200 rounded-xl w-32 animate-pulse"></div>
+            ))}
+          </div>
+          <div className="space-y-8">
+            {[1, 2].map((n) => (
+              <div key={n} className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                <div className="h-8 bg-gray-200 rounded-xl w-64 mb-6 animate-pulse"></div>
+                <div className="space-y-4">
+                  <div className="h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+                  <div className="h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const renderLabTable = (requests: Request[], isAccepted: boolean) => (
-    <div className="bg-white rounded-lg shadow-md p-4 mt-4">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        {isAccepted ? "Accepted Laboratory Requests" : "Laboratory Requests"}
+    <div className="bg-white rounded-xl shadow-md p-6 mt-4 border border-gray-100">
+      <h2 className="text-xl font-semibold text-gray-700 mb-4">
+        {isAccepted ? "Accepted Laboratory Requests" : "Pending Laboratory Requests"}
       </h2>
       {requests.length > 0 ? (
-        <table className="w-full border-collapse border border-gray-200 shadow-md">
+        <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-3 text-center">Lab ID</th>
-              <th className="border p-3 text-center">Lab Name</th>
-              <th className="border p-3 text-center">Added Date</th>
-              <th className="border p-3 text-center">Added Time</th>
-              {!isAccepted && <th className="border p-3 text-center">Actions</th>}
+            <tr className="bg-blue-50">
+              <th className="p-4 text-left text-blue-600 font-medium rounded-tl-xl">Lab ID</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Lab Name</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Added Date</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Added Time</th>
+              {!isAccepted && <th className="p-4 text-left text-blue-600 font-medium rounded-tr-xl">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {requests.map((request) => (
-              <tr key={request._id} className="border hover:bg-gray-50">
-                <td className="border p-3 text-gray-700">{request.labId}</td>
-                <td className="border p-3 text-gray-700">{request.labName}</td>
-                <td className="border p-3 text-gray-700">{request.addedDate}</td>
-                <td className="border p-3 text-gray-700">{request.addedTime}</td>
+              <tr key={request._id} className="border-b border-gray-100 hover:bg-blue-50">
+                <td className="p-4 text-gray-600">{request.labId}</td>
+                <td className="p-4 text-gray-600">{request.labName}</td>
+                <td className="p-4 text-gray-600">{request.addedDate}</td>
+                <td className="p-4 text-gray-600">{request.addedTime}</td>
                 {!isAccepted && (
-                  <td className="border p-3 text-center">
-                    <button
-                      onClick={() => handleAcceptRequest(request._id, "lab")}
-                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
-                    >
-                      Accept
-                    </button>
+                  <td className="p-4">
+                    <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-xl text-center text-sm font-medium">
+                      Pending
+                    </div>
                   </td>
                 )}
               </tr>
@@ -142,44 +201,41 @@ const PatientRequestPage = () => {
           </tbody>
         </table>
       ) : (
-        <p className="text-gray-500 text-center mt-4">
-          No {isAccepted ? "accepted laboratory" : "laboratory"} requests.
-        </p>
+        <div className="p-6 text-center text-gray-400 bg-gray-50 rounded-xl">
+          No {isAccepted ? "accepted laboratory" : "pending laboratory"} requests
+        </div>
       )}
     </div>
   );
 
   const renderPharmacyTable = (requests: Request[], isAccepted: boolean) => (
-    <div className="bg-white rounded-lg shadow-md p-4 mt-4">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        {isAccepted ? "Accepted Pharmacy Requests" : "Pharmacy Requests"}
+    <div className="bg-white rounded-xl shadow-md p-6 mt-4 border border-gray-100">
+      <h2 className="text-xl font-semibold text-gray-700 mb-4">
+        {isAccepted ? "Accepted Pharmacy Requests" : "Pending Pharmacy Requests"}
       </h2>
       {requests.length > 0 ? (
-        <table className="w-full border-collapse border border-gray-200 shadow-md">
+        <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-3 text-center">Pharmacy ID</th>
-              <th className="border p-3 text-center">Pharmacy Name</th>
-              <th className="border p-3 text-center">Added Date</th>
-              <th className="border p-3 text-center">Added Time</th>
-              {!isAccepted && <th className="border p-3 text-center">Actions</th>}
+            <tr className="bg-blue-50">
+              <th className="p-4 text-left text-blue-600 font-medium rounded-tl-xl">Pharmacy ID</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Pharmacy Name</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Added Date</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Added Time</th>
+              {!isAccepted && <th className="p-4 text-left text-blue-600 font-medium rounded-tr-xl">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {requests.map((request) => (
-              <tr key={request._id} className="border hover:bg-gray-50">
-                <td className="border p-3 text-gray-700">{request.pharmacyId}</td>
-                <td className="border p-3 text-gray-700">{request.pharmacyName}</td>
-                <td className="border p-3 text-gray-700">{request.addedDate}</td>
-                <td className="border p-3 text-gray-700">{request.addedTime}</td>
+              <tr key={request._id} className="border-b border-gray-100 hover:bg-blue-50">
+                <td className="p-4 text-gray-600">{request.pharmacyId}</td>
+                <td className="p-4 text-gray-600">{request.pharmacyName}</td>
+                <td className="p-4 text-gray-600">{request.addedDate}</td>
+                <td className="p-4 text-gray-600">{request.addedTime}</td>
                 {!isAccepted && (
-                  <td className="border p-3 text-center">
-                    <button
-                      onClick={() => handleAcceptRequest(request._id, "pharmacy")}
-                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
-                    >
-                      Accept
-                    </button>
+                  <td className="p-4">
+                    <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-xl text-center text-sm font-medium">
+                      Pending
+                    </div>
                   </td>
                 )}
               </tr>
@@ -187,45 +243,43 @@ const PatientRequestPage = () => {
           </tbody>
         </table>
       ) : (
-        <p className="text-gray-500 text-center mt-4">
-          No {isAccepted ? "accepted pharmacy" : "pharmacy"} requests.
-        </p>
+        <div className="p-6 text-center text-gray-400 bg-gray-50 rounded-xl">
+          No {isAccepted ? "accepted pharmacy" : "pending pharmacy"} requests
+        </div>
       )}
     </div>
   );
 
   const renderDoctorTable = (requests: Request[], isAccepted: boolean) => (
-    <div className="bg-white rounded-lg shadow-md p-4 mt-4">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        {isAccepted ? "Accepted Doctor Requests" : "Doctor Requests"}
+    <div className="bg-white rounded-xl shadow-md p-6 mt-4 border border-gray-100">
+      <h2 className="text-xl font-semibold text-gray-700 mb-4">
+        {isAccepted ? "Accepted Doctor Requests" : "Pending Doctor Requests"}
       </h2>
       {requests.length > 0 ? (
-        <table className="w-full border-collapse border border-gray-200 shadow-md">
+        <table className="w-full border-collapse">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-3 text-center">Doctor ID</th>
-              <th className="border p-3 text-center">Doctor Name</th>
-              <th className="border p-3 text-center">Added Date</th>
-              <th className="border p-3 text-center">Added Time</th>
-              {!isAccepted && <th className="border p-3 text-center">Actions</th>}
+            <tr className="bg-blue-50">
+              <th className="p-4 text-left text-blue-600 font-medium rounded-tl-xl">Doctor ID</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Doctor Name</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Added Date</th>
+              <th className="p-4 text-left text-blue-600 font-medium">Added Time</th>
+              {!isAccepted && <th className="p-4 text-left text-blue-600 font-medium rounded-tr-xl">Actions</th>}
             </tr>
           </thead>
           <tbody>
             {requests.map((request) => (
-              <tr key={request._id} className="border hover:bg-gray-50">
-                <td className="border p-3 text-gray-700">{request.doctorId}</td>
-                <td className="border p-3 text-gray-700">
-                  {request.firstName} {request.lastName}
-                </td>
-                <td className="border p-3 text-gray-700">{request.addedDate}</td>
-                <td className="border p-3 text-gray-700">{request.addedTime}</td>
+              <tr key={request._id} className="border-b border-gray-100 hover:bg-blue-50">
+                <td className="p-4 text-gray-600">{request.doctorId}</td>
+                <td className="p-4 text-gray-600">{request.firstName} {request.lastName}</td>
+                <td className="p-4 text-gray-600">{request.addedDate}</td>
+                <td className="p-4 text-gray-600">{request.addedTime}</td>
                 {!isAccepted && (
-                  <td className="border p-3 text-center">
+                  <td className="p-4">
                     <button
                       onClick={() => handleAcceptRequest(request._id, "doctor")}
-                      className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors text-sm font-semibold"
                     >
-                      Accept
+                      Accept Request
                     </button>
                   </td>
                 )}
@@ -234,9 +288,9 @@ const PatientRequestPage = () => {
           </tbody>
         </table>
       ) : (
-        <p className="text-gray-500 text-center mt-4">
-          No {isAccepted ? "accepted doctor" : "doctor"} requests.
-        </p>
+        <div className="p-6 text-center text-gray-400 bg-gray-50 rounded-xl">
+          No {isAccepted ? "accepted doctor" : "pending doctor"} requests
+        </div>
       )}
     </div>
   );
@@ -244,28 +298,45 @@ const PatientRequestPage = () => {
   return (
     <div className="flex h-screen">
       <Sidebar />
-      <div className="flex flex-col w-full h-screen bg-gray-100 p-4 overflow-y-auto">
-        <div className="flex space-x-4 mb-4">
+      <div className="flex flex-col w-full h-screen bg-gray-50 p-8 overflow-y-auto">
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-800 border-b-2 border-blue-200 pb-2">
+            Request Management
+          </h1>
+        </div>
+
+        <div className="flex space-x-4 mb-8">
           <button
-            className={`px-4 py-2 rounded-lg ${
-              activeTab === "lab" ? "bg-blue-700" : "bg-blue-600"
-            } text-white hover:bg-blue-700 transition-colors`}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+              activeTab === "lab"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-white text-blue-600 border-2 border-blue-200 hover:border-blue-300"
+            }`}
             onClick={() => setActiveTab("lab")}
           >
             Laboratory Requests
           </button>
           <button
-            className={`px-4 py-2 rounded-lg ${
-              activeTab === "pharmacy" ? "bg-blue-700" : "bg-blue-600"
-            } text-white hover:bg-blue-700 transition-colors`}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+              activeTab === "pharmacy"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-white text-blue-600 border-2 border-blue-200 hover:border-blue-300"
+            }`}
             onClick={() => setActiveTab("pharmacy")}
           >
             Pharmacy Requests
           </button>
           <button
-            className={`px-4 py-2 rounded-lg ${
-              activeTab === "doctor" ? "bg-blue-700" : "bg-blue-600"
-            } text-white hover:bg-blue-700 transition-colors`}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+              activeTab === "doctor"
+                ? "bg-blue-600 text-white shadow-lg"
+                : "bg-white text-blue-600 border-2 border-blue-200 hover:border-blue-300"
+            }`}
             onClick={() => setActiveTab("doctor")}
           >
             Doctor Requests
@@ -273,24 +344,24 @@ const PatientRequestPage = () => {
         </div>
 
         {activeTab === "lab" && (
-          <>
+          <div className="space-y-8">
             {renderLabTable(labRequests, false)}
             {renderLabTable(acceptedLabRequests, true)}
-          </>
+          </div>
         )}
 
         {activeTab === "pharmacy" && (
-          <>
+          <div className="space-y-8">
             {renderPharmacyTable(pharmacyRequests, false)}
             {renderPharmacyTable(acceptedPharmacyRequests, true)}
-          </>
+          </div>
         )}
 
         {activeTab === "doctor" && (
-          <>
+          <div className="space-y-8">
             {renderDoctorTable(doctorRequests, false)}
             {renderDoctorTable(acceptedDoctorRequests, true)}
-          </>
+          </div>
         )}
       </div>
     </div>

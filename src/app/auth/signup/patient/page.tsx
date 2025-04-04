@@ -18,6 +18,7 @@ const PatientSignUpPage = () => {
     phone: "",
     address: "",
     dateOfBirth: "",
+    gender: "", 
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,6 +62,8 @@ const PatientSignUpPage = () => {
       "phone",
       "address",
       "dateOfBirth",
+      "gender",
+      
     ];
     const missingFields = requiredFields.filter(
       (field) => !formData[field as keyof typeof formData]
@@ -87,6 +90,7 @@ const PatientSignUpPage = () => {
           phoneNumber: formData.phone,
           address: formData.address,
           dateOfBirth: formData.dateOfBirth,
+          gender: formData.gender,
         }
       );
       // Assuming the API returns a token or patientId
@@ -116,6 +120,7 @@ const PatientSignUpPage = () => {
         profilepic: "",
         updateAt: new Date().toISOString(),
         weight: "",
+        gender: formData.gender,
       };
 
       localStorage.setItem("patientData", JSON.stringify(patientData));
@@ -280,6 +285,25 @@ const PatientSignUpPage = () => {
             required
           />
         </div>
+
+          {/* Gender */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Gender *
+              </label>
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+
 
         <div>
           <button

@@ -7,23 +7,22 @@ import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 import Sidebar from "../../sidebar/sidebar";
 import Image from "next/image";
+import Swal from "sweetalert2";
 
 interface Message {
   labId: string;
   data: string;
-  addedDate: string; // YYYY-MM-DD format
-  addedTime: string; // HH:MM format
+  addedDate: string; // YYYY-MM-DD
+  addedTime: string; // HH:MM
   sender: "laboratory" | "patient";
   type: "message" | "labReport" | "report";
 }
 
-// Define a proper type for report data
 interface ReportData {
   file_name: string;
-  // Add other report properties as needed
+  // other fields if needed
 }
 
-// Client component that uses useSearchParams
 function MessageContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [reportData, setReportData] = useState<Record<string, ReportData>>({});
@@ -32,17 +31,17 @@ function MessageContent() {
   const [newMessage, setNewMessage] = useState<string>("");
   const [reportUrl, setReportUrl] = useState<string | null>(null);
   const [currentReportId, setCurrentReportId] = useState<string | null>(null);
+
   const searchParams = useSearchParams();
   const selectedLaboratory = searchParams.get("labId");
 
   useEffect(() => {
-    // Move fetchReportData inside useEffect to avoid dependency issues
+    document.title = "Patient Lab Message | CuraSync";
+    // Helper to fetch a report's info
     const getReportInfo = async (reportId: string) => {
       if (!reportId) return null;
-
       try {
         const response = await api.get(`/labreport/info/${reportId}`);
-        console.log(response.data);
         return response.data;
       } catch (error) {
         toast.error("Failed to fetch report details. Please try again later.");
@@ -50,8 +49,9 @@ function MessageContent() {
       }
     };
 
-    const fetchReportData = async (messagesToProcess: Message[]) => {
-      for (const msg of messagesToProcess) {
+    // For each "report" message, fetch additional data
+    const fetchReportData = async (msgs: Message[]) => {
+      for (const msg of msgs) {
         if (msg.type === "report") {
           try {
             const reportId = JSON.parse(msg.data)?.reportId;
@@ -69,22 +69,47 @@ function MessageContent() {
       }
     };
 
+    // Fetch all messages
     const fetchMessages = async () => {
       try {
         const response = await api.post("/patient/lab/messages", {
           labId: selectedLaboratory,
         });
+
+        // If no messages exist
+        if (!response.data || response.data.length === 0) {
+          console.log("No messages found"); // Simple console log
+          Swal.fire({
+            icon: "warning",
+            title: "No messages found!",
+            text: "There are no messages to show.",
+            confirmButtonText: "OK",
+          });
+          return;
+        }
+
         setMessages(response.data);
-        console.log(response.data);
-        await fetchReportData(response.data); // Await to ensure report data is fetched before rendering
-      } catch (error: unknown) {
-        toast.error("Failed to load messages. Please check your connection.");
-        console.error("Request failed:", error);
+        await fetchReportData(response.data);
+      } catch (error: any) {
+        // If the error has a 404 status, show a simple log + SweetAlert
+        if (error.response?.status === 404) {
+          console.log("No messages found");
+          Swal.fire({
+            icon: "warning",
+            title: "No messages found!",
+            text: "There are no messages to show.",
+            confirmButtonText: "OK",
+          });
+        } else {
+          // Otherwise, log the general error
+          console.error("Request failed:", error);
+        }
       }
     };
 
     fetchMessages();
 
+    // Setup Socket.io
     const serverUrl = "wss://curasync-backend.onrender.com/chat";
     const token = localStorage.getItem("accessToken");
     const additionalData = { id: selectedLaboratory };
@@ -102,15 +127,15 @@ function MessageContent() {
 
     socket.on("receive-message", (message: Message) => {
       setMessages((prevMessages) => [...prevMessages, message]);
-      console.log("Received message:", message);
-      fetchReportData([message]); // Fetch report data for the new message
+      fetchReportData([message]);
     });
 
     return () => {
       socket.disconnect();
     };
-  }, [selectedLaboratory, reportData]); // reportData is needed since it's used in fetchReportData
+  }, [selectedLaboratory, reportData]);
 
+  // Sort messages by date/time
   const laboratoryMessages = [...messages].sort((a, b) => {
     return (
       a.addedDate.localeCompare(b.addedDate) ||
@@ -118,6 +143,7 @@ function MessageContent() {
     );
   });
 
+  // Format date for display
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("en-US", {
@@ -127,6 +153,7 @@ function MessageContent() {
     });
   };
 
+  // Send a message
   const handleSendMessage = async () => {
     if (newMessage.trim() === "") return;
 
@@ -153,23 +180,22 @@ function MessageContent() {
     }
   };
 
+  // When a user clicks on a "report" message, show the modal
   const handleReportClick = (reportId: string) => {
     setCurrentReportId(reportId);
     setIsOpen(true);
     getReport(reportId);
   };
 
+  // Fetch the actual report image
   const getReport = async (reportId: string) => {
     if (!reportId) return null;
-
     try {
       const response = await api.get(`/labreport/file/${reportId}`, {
         responseType: "blob",
       });
-      console.log(response.data);
       setReportFile(response.data);
       setReportUrl(URL.createObjectURL(response.data));
-      console.log(URL.createObjectURL(response.data));
     } catch (error) {
       toast.error("Failed to fetch report details. Please try again later.");
       console.error("Request failed:", error);
@@ -180,9 +206,12 @@ function MessageContent() {
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">
+      {/* Sidebar */}
       <div className="w-64 flex-shrink-0">
         <Sidebar />
       </div>
+
+      {/* Main content */}
       <div className="flex flex-col flex-grow bg-gray-100 p-4">
         <div className="flex-grow overflow-y-auto bg-white rounded-lg shadow-md p-4 mb-4">
           {laboratoryMessages.map((msg, index) => {
@@ -198,6 +227,7 @@ function MessageContent() {
                     </span>
                   </div>
                 )}
+                {/* Plain message */}
                 {msg.type === "message" && (
                   <div
                     className={`flex mb-4 ${
@@ -228,6 +258,7 @@ function MessageContent() {
                     </div>
                   </div>
                 )}
+                {/* Report message */}
                 {msg.type === "report" &&
                   reportData[JSON.parse(msg.data)?.reportId] && (
                     <div className="flex items-center justify-between bg-blue-50 p-4 rounded-lg shadow-md max-w-md mb-4 hover:shadow-lg transition-shadow duration-300 ease-in-out">
@@ -239,7 +270,10 @@ function MessageContent() {
                             handleReportClick(JSON.parse(msg.data)?.reportId)
                           }
                         >
-                          {reportData[JSON.parse(msg.data)?.reportId].file_name}
+                          {
+                            reportData[JSON.parse(msg.data)?.reportId]
+                              .file_name
+                          }
                         </p>
                       </div>
                     </div>
@@ -249,6 +283,7 @@ function MessageContent() {
           })}
         </div>
 
+        {/* Message Input */}
         <div className="bg-white rounded-lg shadow-md p-4 flex">
           <input
             type="text"
@@ -267,6 +302,7 @@ function MessageContent() {
         </div>
       </div>
 
+      {/* Report Modal */}
       {isOpen && currentReportId && reportFile && reportUrl && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-70">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96 space-y-6 transform transition-all duration-300 scale-100 hover:scale-105">
@@ -280,7 +316,7 @@ function MessageContent() {
                 fill
                 style={{ objectFit: "contain" }}
                 className="rounded-lg shadow-md border border-gray-300"
-                unoptimized // Important for blob URLs
+                unoptimized
               />
             </div>
             <button
@@ -300,7 +336,6 @@ function MessageContent() {
   );
 }
 
-// Loading fallback component
 function MessagingLoader() {
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">
@@ -316,7 +351,6 @@ function MessagingLoader() {
   );
 }
 
-// Main component with Suspense boundary
 const MessagesPage = () => {
   return (
     <Suspense fallback={<MessagingLoader />}>

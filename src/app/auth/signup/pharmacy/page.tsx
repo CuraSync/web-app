@@ -1,9 +1,10 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import SignUpLayout from '@/components/auth/SignUpLayout';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+
 
 const PharmacySignUpPage = () => {
   const router = useRouter();
@@ -17,6 +18,10 @@ const PharmacySignUpPage = () => {
     phone: '',
     location: ''
   });
+
+  useEffect(() => {
+      document.title = "Pharmacy Signup | CuraSync";
+    }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -79,6 +84,7 @@ const PharmacySignUpPage = () => {
   };
 
   return (
+
     <SignUpLayout
       title="Pharmacy Portal"
       description="Join our network of pharmacies and provide essential medication services."
@@ -190,6 +196,7 @@ const PharmacySignUpPage = () => {
         </div>
       </form>
     </SignUpLayout>
+
   );
 };
 

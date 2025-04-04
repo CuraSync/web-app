@@ -42,9 +42,14 @@ const Footer = () => {
                     <Image src="/assets/icons/ig.svg" alt="Instagram" fill style={{ objectFit: 'contain' }} />
                   </div>
                 </a>
-                <a href="https://www.facebook.com/curasync" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-purple-600">
+                <a href="https://www.linkedin.com/company/curasync/" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-purple-600">
                   <div className="relative w-6 h-6">
-                    <Image src="/assets/icons/fb.svg" alt="Facebook" fill style={{ objectFit: 'contain' }} />
+                    <Image src="/assets/icons/lin.svg" alt="LinkdIn" fill style={{ objectFit: 'contain' }} />
+                  </div>
+                </a>
+                <a href="https://github.com/CuraSync" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-purple-600">
+                  <div className="relative w-6 h-6">
+                    <Image src="/assets/icons/gh.svg" alt="GitHub" fill style={{ objectFit: 'contain' }} />
                   </div>
                 </a>
               </div>

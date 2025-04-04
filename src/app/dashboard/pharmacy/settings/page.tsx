@@ -9,189 +9,222 @@ import axios from "axios";
 import Image from "next/image";
 
 const SettingsPage = () => {
- const router = useRouter();
- const [description, setDescription] = useState("");
- const [pharmacyName, setPharmacyName] = useState("");
- const [phoneNumber, setPhoneNumber] = useState("");
- const [email, setEmail] = useState("");
- const [licenceNumber, setLicenceNumber] = useState("");
- const [location, setLocation] = useState("");
- const [pharmacyId, setPharmacyId] = useState("");
- const [updatedAt, setUpdatedAt] = useState("");
- const [createdAt, setCreatedAt] = useState("");
- const [contactInformation, setContactInformation] = useState("");
- const [rating, setRating] = useState(0);
- const [image, setImage] = useState<File | null>(null);
- const [uploading, setUploading] = useState<boolean>(false);
- const [imageUrl, setImageUrl] = useState<string | null>(null);
- 
+  const router = useRouter();
+  // Initialize all state values with empty strings instead of null
+  const [description, setDescription] = useState("");
+  const [pharmacyName, setPharmacyName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [licenceNumber, setLicenceNumber] = useState("");
+  const [location, setLocation] = useState("");
+  const [pharmacyId, setPharmacyId] = useState("");
+  const [updatedAt, setUpdatedAt] = useState("");
+  const [createdAt, setCreatedAt] = useState("");
+  const [contactInformation, setContactInformation] = useState("");
+  const [rating, setRating] = useState(0);
+  const [image, setImage] = useState<File | null>(null);
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [loading, setLoading] = useState<boolean>(false);
+
   interface Contact {
-   type: string;
-   value: string;
- }
-  const [contacts, setContacts] = useState<Contact[]>([{ type: "", value: "" }]);
-  const fetchProfileData = async () => {
-   try {
-     const response = await api.post("/pharmacy/profile");
-     setDescription(response.data.description || "");
-     setPharmacyName(response.data.pharmacyName || "");
-     setLocation(response.data.location || "");
-     setPharmacyId(response.data.pharmacyId || "");
-     setUpdatedAt(response.data.updatedAt || "");
-     setCreatedAt(response.data.createdAt || "");
-     setImageUrl(response.data.profilePic || "");
-     setContactInformation(response.data.contactInformation || "");
-     setRating(response.data.rating || 0);
-
-   } catch (error) {
-     toast.error("Failed to load profile");
-     console.error(error);
-   }
-   try {
-     const response = await api.get("/pharmacy/home");
-     setPharmacyName(response.data.pharmacyName);
-     setPhoneNumber(response.data.phoneNumber);
-     setEmail(response.data.email);
-     setLicenceNumber(response.data.licenceNumber);
-     setDescription(response.data.description);
-     setLocation(response.data.location);
-     setPharmacyId(response.data.pharmacyId);
-     setUpdatedAt(response.data.updatedAt);
-     setCreatedAt(response.data.createdAt);
-     setContactInformation(response.data.contactInformation);
-     setImageUrl(response.data.profilePic);
-     setRating(response.data.rating);
-     console.log(response.data);
-    
-   } catch (error) {
-     console.log(error);
-   }
- };
-  useEffect(() => {
-  if (typeof window === "undefined") return;
-   if (contactInformation) {
-     try {
-       const parsedContacts = JSON.parse(contactInformation);
-      
-       if (Array.isArray(parsedContacts) && parsedContacts.length > 0 &&
-           parsedContacts.some(contact => contact.type && contact.value)) {
-        
-         const validContacts = parsedContacts.filter(contact =>
-           contact && contact.type && contact.value
-         );
-        
-         if (validContacts.length > 0) {
-           setContacts(validContacts);
-           return;
-         }
-       }
-     } catch (error) {
-       console.error("Error parsing contact information:", error);
-     }
-   }
+    type: string;
+    value: string;
+  }
   
-   setContacts([{ type: "", value: "" }]);
- }, [contactInformation]);
+  const [contacts, setContacts] = useState<Contact[]>([{ type: "", value: "" }]);
+
+  const fetchProfileData = async () => {
+    setLoading(true);
+    try {
+      const response = await api.post("/pharmacy/profile");
+      // Ensure we never set null values
+      setDescription(response.data.description || "");
+      setPharmacyName(response.data.pharmacyName || "");
+      setLocation(response.data.location || "");
+      setPharmacyId(response.data.pharmacyId || "");
+      setUpdatedAt(response.data.updatedAt || "");
+      setCreatedAt(response.data.createdAt || "");
+      setImageUrl(response.data.profilePic || "");
+      setContactInformation(response.data.contactInformation || "");
+      setRating(response.data.rating || 0);
+    } catch (error) {
+      toast.error("Failed to load profile");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+
+    try {
+      const response = await api.get("/pharmacy/home");
+      // Ensure we never set null values
+      setPharmacyName(response.data.pharmacyName || "");
+      setPhoneNumber(response.data.phoneNumber || "");
+      setEmail(response.data.email || "");
+      setLicenceNumber(response.data.licenceNumber || "");
+      setDescription(response.data.description || "");
+      setLocation(response.data.location || "");
+      setPharmacyId(response.data.pharmacyId || "");
+      setUpdatedAt(response.data.updatedAt || "");
+      setCreatedAt(response.data.createdAt || "");
+      setContactInformation(response.data.contactInformation || "");
+      setImageUrl(response.data.profilePic || "");
+      setRating(response.data.rating || 0);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-   fetchProfileData();
- }, []);
+    if (contactInformation && typeof contactInformation === 'string' && contactInformation.trim() !== '') {
+      try {
+        const parsedContacts = JSON.parse(contactInformation);
+        if (Array.isArray(parsedContacts) && parsedContacts.length > 0 &&
+            parsedContacts.some(contact => contact.type && contact.value)) {
+          const validContacts = parsedContacts.filter(contact =>
+            contact && contact.type && contact.value
+          );
+          if (validContacts.length > 0) {
+            setContacts(validContacts);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing contact information:", error);
+      }
+    }
+    setContacts([{ type: "", value: "" }]);
+  }, [contactInformation]);
 
+  
 
- const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-   setDescription(e.target.value);
- };
+  useEffect(() => {
+    document.title = "Pharmacy Settings | CuraSync";
+  }, []);
+
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  // All your handler functions remain the same
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDescription(e.target.value);
+  };
+
   const handlePharmacyNameChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-   setPharmacyName(e.target.value);
- };
+    setPharmacyName(e.target.value);
+  };
+
   const handlephoneNumberChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-   setPhoneNumber(e.target.value);
- };
-const handleLocationChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-   setLocation(e.target.value);
- };
+    setPhoneNumber(e.target.value);
+  };
 
+  const handleLocationChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setLocation(e.target.value);
+  };
 
- const handleRating = (value: number) => {
-   setRating(value);
- };
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-   const file = e.target.files?.[0];
-   if (file && file.size <= 5 * 1024 * 1024) {
-     setImage(file);
-   } else {
-     alert("File size should be less than 5MB");
-     setImage(null);
-   }
- };
+    const file = e.target.files?.[0];
+    if (file && file.size <= 5 * 1024 * 1024) {
+      setImage(file);
+    } else {
+      alert("File size should be less than 5MB");
+      setImage(null);
+    }
+  };
 
+  const handleUpload = async () => {
+    if (!image) return;
+    setUploading(true);
 
- const handleUpload = async () => {
-   if (!image) return;
-   setUploading(true);
+    const formData = new FormData();
+    formData.append("file", image);
+    formData.append(
+      "upload_preset",
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ""
+    );
+    try {
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        formData
+      );
+      setImageUrl(response.data.secure_url || "");
+    } catch (error) {
+      console.error("Upload failed", error);
+      alert("Image upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
-
-   const formData = new FormData();
-   formData.append("file", image);
-   formData.append(
-     "upload_preset",
-     process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || ""
-   );
-   try {
-     const response = await axios.post(
-       `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-       formData
-     );
-     setImageUrl(response.data.secure_url);
-     console.log(imageUrl);
-   } catch (error) {
-     console.error("Upload failed", error);
-     alert("Image upload failed. Please try again.");
-   } finally {
-     setUploading(false);
-   }
-
-
- };
- 
   const handleSaveProfile = async () => {
-   try {
-     const contactInfoString = JSON.stringify(contacts);
-    
-     await api.post("/pharmacy/profile", {
-       description,
-       pharmacyName,
-       phoneNumber,
-       location,
-       pharmacyId,
-       updatedAt,
-       contactInformation: contactInfoString,
-       profilePic:imageUrl,
-       rating
-     });
-    
-     toast.success("Profile updated successfully");
-     router.refresh();
-   } catch (error) {
-     toast.error("Failed to update profile");
-     console.error(error);
-   }
- };
+    try {
+      const contactInfoString = JSON.stringify(contacts);
+      await api.post("/pharmacy/profile", {
+        description,
+        pharmacyName,
+        phoneNumber,
+        location,
+        pharmacyId,
+        updatedAt,
+        contactInformation: contactInfoString,
+        profilePic: imageUrl,
+        rating
+      });
+      toast.success("Profile updated successfully");
+      router.refresh();
+    } catch (error) {
+      toast.error("Failed to update profile");
+      console.error(error);
+    }
+  };
+
   const handleChange = (index: number, field: "type" | "value", value: string) => {
-   const newContacts = [...contacts];
-   newContacts[index][field] = value;
-   setContacts(newContacts);
- };
+    const newContacts = [...contacts];
+    newContacts[index][field] = value;
+    setContacts(newContacts);
+  };
+
   const addContactField = () => {
-   setContacts([...contacts, { type: "", value: "" }]);
- };
+    setContacts([...contacts, { type: "", value: "" }]);
+  };
+
+  const removeContactField = (indexToRemove: number) => {
+    if (contacts.length <= 1) return;
+    setContacts(contacts.filter((_, index) => index !== indexToRemove));
+  };
 
 
- const removeContactField = (indexToRemove: number) => {
-   if (contacts.length <= 1) {
-     return;
-   }
-   setContacts(contacts.filter((_, index) => index !== indexToRemove));
- };
+ if (loading) {
+  return (
+      <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
+      <div className="flex-shrink-0 md:w-1/4 lg:w-1/5">
+          <PharmacySidebar />
+      </div>
+      <div className="flex flex-col w-full h-screen bg-gray-50 p-8 overflow-y-auto">
+        <div className="mb-8">
+          <div className="h-10 bg-gray-200 rounded-xl w-64 mb-4 animate-pulse"></div>
+        </div>
+        <div className="space-y-8">
+          {[1, 2].map((n) => (
+            <div key={n} className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+              <div className="h-8 bg-gray-200 rounded-xl w-64 mb-6 animate-pulse"></div>
+              <div className="space-y-4">
+                <div className="h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+                <div className="h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-white">
   <div className="flex-shrink-0 md:w-1/4 lg:w-1/5">
@@ -320,34 +353,7 @@ const handleLocationChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         />
       </div>
 
-      <div className="p-6">
-        <span className="block text-gray-700 font-medium mb-2">Rating:</span>
-        <div className="flex items-center gap-2">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <div key={star} className="relative w-8 h-8">
-              <Star className="absolute w-8 h-8 text-gray-300" />
-              <div
-                className="absolute w-4 h-8 overflow-hidden cursor-pointer"
-                onClick={() => handleRating(star - 0.5)}
-              >
-                {rating >= star - 0.5 && (
-                  <Star className="absolute w-8 h-8 text-yellow-500 fill-yellow-500" />
-                )}
-              </div>
-
-              <div
-                className="absolute left-4 w-4 h-8 overflow-hidden cursor-pointer"
-                onClick={() => handleRating(star)}
-              >
-                {rating >= star && (
-                  <Star className="absolute -left-4 w-8 h-8 text-yellow-500 fill-yellow-500" />
-                )}
-              </div>
-            </div>
-          ))}
-          <span className="ml-2 text-gray-700">({rating}/5)</span>
-        </div>
-      </div>
+      
 
       <div className="p-6">
         <label className="block text-gray-700 font-medium mb-2">Contact Information</label>

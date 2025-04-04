@@ -8,6 +8,7 @@ import LabSidebar from "../../sidebar/sidebar";
 import { toast } from "sonner";
 import Image from "next/image";
 
+
 interface Message {
   patientId: string;
   data: string;
@@ -89,6 +90,10 @@ function MessageContent() {
       console.error("Request failed:", error);
     }
   }, [selectedPatient, fetchReportData]);
+
+    useEffect(() => {
+        document.title = "Message | CuraSync";
+      }, []);
 
   useEffect(() => {
     fetchMessages();
@@ -179,8 +184,6 @@ function MessageContent() {
       });
       toast.success("Message sent successfully");
 
-      // No need to call fetchMessages() here as the WebSocket will update
-      // the messages when the server broadcasts the message
     } catch (error) {
       toast.error("Failed to send the message. Please try again later.");
       console.error("Request failed:", error);
@@ -242,6 +245,8 @@ function MessageContent() {
     }
   };
 
+  
+
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">
       <div className="w-64 flex-shrink-0 bg-gray-800 text-white">
@@ -257,7 +262,7 @@ function MessageContent() {
               <React.Fragment key={index}>
                 {showDate && (
                   <div className="flex justify-center my-6">
-                    <span className="bg-blue-100 text-blue-700 text-sm px-4 py-2 rounded-full shadow-md">
+                    <span className="bg-gray-200 text-gray-600 text-sm px-3 py-1 rounded-full">
                       {formatDate(msg.addedDate)}
                     </span>
                   </div>
@@ -398,7 +403,7 @@ function MessageContent() {
   );
 }
 
-// Loading fallback component
+
 function MessagingLoader() {
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">
