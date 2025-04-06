@@ -2,10 +2,13 @@
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import api from "@/utils/api";
 import { useSearchParams } from "next/navigation";
-import { File } from "lucide-react";
+import { File, SearchSlash, X } from "lucide-react";
 import io from "socket.io-client";
 import { toast } from "sonner";
 import Sidebar from "../../sidebar/sidebar";
+import Image from "next/image";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface TimelineNote {
   doctorId: string;
@@ -20,6 +23,11 @@ interface TimelineNote {
 const TimelineContent = () => {
   const [notes, setNotes] = useState<TimelineNote[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isVisualization, setIsVisualization] = useState(false);
+  const [visualizationData, setVisualizationData] = useState<string | null>(
+    null
+  );
+  const [visualizationLoading, setvisualizationLoading] = useState(false);
   const [reportUrl, setReportUrl] = useState<string | null>(null);
   const prevNotesLengthRef = useRef(0);
   const [reportData, setReportData] = useState<Record<string, any>>({});
@@ -176,6 +184,30 @@ const TimelineContent = () => {
     }
   };
 
+  const handleVisualizationClick = (reportId: string) => {
+    setIsVisualization(true);
+    getVisualization(reportId);
+  };
+
+  const getVisualization = async (reportId: string) => {
+    if (!reportId) return null;
+
+    setvisualizationLoading(true);
+    try {
+      const response = await api.post("/labreport/visualization", {
+        reportId,
+      });
+      console.log(response.data);
+      setVisualizationData(response.data.visualization);
+      setvisualizationLoading(false);
+    } catch (error) {
+      toast.error(
+        "Failed to fetch Visualization data. Please try again later."
+      );
+      console.error("Request failed:", error);
+    }
+  };
+
   return (
     <>
       {/* Timeline Area */}
@@ -243,30 +275,52 @@ const TimelineContent = () => {
                               note.type
                             )}`}
                           >
-                            <File
-                              size={32}
-                              className="hover:cursor-pointer w-[56px]"
-                              onClick={() =>
-                                handleReportClick(
-                                  typeof note.data == "object"
-                                    ? note.data.reportId
-                                    : JSON.parse(note.data)?.reportId
-                                )
-                              }
-                            />
-                            <p className="w-16 text-center">
-                              {reportData[
-                                typeof note.data == "object"
-                                  ? note.data.reportId
-                                  : JSON.parse(note.data)?.reportId
-                              ]?.file_name +
-                                "." +
-                                reportData[
-                                  typeof note.data == "object"
-                                    ? note.data.reportId
-                                    : JSON.parse(note.data)?.reportId
-                                ]?.file_type}
-                            </p>
+                            <div className="flex justify-center items-center gap-12 w-full">
+                              <div
+                                className="bg-gray-300 p-6 rounded-xl cursor-pointer"
+                                onClick={() =>
+                                  handleReportClick(
+                                    typeof note.data == "object"
+                                      ? note.data.reportId
+                                      : JSON.parse(note.data)?.reportId
+                                  )
+                                }
+                              >
+                                <File size={45} className="w-[56px]" />
+                                <p className="w-16 text-center mt-2">
+                                  {reportData[
+                                    typeof note.data == "object"
+                                      ? note.data.reportId
+                                      : JSON.parse(note.data)?.reportId
+                                  ]?.file_name +
+                                    "." +
+                                    reportData[
+                                      typeof note.data == "object"
+                                        ? note.data.reportId
+                                        : JSON.parse(note.data)?.reportId
+                                    ]?.file_type}
+                                </p>
+                              </div>
+
+                              <div
+                                className="p-6 bg-slate-200 rounded-3xl cursor-pointer"
+                                onClick={() =>
+                                  handleVisualizationClick(
+                                    typeof note.data == "object"
+                                      ? note.data.reportId
+                                      : JSON.parse(note.data)?.reportId
+                                  )
+                                }
+                              >
+                                <SearchSlash
+                                  size={42}
+                                  className="w-[56px] ml-3"
+                                />
+                                <p className="mt-2 w-24 text-center">
+                                  Visualization
+                                </p>
+                              </div>
+                            </div>
 
                             <p className="text-gray-800">
                               {typeof note.data == "object"
@@ -305,6 +359,111 @@ const TimelineContent = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {isVisualization && (
+        <>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
+            onClick={() => {
+              setIsVisualization(false);
+              setVisualizationData(null);
+            }}
+          />
+
+          <div
+            className={`fixed top-0 right-0 w-[90%] h-full bg-white z-50 shadow-xl transform transition-transform duration-300 ease-in-out ${
+              isVisualization ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <div className="p-4 border-b border-gray-200 flex items-center">
+              <button
+                onClick={() => {
+                  setIsVisualization(false);
+                  setVisualizationData(null);
+                }}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Close panel"
+              >
+                <X size={24} />
+              </button>
+              <div className="ml-4 font-medium">Report Visualization</div>
+            </div>
+
+            <div className="p-6 overflow-y-auto h-[calc(100%-4rem)]">
+              <div className="flex flex-col md:flex-row gap-6">
+                {visualizationLoading && (
+                  <div className="flex flex-col items-center justify-center w-full py-16">
+                    <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+                    <h3 className="text-lg font-medium text-gray-700">
+                      Visualization Loading
+                    </h3>
+                  </div>
+                )}
+                {visualizationData && (
+                  <>
+                    <div className="md:w-2/5">
+                      <Image
+                        src="/assets/lab/blood.avif"
+                        alt="Report visualization"
+                        width={500}
+                        height={300}
+                        className="w-full h-auto mt-12"
+                      />
+                    </div>
+
+                    <div className="md:w-3/5 prose prose-sm md:prose-base lg:prose-lg max-w-none">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          h1: ({ node, ...props }) => (
+                            <h1 className="text-xl font-bold mt-4" {...props} />
+                          ),
+                          h2: ({ node, ...props }) => (
+                            <h2 className="text-lg font-bold mt-3" {...props} />
+                          ),
+                          strong: ({ node, ...props }) => (
+                            <strong className="font-bold" {...props} />
+                          ),
+                          ul: ({ node, ...props }) => (
+                            <ul className="list-disc pl-5 my-2" {...props} />
+                          ),
+                          li: ({ node, ...props }) => (
+                            <li className="my-1" {...props} />
+                          ),
+                        }}
+                      >
+                        {visualizationData}
+                      </ReactMarkdown>
+                    </div>
+                  </>
+                )}
+
+                {!visualizationData && !visualizationLoading && (
+                  <div className="flex flex-col items-center justify-center w-full py-12 px-8 bg-gray-50 rounded-xl border border-gray-200">
+                    <div className="mb-6 text-gray-400">
+                      <SearchSlash size={64} />
+                    </div>
+                    <h3 className="text-xl font-medium text-gray-700 mb-2">
+                      No Visualization Available
+                    </h3>
+                    <p className="text-gray-500 text-center mb-6 max-w-md">
+                      Visualization is not done yet. Please generate the
+                      visualization using the button below.
+                    </p>
+                    <button
+                      className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 shadow-sm"
+                      onClick={() => {}}
+                    >
+                      <SearchSlash size={18} />
+                      Generate Visualization
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </>
   );

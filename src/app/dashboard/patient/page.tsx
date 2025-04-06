@@ -63,31 +63,33 @@ const PatientDashboard = () => {
     {
       id: 1,
       title: "The Burden of Chronic Disease",
-      description: "Learn what are these Chronic Diseases.Be here and get to know about it  .",
+      description:
+        "Learn what are these Chronic Diseases.Be here and get to know about it  .",
       url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC10830426/",
-      source: "National Institutes of Health"
+      source: "National Institutes of Health",
     },
     {
       id: 2,
       title: "Heart Disease Prevention Strategies",
-      description: "Learn about effective ways to prevent cardiovascular diseases.",
+      description:
+        "Learn about effective ways to prevent cardiovascular diseases.",
       url: "https://www.heart.org/en/health-topics/consumer-healthcare/what-is-cardiovascular-disease",
-      source: "American Heart Association"
+      source: "American Heart Association",
     },
     {
       id: 3,
       title: "Living with Chronic Pain: A Comprehensive Guide",
       description: "Understanding and managing chronic pain conditions.",
       url: "https://www.mayoclinic.org/diseases-conditions/chronic-pain/symptoms-causes/syc-20350823",
-      source: "Mayo Clinic"
+      source: "Mayo Clinic",
     },
     {
       id: 4,
       title: "Asthma Management in Adults",
       description: "Latest guidelines for controlling asthma symptoms.",
       url: "https://www.lung.org/lung-health-diseases/lung-disease-lookup/asthma",
-      source: "American Lung Association"
-    }
+      source: "American Lung Association",
+    },
   ]);
 
   const fetchHomeData = async () => {
@@ -97,7 +99,8 @@ const PatientDashboard = () => {
       setPatientInfo({
         firstName: data.firstName || "",
         lastName: data.lastName || "",
-        fullName: data.fullName || `${data.firstName || ""} ${data.lastName || ""}`,
+        fullName:
+          data.fullName || `${data.firstName || ""} ${data.lastName || ""}`,
         address: data.address || "",
         bloodType: data.bloodType || "",
         bmi: data.bmi || "",
@@ -171,16 +174,18 @@ const PatientDashboard = () => {
                 DOB: {new Date(patientInfo.dateOfBirth).toLocaleDateString()}
               </p>
               <p className="text-gray-600">Gender: {patientInfo.gender}</p>
-              <p className="text-gray-600">Blood Type: {patientInfo.bloodType}</p>
+              <p className="text-gray-600">
+                Blood Type: {patientInfo.bloodType}
+              </p>
               <p className="text-gray-600">NIC: {patientInfo.nic}</p>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-6">
+        <div className="mt-6 grid grid-cols-3 gap-6 ">
           {/* Vital Statistics */}
-          <div className="col-span-2 bg-white rounded-lg shadow-sm border p- niedzielica6">
-            <h3 className="text-lg font-semibold mb-4">Vital Statistics</h3>
+          <div className="col-span-2 bg-white rounded-lg shadow-sm border p-6 niedzielica6 ">
+            <h3 className="text-lg font-semibold mb-4 ">Vital Statistics</h3>
             <div className="space-y-2">
               <p className="text-gray-600">Height: {patientInfo.height}</p>
               <p className="text-gray-600">Weight: {patientInfo.weight}</p>
@@ -192,7 +197,7 @@ const PatientDashboard = () => {
           </div>
 
           {/* Emergency Contact */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="bg-white rounded-lg shadow-sm border p-6 ">
             <h3 className="text-lg font-semibold">Emergency Contact</h3>
             <div className="mt-4 space-y-2">
               <p className="text-gray-600">Name: {patientInfo.guardianName}</p>
@@ -208,17 +213,23 @@ const PatientDashboard = () => {
           <h3 className="text-lg font-semibold mb-4">Health Articles</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {articles.map((article) => (
-              <div 
-                key={article.id} 
+              <div
+                key={article.id}
                 className="bg-white rounded-lg shadow-sm shadow-inner shadow-blue-100 border-2 border-blue-600 p-6 hover:shadow-md transition-shadow"
               >
-                <h4 className="text-lg font-medium mb-2 font-serif">{article.title}</h4>
-                <p className="text-gray-600 mb-4 font-serif italic">{article.description}</p>
+                <h4 className="text-lg font-medium mb-2 font-serif">
+                  {article.title}
+                </h4>
+                <p className="text-gray-600 mb-4 font-serif italic">
+                  {article.description}
+                </p>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500 font-serif">Source: {article.source}</span>
-                  <a 
-                    href={article.url} 
-                    target="_blank" 
+                  <span className="text-sm text-gray-500 font-serif">
+                    Source: {article.source}
+                  </span>
+                  <a
+                    href={article.url}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium font-serif"
                   >
